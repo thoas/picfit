@@ -131,5 +131,7 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 
 	panicIf(err)
 
+	res.ContentType(imageResponse.ContentType)
+	res.SetHeaders(imageResponse.Header, true)
 	res.ResponseWriter.Write(content)
 }

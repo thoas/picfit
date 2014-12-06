@@ -83,7 +83,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/muxer",
-			"Rev": "1c861a52bedd251fc4aeb944fead242e91daa8fb"
+			"Rev": "e3ec21636187432fcb00c816fb5eebc2409377f7"
 		},
 		{
 			"ImportPath": "github.com/thoas/storages",

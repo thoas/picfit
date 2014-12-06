@@ -25,3 +25,5 @@ var Extensions = map[string]string{
 	"image/bmp":  "bmp",
 	"image/gif":  "gif",
 }
+
+var HeaderKeys = []string{"Age", "Content-Type", "Last-Modified", "Date", "Etag"}

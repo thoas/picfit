@@ -15,6 +15,7 @@ type ImageResponse struct {
 	Image       image.Image
 	ContentType string
 	Key         string
+	Header      map[string]string
 }
 
 func ImageResponseFromURL(url string) (*ImageResponse, error) {
@@ -34,13 +35,22 @@ func ImageResponseFromURL(url string) (*ImageResponse, error) {
 		return nil, err
 	}
 
-	var contentType = mime.TypeByExtension(url)
+	var headers = make(map[string]string)
 
-	if results, ok := content.Header["Content-Type"]; ok {
-		contentType = results[0]
+	for _, key := range HeaderKeys {
+		if value, ok := content.Header[key]; ok && len(value) > 0 {
+			fmt.Println(value)
+			headers[key] = value[0]
+		}
 	}
 
-	return &ImageResponse{Image: dest, ContentType: contentType}, nil
+	var contentType = mime.TypeByExtension(url)
+
+	if value, ok := headers["Content-Type"]; ok {
+		contentType = value
+	}
+
+	return &ImageResponse{Image: dest, ContentType: contentType, Header: headers}, nil
 }
 
 func ImageResponseFromBytes(content []byte, contentType string) (*ImageResponse, error) {
