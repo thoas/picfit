@@ -13,7 +13,15 @@ type CacheKVStore struct {
 }
 
 func (k *CacheKVStore) NewFromParams(params map[string]string) KVStore {
-	maxEntries, _ := strconv.Atoi(params["max_entries"])
+	value, ok := params["max_entries"]
+
+	var maxEntries int
+
+	if !ok {
+		maxEntries = -1
+	} else {
+		maxEntries, _ = strconv.Atoi(value)
+	}
 
 	return &CacheKVStore{Cache: NewCacheKVStoreConnection(maxEntries)}
 }
