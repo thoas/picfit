@@ -9,5 +9,7 @@ type KVStore interface {
 type KVStoreConnection interface {
 	Close() error
 	Get(key string) string
+	Delete(key string) error
+	Exists(key string) bool
 	Set(key string, value string) error
 }

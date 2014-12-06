@@ -77,8 +77,28 @@ func (k *RedisKVStoreConnection) Get(key string) string {
 	return result
 }
 
+func (k *RedisKVStoreConnection) Exists(key string) bool {
+	exists, err := redis.Bool(k.Connection.Do("EXISTS", key))
+
+	if err != nil {
+		return false
+	}
+
+	return exists
+}
+
 func (k *RedisKVStoreConnection) Set(key string, value string) error {
 	_, err := k.Connection.Do("SET", key, value)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k *RedisKVStoreConnection) Delete(key string) error {
+	_, err := k.Connection.Do("DELETE", key)
 
 	if err != nil {
 		return err

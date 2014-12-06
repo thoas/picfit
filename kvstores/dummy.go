@@ -26,6 +26,14 @@ func (k *DummyKVStoreConnection) Get(key string) string {
 	return ""
 }
 
+func (k *DummyKVStoreConnection) Exists(key string) bool {
+	return false
+}
+
+func (k *DummyKVStoreConnection) Delete(key string) error {
+	return nil
+}
+
 func (k *DummyKVStoreConnection) Set(key string, value string) error {
 	return nil
 }
