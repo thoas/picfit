@@ -61,7 +61,9 @@ func (a *Application) Store(i *image.ImageResponse) {
 		return
 	}
 
-	filename, err := a.Storage.Save(fmt.Sprintf("%s.%s", a.ShardFilename(i.Key), i.Format()), content)
+	filename := fmt.Sprintf("%s.%s", a.ShardFilename(i.Key), i.Format())
+
+	err = a.Storage.Save(filename, content)
 
 	if err != nil {
 		a.Logger.Error.Print(err)
