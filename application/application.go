@@ -7,6 +7,7 @@ import (
 	"github.com/thoas/picfit/kvstores"
 	"github.com/thoas/storages"
 	"log"
+	"mime"
 	"strings"
 )
 
@@ -60,13 +61,35 @@ func (a *Application) Store(i *image.ImageResponse) {
 		return
 	}
 
-	filename, err := a.Storage.Save(fmt.Sprintf("%s.%s", a.ShardFilename(i.Key), i.Format()), i.ContentType, content)
+	filename, err := a.Storage.Save(fmt.Sprintf("%s.%s", a.ShardFilename(i.Key), i.Format()), content)
 
 	if err != nil {
 		a.Logger.Error.Print(err)
 	} else {
+		a.Logger.Info.Printf("Save thumbnail %s to storage", filename)
+
 		err = con.Set(i.Key, filename)
 
-		a.Logger.Info.Printf("Save thumbnail %s to storage", filename)
+		if err != nil {
+			a.Logger.Info.Printf("Save key %s=%s to kvstore", i.Key, filename)
+		} else {
+			a.Logger.Error.Print(err)
+		}
 	}
+}
+
+func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageResponse, error) {
+	body, err := a.Storage.Open(filename)
+
+	if err != nil {
+		return nil, err
+	}
+
+	imageResponse, err := image.ImageResponseFromBytes(body, mime.TypeByExtension(filename))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imageResponse, nil
 }

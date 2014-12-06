@@ -91,11 +91,7 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 
 			panicIf(err)
 		} else {
-			body, err := App.Storage.Open(stored)
-
-			panicIf(err)
-
-			imageResponse, err = image.ImageResponseFromBytes(body, mime.TypeByExtension(stored))
+			imageResponse, err = App.ImageResponseFromStorage(stored)
 
 			panicIf(err)
 		}
@@ -113,11 +109,7 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 
 				panicIf(err)
 			} else {
-				body, err := App.Storage.Open(stored)
-
-				panicIf(err)
-
-				imageResponse, err = image.ImageResponseFromBytes(body, mime.TypeByExtension(filename))
+				imageResponse, err = App.ImageResponseFromStorage(stored)
 
 				panicIf(err)
 			}
