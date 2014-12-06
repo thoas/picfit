@@ -7,6 +7,7 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/franela/goreq"
 	"image"
+	"mime"
 	"net/http"
 )
 
@@ -33,7 +34,13 @@ func ImageResponseFromURL(url string) (*ImageResponse, error) {
 		return nil, err
 	}
 
-	return &ImageResponse{Image: dest, ContentType: content.Header["Content-Type"][0]}, nil
+	var contentType = mime.TypeByExtension(url)
+
+	if results, ok := content.Header["Content-Type"]; ok {
+		contentType = results[0]
+	}
+
+	return &ImageResponse{Image: dest, ContentType: contentType}, nil
 }
 
 func ImageResponseFromBytes(content []byte, contentType string) (*ImageResponse, error) {
