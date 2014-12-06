@@ -3,7 +3,8 @@ package kvstores
 type DummyKVStore struct {
 }
 
-func (k *DummyKVStore) Connect(params map[string]string) {
+func (k *DummyKVStore) NewFromParams(params map[string]string) KVStore {
+	return &DummyKVStore{}
 }
 
 func (k *DummyKVStore) Close() error {

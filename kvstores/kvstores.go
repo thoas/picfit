@@ -1,7 +1,7 @@
 package kvstores
 
 type KVStore interface {
-	Connect(params map[string]string)
+	NewFromParams(params map[string]string) KVStore
 	Connection() KVStoreConnection
 	Close() error
 }

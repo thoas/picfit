@@ -67,7 +67,7 @@ var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 		return err
 	}
 
-	store.Connect(mapInterfaceToMapString(config))
+	store = store.NewFromParams(mapInterfaceToMapString(config))
 
 	App.KVStore = store
 
@@ -87,7 +87,7 @@ var StorageInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 		return err
 	}
 
-	storage.Params(mapInterfaceToMapString(config))
+	storage, err = storage.NewFromParams(mapInterfaceToMapString(config))
 
 	App.Storage = storage
 

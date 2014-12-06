@@ -41,10 +41,8 @@ type RedisKVStore struct {
 	Pool *redis.Pool
 }
 
-func (k *RedisKVStore) Connect(params map[string]string) {
-	pool := newPool(params["host"], params["port"], params["password"], params["db"])
-
-	k.Pool = pool
+func (k *RedisKVStore) NewFromParams(params map[string]string) KVStore {
+	return &RedisKVStore{Pool: newPool(params["host"], params["port"], params["password"], params["db"])}
 }
 
 func (k *RedisKVStore) Close() error {
