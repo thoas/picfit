@@ -87,7 +87,20 @@ func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageRes
 		return nil, err
 	}
 
-	imageResponse, err := image.ImageResponseFromBytes(body, mime.TypeByExtension(filename))
+	modifiedTime, err := a.Storage.ModifiedTime(filename)
+
+	if err != nil {
+		return nil, err
+	}
+
+	contentType := mime.TypeByExtension(filename)
+
+	headers := map[string]string{
+		"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
+		"Content-Type":  contentType,
+	}
+
+	imageResponse, err := image.ImageResponseFromBytes(body, contentType, headers)
 
 	if err != nil {
 		return nil, err
