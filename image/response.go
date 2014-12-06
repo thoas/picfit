@@ -39,7 +39,6 @@ func ImageResponseFromURL(url string) (*ImageResponse, error) {
 
 	for _, key := range HeaderKeys {
 		if value, ok := content.Header[key]; ok && len(value) > 0 {
-			fmt.Println(value)
 			headers[key] = value[0]
 		}
 	}
