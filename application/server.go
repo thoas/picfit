@@ -29,6 +29,7 @@ var App = &Application{
 
 var KVStores = map[string]kvstores.KVStore{
 	"redis": &kvstores.RedisKVStore{},
+	"cache": &kvstores.CacheKVStore{},
 }
 
 var Storages = map[string]storages.Storage{
