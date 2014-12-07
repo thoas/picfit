@@ -3,8 +3,8 @@ package application
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/thoas/kvstores"
 	"github.com/thoas/picfit/image"
-	"github.com/thoas/picfit/kvstores"
 	"github.com/thoas/storages"
 	"log"
 	"mime"

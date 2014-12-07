@@ -82,6 +82,10 @@
 			"Rev": "2d3baec0901daab5cc25673fb44388add33de30b"
 		},
 		{
+			"ImportPath": "github.com/thoas/kvstores",
+			"Rev": "2b7b9ddfea2a9a28b25eee792f7a5971b722db0a"
+		},
+		{
 			"ImportPath": "github.com/thoas/muxer",
 			"Rev": "e3ec21636187432fcb00c816fb5eebc2409377f7"
 		},

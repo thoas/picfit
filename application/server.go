@@ -9,8 +9,6 @@ import (
 	"github.com/jmoiron/jsonq"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
-	"github.com/thoas/picfit/kvstores"
-	"github.com/thoas/storages"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -27,14 +25,14 @@ var App = &Application{
 	},
 }
 
-var KVStores = map[string]kvstores.KVStore{
-	"redis": &kvstores.RedisKVStore{},
-	"cache": &kvstores.CacheKVStore{},
+var KVStores = map[string]KVStoreParameter{
+	"redis": RedisKVStoreParameter,
+	"cache": CacheKVStoreParameter,
 }
 
-var Storages = map[string]storages.Storage{
-	"s3": &storages.S3Storage{},
-	"fs": &storages.FileSystemStorage{},
+var Storages = map[string]StorageParameter{
+	"s3": S3StorageParameter,
+	"fs": FileSystemStorageParameter,
 }
 
 func Run(path string) error {

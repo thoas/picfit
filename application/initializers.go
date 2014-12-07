@@ -55,7 +55,7 @@ var ShardInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
 }
 
 var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
-	store, ok := KVStores[key]
+	parameter, ok := KVStores[key]
 
 	if !ok {
 		return errors.New(fmt.Sprintf("KVStore %s does not exist", key))
@@ -67,7 +67,11 @@ var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 		return err
 	}
 
-	store = store.NewFromParams(mapInterfaceToMapString(config))
+	store, err := parameter(mapInterfaceToMapString(config))
+
+	if err != nil {
+		return err
+	}
 
 	App.KVStore = store
 
@@ -75,7 +79,7 @@ var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 }
 
 var StorageInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
-	storage, ok := Storages[key]
+	parameter, ok := Storages[key]
 
 	if !ok {
 		return errors.New(fmt.Sprintf("Storage %s does not exist", key))
@@ -87,7 +91,11 @@ var StorageInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 		return err
 	}
 
-	storage, err = storage.NewFromParams(mapInterfaceToMapString(config))
+	storage, err := parameter(mapInterfaceToMapString(config))
+
+	if err != nil {
+		return err
+	}
 
 	App.Storage = storage
 
