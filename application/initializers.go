@@ -5,23 +5,15 @@ import (
 	"fmt"
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/picfit/image"
-	"strings"
 )
 
 type Initializer func(key string, jq *jsonq.JsonQuery) error
 
 var Initializers = map[string]Initializer{
-	"kvstore":  KVStoreInitializer,
-	"storage":  StorageInitializer,
-	"shard":    ShardInitializer,
-	"format":   FormatInitializer,
-	"base_url": BaseURLInitializer,
-}
-
-var BaseURLInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
-	App.BaseURL = strings.TrimSuffix(key, "/")
-
-	return nil
+	"kvstore": KVStoreInitializer,
+	"storage": StorageInitializer,
+	"shard":   ShardInitializer,
+	"format":  FormatInitializer,
 }
 
 var FormatInitializer Initializer = func(format string, jq *jsonq.JsonQuery) error {

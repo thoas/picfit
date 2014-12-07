@@ -32,18 +32,6 @@ type Application struct {
 	Logger      Logger
 }
 
-func (a *Application) URL(str ...string) string {
-	var results []string
-
-	results = append(results, a.BaseURL)
-
-	for _, value := range str {
-		results = append(results, value)
-	}
-
-	return strings.Join(results, "/")
-}
-
 func (a *Application) ShardFilename(filename string) string {
 	results := shard(filename, a.Shard.Width, a.Shard.Depth, true)
 
@@ -81,6 +69,11 @@ func (a *Application) Store(i *image.ImageResponse) {
 }
 
 func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageResponse, error) {
+	// URL provided we use http protocol to retrieve it
+	if a.Storage.HasBaseURL() {
+		return image.ImageResponseFromURL(a.Storage.URL(filename))
+	}
+
 	body, err := a.Storage.Open(filename)
 
 	if err != nil {

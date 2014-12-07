@@ -39,7 +39,7 @@ var RedisKVStoreParameter KVStoreParameter = func(params map[string]string) (kvs
 }
 
 var FileSystemStorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
-	return storages.NewFileSystemStorage(params["location"]), nil
+	return storages.NewFileSystemStorage(params["location"], params["base_url"]), nil
 }
 
 var S3StorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
@@ -56,5 +56,5 @@ var S3StorageParameter StorageParameter = func(params map[string]string) (storag
 		return nil, errors.New(fmt.Sprintf("The Region %s does not exist", params["region"]))
 	}
 
-	return storages.NewS3Storage(params["access_key_id"], params["secret_access_key"], params["bucket_name"], params["location"], Region, ACL), nil
+	return storages.NewS3Storage(params["access_key_id"], params["secret_access_key"], params["bucket_name"], params["location"], Region, ACL, params["base_url"]), nil
 }

@@ -85,16 +85,9 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 
 	// Image from the KVStore found
 	if stored != "" {
-		// URL provided we use http protocol to retrieve it
-		if App.BaseURL != "" {
-			imageResponse, err = image.ImageResponseFromURL(App.URL(stored))
+		imageResponse, err = App.ImageResponseFromStorage(stored)
 
-			panicIf(err)
-		} else {
-			imageResponse, err = App.ImageResponseFromStorage(stored)
-
-			panicIf(err)
-		}
+		panicIf(err)
 	} else {
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
@@ -104,15 +97,9 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 			panicIf(err)
 		} else {
 			// URL provided we use http protocol to retrieve it
-			if App.BaseURL != "" {
-				imageResponse, err = image.ImageResponseFromURL(App.URL(filename))
+			imageResponse, err = App.ImageResponseFromStorage(filename)
 
-				panicIf(err)
-			} else {
-				imageResponse, err = App.ImageResponseFromStorage(stored)
-
-				panicIf(err)
-			}
+			panicIf(err)
 		}
 
 		file := image.NewImageFile(imageResponse.Image)
