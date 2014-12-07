@@ -16,6 +16,7 @@ type ImageResponse struct {
 	ContentType string
 	Key         string
 	Header      map[string]string
+	Filename    string
 }
 
 func ImageResponseFromURL(url string) (*ImageResponse, error) {

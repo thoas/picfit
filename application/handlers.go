@@ -55,41 +55,9 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 var ImageHandler Handler = func(res muxer.Response, req *Request) {
-	stored := req.Connection.Get(req.Key)
+	imageResponse, err := App.ImageResponseFromRequest(req, true)
 
-	var imageResponse *image.ImageResponse
-	var err error
-
-	// Image from the KVStore found
-	if stored != "" {
-		imageResponse, err = App.ImageResponseFromStorage(stored)
-
-		panicIf(err)
-	} else {
-		// Image not found from the KVStore, we need to process it
-		// URL available in Query String
-		if req.URL != nil {
-			imageResponse, err = image.ImageResponseFromURL(req.URL.String())
-
-			panicIf(err)
-		} else {
-			// URL provided we use http protocol to retrieve it
-			imageResponse, err = App.ImageResponseFromStorage(req.Filename)
-
-			panicIf(err)
-		}
-
-		file := image.NewImageFile(imageResponse.Image)
-
-		dest, err := file.Transform(req.Method, req.QueryString)
-
-		panicIf(err)
-
-		imageResponse.Image = dest
-		imageResponse.Key = req.Key
-
-		go App.Store(imageResponse)
-	}
+	panicIf(err)
 
 	content, err := imageResponse.ToBytes()
 
