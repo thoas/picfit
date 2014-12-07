@@ -1,11 +1,9 @@
 package application
 
 import (
-	"errors"
-	"fmt"
+	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/image"
-	"mime"
 	"net/http"
 	"net/url"
 )
@@ -18,70 +16,49 @@ func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(NotFound)
 }
 
-func extractMethod(req *muxer.Request) (*image.Method, error) {
-	method, ok := image.Methods[req.Params["method"]]
-
-	if !ok || !method.HasEnoughParams(req.QueryString) {
-		return nil, errors.New(fmt.Sprintf("Invalid method %s or invalid parameters", method))
-	}
-
-	return method, nil
+type Request struct {
+	*muxer.Request
+	Method     *image.Method
+	Connection kvstores.KVStoreConnection
+	Key        string
+	URL        *url.URL
+	Filename   string
 }
 
-func extractURL(req *muxer.Request) (*url.URL, error) {
-	urlValue := req.QueryString["url"]
+type Handler func(muxer.Response, *Request)
 
-	if urlValue != "" {
-		url, err := url.Parse(urlValue)
+func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	con := App.KVStore.Connection()
+	defer con.Close()
 
-		mimetype := mime.TypeByExtension(urlValue)
+	request := muxer.NewRequest(req)
 
-		_, ok := image.Formats[mimetype]
+	method, err := extractMethod(request)
 
-		if ok || err == nil {
-			return url, nil
-		}
+	res := muxer.NewResponse(w)
+
+	if err != nil {
+		res.BadRequest()
+		return
 	}
 
-	return nil, errors.New(fmt.Sprintf("URL %s is not valid", urlValue))
-}
+	url, err := extractURL(request)
 
-func keyFromRequest(req *muxer.Request) string {
-	qs := serialize(req.QueryString)
-
-	var key string
-
-	if filename, ok := req.Params["filename"]; !ok {
-		key = tokey(req.Params["method"], qs)
-	} else {
-		key = tokey(req.Params["method"], filename, qs)
-	}
-
-	return key
-}
-
-var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
-	method, err := extractMethod(req)
-
-	panicIf(err)
-
-	url, err := extractURL(req)
-
-	filename := req.Params["filename"]
+	filename := request.Params["filename"]
 
 	if err != nil && filename == "" {
 		res.BadRequest()
 		return
 	}
 
-	con := App.KVStore.Connection()
-	defer con.Close()
+	h(res, &Request{request, method, con, keyFromRequest(request), url, filename})
+}
 
-	key := keyFromRequest(req)
-
-	stored := con.Get(key)
+var ImageHandler Handler = func(res muxer.Response, req *Request) {
+	stored := req.Connection.Get(req.Key)
 
 	var imageResponse *image.ImageResponse
+	var err error
 
 	// Image from the KVStore found
 	if stored != "" {
@@ -91,25 +68,25 @@ var ImageHandler muxer.Handler = func(res muxer.Response, req *muxer.Request) {
 	} else {
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
-		if url != nil {
-			imageResponse, err = image.ImageResponseFromURL(url.String())
+		if req.URL != nil {
+			imageResponse, err = image.ImageResponseFromURL(req.URL.String())
 
 			panicIf(err)
 		} else {
 			// URL provided we use http protocol to retrieve it
-			imageResponse, err = App.ImageResponseFromStorage(filename)
+			imageResponse, err = App.ImageResponseFromStorage(req.Filename)
 
 			panicIf(err)
 		}
 
 		file := image.NewImageFile(imageResponse.Image)
 
-		dest, err := file.Transform(method, req.QueryString)
+		dest, err := file.Transform(req.Method, req.QueryString)
 
 		panicIf(err)
 
 		imageResponse.Image = dest
-		imageResponse.Key = key
+		imageResponse.Key = req.Key
 
 		go App.Store(imageResponse)
 	}
