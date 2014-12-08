@@ -89,8 +89,19 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile,
 }
 
 func (i *ImageFile) ToBytes() ([]byte, error) {
+	format, ok := Formats[i.GetContentType()]
+
+	if !ok {
+		format = DefaultFormat
+	}
+
+	return i.ToBytesWithFormat(format)
+}
+
+func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := imaging.Encode(buf, i.Source, Formats[i.GetContentType()])
+
+	err := imaging.Encode(buf, i.Source, format)
 
 	if err != nil {
 		return nil, err

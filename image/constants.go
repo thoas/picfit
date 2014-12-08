@@ -4,6 +4,8 @@ import (
 	"github.com/disintegration/imaging"
 )
 
+const DefaultFormat = imaging.PNG
+
 var Formats = map[string]imaging.Format{
 	"image/jpeg": imaging.JPEG,
 	"image/png":  imaging.PNG,

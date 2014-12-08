@@ -60,19 +60,21 @@ a dedicated request one time.
     {
       "port": 3001,
       "storage": {
-        "type": "fs",
-        "location": "/path/to/directory/"
+        "src": {
+          "type": "fs",
+          "location": "/path/to/directory/"
+        }
       },
       "kvstore": {
         "type": "cache"
       },
     }
 
-Store images on Amazon AWS S3, keys in Redis and shard filename
+Store images on Amazon S3, keys in Redis and shard filename
 ---------------------------------------------------------------
 
 * key/value store provided by Redis
-* Amazon AWS S3 storage
+* Amazon S3 storage
 * shard filename
 
 .. code-block:: json
@@ -87,7 +89,7 @@ Store images on Amazon AWS S3, keys in Redis and shard filename
       },
       "port": 3001,
       "storage": {
-        "source": {
+        "src": {
           "type": "s3",
           "access_key_id": "[ACCESS_KEY_ID]",
           "secret_access_key": "[SECRET_ACCESS_KEY]",
@@ -103,9 +105,9 @@ Store images on Amazon AWS S3, keys in Redis and shard filename
       }
     }
 
-With the following config, we will store keys on Redis_.
+With this config, we will store keys on Redis_.
 
-Images will be stored on Amazon AWS S3 at the location ``/path/to/directory``.
+Images will be stored on Amazon S3 at the location ``/path/to/directory``.
 
 ``[ACL]`` can be:
 
@@ -139,6 +141,41 @@ Example:
 
 ``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
 
+Load images from file system and store them in Amazon S3, keys on Redis
+=======================================================================
+
+* key/value store provided by Redis
+* File system to load images
+* Amazon S3 storage to process images
+
+.. code-block:: json
+
+    {
+      "kvstore": {
+        "type": "redis",
+        "host": "127.0.0.1",
+        "port": "6379",
+        "password": "",
+        "db": 0
+      },
+      "port": 3001,
+      "storage": {
+        "src": {
+          "type": "fs",
+          "location": "path/to/directory"
+        },
+        "dest": {
+          "type": "s3",
+          "access_key_id": "[ACCESS_KEY_ID]",
+          "secret_access_key": "[SECRET_ACCESS_KEY]",
+          "bucket_name": "[BUCKET_NAME]",
+          "acl": "[ACL]",
+          "region": "[REGION_NAME]",
+          "location": "path/to/directory"
+        }
+      }
+    }
+
 Running
 =======
 
@@ -154,10 +191,17 @@ To see a list of all available options, run::
 
     $ picfit --help
 
-Calling
-=======
+Usage
+=====
 
-...
+To use this service, include the service url as replacement for your images, for example:::
+
+    <img src="https://www.google.fr/images/srpr/logo11w.png" />
+
+will become::
+
+    <img src="http://localhost:3001/image/method/resize/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100"
+
 
 Security
 ========
