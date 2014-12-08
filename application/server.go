@@ -49,10 +49,8 @@ func Run(path string) error {
 	dec.Decode(&data)
 	jq := jsonq.NewQuery(data)
 
-	for k, initializer := range Initializers {
-		value, err := jq.String(k)
-
-		err = initializer(value, jq)
+	for _, initializer := range Initializers {
+		err = initializer(jq)
 
 		panicIf(err)
 	}
@@ -61,6 +59,8 @@ func Run(path string) error {
 	App.Router.NotFoundHandler = NotFoundHandler()
 	App.Router.Handle("/image/{filename}/method/{method}/display", ImageHandler)
 	App.Router.Handle("/image/method/{method}/display", ImageHandler)
+	//App.Router.Handle("/image/{filename}/method/{method}/get", GetHandler)
+	//App.Router.Handle("/image/method/{method}/get", GetHandler)
 
 	allowedOrigins, err := jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := jq.ArrayOfStrings("allowed_methods")

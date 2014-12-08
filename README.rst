@@ -59,11 +59,11 @@ a dedicated request one time.
 
     {
       "port": 3001,
-      "storage": "fs",
-      "kvstore": "cache",
-      "fs": {
+      "storage": {
+        "type": "fs",
         "location": "/path/to/directory/"
-      }
+      },
+      "kvstore": "cache",
     }
 
 Store images on Amazon AWS S3, keys in Redis and shard filename
@@ -76,22 +76,24 @@ Store images on Amazon AWS S3, keys in Redis and shard filename
 .. code-block:: json
 
     {
-      "kvstore": "redis",
-      "redis": {
+      "kvstore": {
+        "type": "redis",
         "host": "127.0.0.1",
         "port": "6379",
         "password": "",
         "db": 0
       },
       "port": 3001,
-      "storage": "s3",
-      "s3": {
-        "access_key_id": "[ACCESS_KEY_ID]",
-        "secret_access_key": "[SECRET_ACCESS_KEY]",
-        "bucket_name": "[BUCKET_NAME]",
-        "acl": "[ACL]",
-        "region": "[REGION_NAME]",
-        "location": "path/to/directory"
+      "storage": {
+        "source": {
+          "type": "s3",
+          "access_key_id": "[ACCESS_KEY_ID]",
+          "secret_access_key": "[SECRET_ACCESS_KEY]",
+          "bucket_name": "[BUCKET_NAME]",
+          "acl": "[ACL]",
+          "region": "[REGION_NAME]",
+          "location": "path/to/directory"
+        }
       },
       "shard": {
         "width": 1,

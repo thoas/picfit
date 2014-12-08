@@ -22,14 +22,15 @@ type Logger struct {
 }
 
 type Application struct {
-	Format      string
-	ContentType string
-	BaseURL     string
-	KVStore     kvstores.KVStore
-	Storage     storages.Storage
-	Router      *mux.Router
-	Shard       Shard
-	Logger      Logger
+	Format        string
+	ContentType   string
+	BaseURL       string
+	KVStore       kvstores.KVStore
+	SourceStorage storages.Storage
+	DestStorage   storages.Storage
+	Router        *mux.Router
+	Shard         Shard
+	Logger        Logger
 }
 
 func (a *Application) ShardFilename(filename string) string {
@@ -38,7 +39,7 @@ func (a *Application) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (a *Application) Store(i *image.ImageResponse) error {
+func (a *Application) Store(i *image.ImageFile) error {
 	con := App.KVStore.Connection()
 	defer con.Close()
 
@@ -49,7 +50,7 @@ func (a *Application) Store(i *image.ImageResponse) error {
 		return err
 	}
 
-	err = a.Storage.Save(i.Filename, content)
+	err = a.DestStorage.Save(i.Filename, content)
 
 	if err != nil {
 		a.Logger.Error.Print(err)
@@ -68,25 +69,25 @@ func (a *Application) Store(i *image.ImageResponse) error {
 	return err
 }
 
-func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageResponse, error) {
-	var imageResponse *image.ImageResponse
+func (a *Application) ImageFileFromStorage(filename string) (*image.ImageFile, error) {
+	var file *image.ImageFile
 	var err error
 
 	// URL provided we use http protocol to retrieve it
-	if a.Storage.HasBaseURL() {
-		imageResponse, err = image.ImageResponseFromURL(a.Storage.URL(filename))
+	if a.SourceStorage.HasBaseURL() {
+		file, err = image.ImageFileFromURL(a.SourceStorage.URL(filename))
 
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		body, err := a.Storage.Open(filename)
+		body, err := a.SourceStorage.Open(filename)
 
 		if err != nil {
 			return nil, err
 		}
 
-		modifiedTime, err := a.Storage.ModifiedTime(filename)
+		modifiedTime, err := a.SourceStorage.ModifiedTime(filename)
 
 		if err != nil {
 			return nil, err
@@ -99,7 +100,7 @@ func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageRes
 			"Content-Type":  contentType,
 		}
 
-		imageResponse, err = image.ImageResponseFromBytes(body, contentType, headers)
+		file, err = image.ImageFileFromBytes(body, contentType, headers)
 
 		if err != nil {
 			return nil, err
@@ -107,52 +108,51 @@ func (a *Application) ImageResponseFromStorage(filename string) (*image.ImageRes
 
 	}
 
-	imageResponse.Filename = a.Storage.Path(filename)
+	file.Filename = a.SourceStorage.Path(filename)
 
-	return imageResponse, err
+	return file, err
 }
 
-func (a *Application) ImageResponseFromRequest(req *Request, async bool) (*image.ImageResponse, error) {
-	var imageResponse *image.ImageResponse
+func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) (*image.ImageFile, error) {
+	var file *image.ImageFile = &image.ImageFile{Key: req.Key}
 	var err error
 
 	// Image from the KVStore found
 	stored := req.Connection.Get(req.Key)
 
+	file.Filename = stored
+
 	if stored != "" {
-		imageResponse, err = a.ImageResponseFromStorage(stored)
+		file, err = a.ImageFileFromStorage(stored)
 	} else {
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
 		if req.URL != nil {
-			imageResponse, err = image.ImageResponseFromURL(req.URL.String())
+			file, err = image.ImageFileFromURL(req.URL.String())
 
 		} else {
 			// URL provided we use http protocol to retrieve it
-			imageResponse, err = a.ImageResponseFromStorage(req.Filename)
+			file, err = a.ImageFileFromStorage(req.Filename)
 		}
 
-		file := image.NewImageFile(imageResponse.Image)
-
-		dest, err := file.Transform(req.Method, req.QueryString)
+		file, err = file.Transform(req.Method, req.QueryString)
 
 		if err != nil {
 			return nil, err
 		}
 
-		imageResponse.Image = dest
+		file.Filename = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), file.Format())
 	}
 
-	imageResponse.Key = req.Key
-	imageResponse.Filename = fmt.Sprintf("%s.%s", a.ShardFilename(imageResponse.Key), imageResponse.Format())
+	file.Key = req.Key
 
 	if stored == "" {
 		if async == true {
-			go a.Store(imageResponse)
+			go a.Store(file)
 		} else {
-			err = a.Store(imageResponse)
+			err = a.Store(file)
 		}
 	}
 
-	return imageResponse, err
+	return file, err
 }

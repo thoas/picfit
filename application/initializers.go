@@ -1,13 +1,13 @@
 package application
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/storages"
 )
 
-type Initializer func(key string, jq *jsonq.JsonQuery) error
+type Initializer func(jq *jsonq.JsonQuery) error
 
 var Initializers = map[string]Initializer{
 	"kvstore": KVStoreInitializer,
@@ -16,7 +16,9 @@ var Initializers = map[string]Initializer{
 	"format":  FormatInitializer,
 }
 
-var FormatInitializer Initializer = func(format string, jq *jsonq.JsonQuery) error {
+var FormatInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+	format, _ := jq.String("format")
+
 	if format != "" {
 		App.Format = format
 		App.ContentType = image.ContentTypes[format]
@@ -28,7 +30,7 @@ var FormatInitializer Initializer = func(format string, jq *jsonq.JsonQuery) err
 	return nil
 }
 
-var ShardInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
+var ShardInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	width, err := jq.Int("shard", "width")
 
 	if err != nil {
@@ -46,14 +48,26 @@ var ShardInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
 	return nil
 }
 
-var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
+var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+	_, err := jq.Object("kvstore")
+
+	if err != nil {
+		return nil
+	}
+
+	key, err := jq.String("kvstore", "type")
+
+	if err != nil {
+		return err
+	}
+
 	parameter, ok := KVStores[key]
 
 	if !ok {
-		return errors.New(fmt.Sprintf("KVStore %s does not exist", key))
+		return fmt.Errorf("KVStore %s does not exist", key)
 	}
 
-	config, err := jq.Object(key)
+	config, err := jq.Object("kvstore")
 
 	if err != nil {
 		return err
@@ -70,26 +84,52 @@ var KVStoreInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error
 	return nil
 }
 
-var StorageInitializer Initializer = func(key string, jq *jsonq.JsonQuery) error {
-	parameter, ok := Storages[key]
+func getStorageFromConfig(key string, jq *jsonq.JsonQuery) (storages.Storage, error) {
+	storageType, err := jq.String("storage", key, "type")
+
+	parameter, ok := Storages[storageType]
 
 	if !ok {
-		return errors.New(fmt.Sprintf("Storage %s does not exist", key))
+		return nil, fmt.Errorf("Storage %s does not exist", key)
 	}
 
-	config, err := jq.Object(key)
+	config, err := jq.Object("storage", key)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	storage, err := parameter(mapInterfaceToMapString(config))
 
 	if err != nil {
+		return nil, err
+	}
+
+	return storage, err
+}
+
+var StorageInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+	_, err := jq.Object("storage")
+
+	if err != nil {
+		return nil
+	}
+
+	sourceStorage, err := getStorageFromConfig("source", jq)
+
+	if err != nil {
 		return err
 	}
 
-	App.Storage = storage
+	App.SourceStorage = sourceStorage
+
+	destStorage, err := getStorageFromConfig("dest", jq)
+
+	if err != nil {
+		App.DestStorage = sourceStorage
+	}
+
+	App.DestStorage = destStorage
 
 	return nil
 }

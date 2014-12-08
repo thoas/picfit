@@ -55,15 +55,21 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 var ImageHandler Handler = func(res muxer.Response, req *Request) {
-	imageResponse, err := App.ImageResponseFromRequest(req, true)
+	file, err := App.ImageFileFromRequest(req, true, true)
 
 	panicIf(err)
 
-	content, err := imageResponse.ToBytes()
+	content, err := file.ToBytes()
 
 	panicIf(err)
 
-	res.ContentType(imageResponse.ContentType)
-	res.SetHeaders(imageResponse.Header, true)
+	res.ContentType(file.ContentType)
+	res.SetHeaders(file.Header, true)
 	res.ResponseWriter.Write(content)
 }
+
+//var GetHandler Handler = func(res muxer.Response, req *Request) {
+//file, err := App.ImageFileFromRequest(req, false, false)
+
+//panicIf(err)
+//}

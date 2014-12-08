@@ -1,32 +1,27 @@
 package image
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"image"
 	"math"
+	"mime"
 	"strconv"
 )
 
-type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
-
 type ImageFile struct {
-	Source image.Image
+	Source      image.Image
+	ContentType string
+	Key         string
+	Header      map[string]string
+	Filename    string
 }
 
-func NewImageFile(source image.Image) *ImageFile {
-	return &ImageFile{
-		Source: source,
-	}
-}
+type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
 
 func (i *ImageFile) GetImageSize() (int, int) {
 	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
-}
-
-func ScalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
-	return math.Max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
 }
 
 func (i *ImageFile) scale(width int, height int, trans Transformation) *image.NRGBA {
@@ -36,7 +31,7 @@ func (i *ImageFile) scale(width int, height int, trans Transformation) *image.NR
 func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *image.NRGBA {
 	width, height := i.GetImageSize()
 
-	factor := ScalingFactor(width, height, geometry[0], geometry[1])
+	factor := scalingFactor(width, height, geometry[0], geometry[1])
 
 	if factor < 1 || upscale {
 		width = int(float64(width) * factor)
@@ -48,7 +43,7 @@ func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *i
 	return imaging.Clone(i.Source)
 }
 
-func (i *ImageFile) Transform(method *Method, qs map[string]string) (*image.NRGBA, error) {
+func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile, error) {
 	_, ok := qs["upscale"]
 
 	if !ok {
@@ -77,8 +72,43 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*image.NRGB
 
 		dest := i.Scale([]int{w, h}, upscale, method.Transformation)
 
-		return dest, err
+		file := &ImageFile{
+			Source:      dest,
+			ContentType: i.ContentType,
+			Key:         i.Key,
+			Header:      i.Header,
+			Filename:    i.Filename,
+		}
+
+		return file, err
 	}
 
-	return nil, errors.New(fmt.Sprintf("Method not found for %s", method))
+	return nil, fmt.Errorf("Method not found for %s", method)
+}
+
+func (i *ImageFile) ToBytes() ([]byte, error) {
+	buf := &bytes.Buffer{}
+	err := imaging.Encode(buf, i.Source, Formats[i.ContentType])
+
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (i *ImageFile) Format() string {
+	if i.ContentType != "" {
+		return Extensions[i.ContentType]
+	}
+
+	if i.Filename != "" {
+		return Extensions[mime.TypeByExtension(i.Filename)]
+	}
+
+	return ""
+}
+
+func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
+	return math.Max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
 }

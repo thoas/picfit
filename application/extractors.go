@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"fmt"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/image"
@@ -13,7 +12,7 @@ func extractMethod(req *muxer.Request) (*image.Method, error) {
 	method, ok := image.Methods[req.Params["method"]]
 
 	if !ok || !method.HasEnoughParams(req.QueryString) {
-		return nil, errors.New(fmt.Sprintf("Invalid method %s or invalid parameters", method))
+		return nil, fmt.Errorf("Invalid method %s or invalid parameters", method)
 	}
 
 	return method, nil
@@ -34,5 +33,5 @@ func extractURL(req *muxer.Request) (*url.URL, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("URL %s is not valid", urlValue))
+	return nil, fmt.Errorf("URL %s is not valid", urlValue)
 }
