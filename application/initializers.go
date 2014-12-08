@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"github.com/jmoiron/jsonq"
+	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/storages"
 )
@@ -52,6 +53,8 @@ var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	_, err := jq.Object("kvstore")
 
 	if err != nil {
+		App.KVStore = &dummy.DummyKVStore{}
+
 		return nil
 	}
 
@@ -112,6 +115,9 @@ var StorageInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	_, err := jq.Object("storage")
 
 	if err != nil {
+		App.SourceStorage = &dummy.DummyStorage{}
+		App.DestStorage = &dummy.DummyStorage{}
+
 		return nil
 	}
 
