@@ -1,13 +1,13 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/storages"
 	"log"
-	"mime"
 	"strings"
 )
 
@@ -50,67 +50,23 @@ func (a *Application) Store(i *image.ImageFile) error {
 		return err
 	}
 
-	err = a.DestStorage.Save(i.Filename, content)
+	err = a.DestStorage.Save(i.Filepath, content)
 
 	if err != nil {
 		a.Logger.Error.Print(err)
 	} else {
-		a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filename)
+		a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
 
-		err = con.Set(i.Key, i.Filename)
+		err = con.Set(i.Key, i.Filepath)
 
 		if err != nil {
-			a.Logger.Info.Printf("Save key %s=%s to kvstore", i.Key, i.Filename)
+			a.Logger.Info.Printf("Save key %s=%s to kvstore", i.Key, i.Filepath)
 		} else {
 			a.Logger.Error.Print(err)
 		}
 	}
 
 	return err
-}
-
-func (a *Application) ImageFileFromStorage(filename string) (*image.ImageFile, error) {
-	var file *image.ImageFile
-	var err error
-
-	// URL provided we use http protocol to retrieve it
-	if a.SourceStorage.HasBaseURL() {
-		file, err = image.ImageFileFromURL(a.SourceStorage.URL(filename))
-
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		body, err := a.SourceStorage.Open(filename)
-
-		if err != nil {
-			return nil, err
-		}
-
-		modifiedTime, err := a.SourceStorage.ModifiedTime(filename)
-
-		if err != nil {
-			return nil, err
-		}
-
-		contentType := mime.TypeByExtension(filename)
-
-		headers := map[string]string{
-			"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
-			"Content-Type":  contentType,
-		}
-
-		file, err = image.ImageFileFromBytes(body, contentType, headers)
-
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	file.Filename = a.SourceStorage.Path(filename)
-
-	return file, err
 }
 
 func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) (*image.ImageFile, error) {
@@ -120,19 +76,30 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	// Image from the KVStore found
 	stored := req.Connection.Get(req.Key)
 
-	file.Filename = stored
+	file.Filepath = stored
 
 	if stored != "" {
-		file, err = a.ImageFileFromStorage(stored)
+		if load {
+			file, err = file.LoadFromStorage(a.DestStorage)
+
+			if err != nil {
+				return nil, err
+			}
+		}
 	} else {
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
 		if req.URL != nil {
-			file, err = image.ImageFileFromURL(req.URL.String())
-
+			file, err = image.ImageFileFromURL(req.URL)
 		} else {
 			// URL provided we use http protocol to retrieve it
-			file, err = a.ImageFileFromStorage(req.Filename)
+			file.Filepath = req.Filepath
+
+			file, err = file.LoadFromStorage(a.SourceStorage)
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		file, err = file.Transform(req.Method, req.QueryString)
@@ -141,7 +108,13 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		file.Filename = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), file.Format())
+		format := file.Format()
+
+		if format == "" {
+			format = DefaultFormat
+		}
+
+		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
 	}
 
 	file.Key = req.Key
@@ -155,4 +128,12 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	}
 
 	return file, err
+}
+
+func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
+	return json.Marshal(map[string]string{
+		"filename": file.GetFilename(),
+		"path":     a.DestStorage.Path(file.Filepath),
+		"url":      a.DestStorage.URL(file.Filepath),
+	})
 }

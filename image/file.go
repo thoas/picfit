@@ -4,18 +4,21 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/disintegration/imaging"
+	"github.com/thoas/storages"
 	"image"
 	"math"
 	"mime"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 type ImageFile struct {
-	Source      image.Image
-	ContentType string
-	Key         string
-	Header      map[string]string
-	Filename    string
+	Source   image.Image
+	Key      string
+	Header   map[string]string
+	Filepath string
+	Storage  storages.Storage
 }
 
 type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
@@ -73,11 +76,10 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile,
 		dest := i.Scale([]int{w, h}, upscale, method.Transformation)
 
 		file := &ImageFile{
-			Source:      dest,
-			ContentType: i.ContentType,
-			Key:         i.Key,
-			Header:      i.Header,
-			Filename:    i.Filename,
+			Source:   dest,
+			Key:      i.Key,
+			Header:   i.Header,
+			Filepath: i.Filepath,
 		}
 
 		return file, err
@@ -88,7 +90,7 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile,
 
 func (i *ImageFile) ToBytes() ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := imaging.Encode(buf, i.Source, Formats[i.ContentType])
+	err := imaging.Encode(buf, i.Source, Formats[i.GetContentType()])
 
 	if err != nil {
 		return nil, err
@@ -98,15 +100,66 @@ func (i *ImageFile) ToBytes() ([]byte, error) {
 }
 
 func (i *ImageFile) Format() string {
-	if i.ContentType != "" {
-		return Extensions[i.ContentType]
+	return Extensions[i.GetContentType()]
+}
+
+func (i *ImageFile) GetContentType() string {
+	return mime.TypeByExtension(i.GetFilename())
+}
+
+func (i *ImageFile) GetFilename() string {
+	return i.Filepath[strings.LastIndex(i.Filepath, "/")+1:]
+}
+
+func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error) {
+	var file *ImageFile
+	var err error
+
+	// URL provided we use http protocol to retrieve it
+	if storage.HasBaseURL() {
+		u, err := url.Parse(storage.URL(i.Filepath))
+
+		if err != nil {
+			return nil, err
+		}
+
+		file, err = ImageFileFromURL(u)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		body, err := storage.Open(i.Filepath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		modifiedTime, err := storage.ModifiedTime(i.Filepath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		contentType := i.GetContentType()
+
+		headers := map[string]string{
+			"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
+			"Content-Type":  contentType,
+		}
+
+		reader := bytes.NewReader(body)
+
+		dest, err := imaging.Decode(reader)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &ImageFile{Source: dest, Storage: storage, Header: headers, Filepath: i.Filepath}, nil
 	}
 
-	if i.Filename != "" {
-		return Extensions[mime.TypeByExtension(i.Filename)]
-	}
-
-	return ""
+	return file, err
 }
 
 func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {

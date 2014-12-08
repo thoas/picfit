@@ -57,10 +57,10 @@ func Run(path string) error {
 
 	App.Router = mux.NewRouter()
 	App.Router.NotFoundHandler = NotFoundHandler()
-	App.Router.Handle("/image/{filename}/method/{method}/display", ImageHandler)
+	App.Router.Handle("/image/{filepath}/method/{method}/display", ImageHandler)
 	App.Router.Handle("/image/method/{method}/display", ImageHandler)
-	//App.Router.Handle("/image/{filename}/method/{method}/get", GetHandler)
-	//App.Router.Handle("/image/method/{method}/get", GetHandler)
+	App.Router.Handle("/image/{filepath}/method/{method}/get", GetHandler)
+	App.Router.Handle("/image/method/{method}/get", GetHandler)
 
 	allowedOrigins, err := jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := jq.ArrayOfStrings("allowed_methods")

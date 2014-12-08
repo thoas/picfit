@@ -22,7 +22,7 @@ type Request struct {
 	Connection kvstores.KVStoreConnection
 	Key        string
 	URL        *url.URL
-	Filename   string
+	Filepath   string
 }
 
 type Handler func(muxer.Response, *Request)
@@ -44,14 +44,14 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	url, err := extractURL(request)
 
-	filename := request.Params["filename"]
+	filepath := request.Params["filepath"]
 
-	if err != nil && filename == "" {
+	if err != nil && filepath == "" {
 		res.BadRequest()
 		return
 	}
 
-	h(res, &Request{request, method, con, keyFromRequest(request), url, filename})
+	h(res, &Request{request, method, con, keyFromRequest(request), url, filepath})
 }
 
 var ImageHandler Handler = func(res muxer.Response, req *Request) {
@@ -63,13 +63,19 @@ var ImageHandler Handler = func(res muxer.Response, req *Request) {
 
 	panicIf(err)
 
-	res.ContentType(file.ContentType)
 	res.SetHeaders(file.Header, true)
 	res.ResponseWriter.Write(content)
 }
 
-//var GetHandler Handler = func(res muxer.Response, req *Request) {
-//file, err := App.ImageFileFromRequest(req, false, false)
+var GetHandler Handler = func(res muxer.Response, req *Request) {
+	file, err := App.ImageFileFromRequest(req, false, false)
 
-//panicIf(err)
-//}
+	panicIf(err)
+
+	content, err := App.ToJSON(file)
+
+	panicIf(err)
+
+	res.ContentType("application/json")
+	res.ResponseWriter.Write(content)
+}
