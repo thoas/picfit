@@ -1,7 +1,7 @@
 picfit
 ======
 
-picfit is a reusable Go server to manipulate (resizing, croping, etc.) images built
+picfit is a reusable Go server to manipulate (resizing, thumbnailing, etc.) images built
 on top of `negroni <https://github.com/codegangsta/negroni>`_ and `gorilla mux <https://github.com/gorilla/mux>`_.
 
 It will act as a proxy of your storage engine and will served ideally behind an http cache system like varnish_.
@@ -244,9 +244,15 @@ Using source storage
 --------------------
 
 If an image is stored in your source storage at the location ``path/to/file.png``, then you can call the service
-to load this file::
+to load this file
+
+::
 
     <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize"
+
+    or
+
+    <img src="http://localhost:3001/display/resize/100x100/path/to/file.png"
 
 
 Security
@@ -305,6 +311,18 @@ Deployment
 
 ...
 
+Roadmap
+=======
+
+- [ ] Add ``pidfile`` option to store PID
+- [ ] Add ``logfile`` option to log output
+- [ ] Add POST handler to upload a new image
+- [ ] Add Delete handler to delete an image on storage
+- [ ] Add ``crop`` new operation
+- [ ] Add ``flip`` new operation
+- [ ] Add LRU cache to speed up popular images
+- [ ] Add sharding of cache keys accross multiple database (see nydus_)
+
 
 Inspirations
 ============
@@ -313,7 +331,7 @@ Inspirations
 * `thumbor <https://github.com/thumbor/thumbor>`_
 * `trousseau <https://github.com/oleiade/trousseau>`_
 
-Thanks to them, beautiful projects.
+Thanks to these beautiful projects.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
