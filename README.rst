@@ -4,6 +4,8 @@ picfit
 picfit is a reusable Go server to manipulate (resizing, croping, etc.) images built
 on top of `negroni <https://github.com/codegangsta/negroni>`_ and `gorilla mux <https://github.com/gorilla/mux>`_.
 
+It will act as a proxy on top of your storage engine and served ideally behind an http cache system like varnish_.
+
 Installation
 ============
 
@@ -13,7 +15,11 @@ Build it
 1. Make sure you have a Go language compiler >= 1.3 (mandatory) and git installed.
 2. Make sure you have the following go system dependencies in your $PATH: bzr, svn, hg, git
 3. Ensure your GOPATH_ is properly set.
-4. Run ``make``
+4. Download picfit::
+
+    git clone https://github.com/thoas/picfit.git
+
+4. Run ``make build``
 
 You have now a binary version of picfit in the ``bin`` directly which fits perfectly with your architecture.
 
@@ -270,7 +276,7 @@ parameter to the query string; e.g.
 
 Note, the application does not include the leading question mark when verifying
 the supplied signature. To verify your signature implementation, see the
-``picfit.signature`` command described in the `Tools`_ section.
+``signature`` command described in the `Tools`_ section.
 
 Tools
 =====
@@ -299,3 +305,4 @@ Thanks to them, beautiful projects.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
+.. _varnish: https://www.varnish-cache.org/

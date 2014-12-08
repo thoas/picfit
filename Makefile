@@ -1,4 +1,7 @@
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
+
+BIN_DIR = $(ROOT_DIR)/bin
 
 test: unit
 
@@ -11,10 +14,11 @@ deps:
 all: picfit
 	@(mkdir -p $(BIN_DIR))
 
-picfit:
+build:
 	@(go get github.com/tools/godep)
 	@(echo "-> Compiling picfit binary")
-	@(godep go build) 
+	@(mkdir -p $(BIN_DIR))
+	@(godep go build -o $(BIN_DIR)/picfit)
 	@(echo "-> picfit binary created")
 
 format:
