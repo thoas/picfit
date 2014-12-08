@@ -46,14 +46,14 @@ func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *i
 	return imaging.Clone(i.Source)
 }
 
-func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile, error) {
+func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*ImageFile, error) {
 	_, ok := qs["upscale"]
 
 	if !ok {
 		qs["upscale"] = "1"
 	}
 
-	switch method {
+	switch operation {
 	case Resize, Thumbnail:
 		w, err := strconv.Atoi(qs["w"])
 
@@ -73,7 +73,7 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile,
 			return nil, err
 		}
 
-		dest := i.Scale([]int{w, h}, upscale, method.Transformation)
+		dest := i.Scale([]int{w, h}, upscale, operation.Transformation)
 
 		file := &ImageFile{
 			Source:   dest,
@@ -85,7 +85,7 @@ func (i *ImageFile) Transform(method *Method, qs map[string]string) (*ImageFile,
 		return file, err
 	}
 
-	return nil, fmt.Errorf("Method not found for %s", method)
+	return nil, fmt.Errorf("Operation not found for %s", operation)
 }
 
 func (i *ImageFile) ToBytes() ([]byte, error) {

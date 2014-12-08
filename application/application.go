@@ -103,7 +103,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		file, err = file.Transform(req.Method, req.QueryString)
+		file, err = file.Transform(req.Operation, req.QueryString)
 
 		if err != nil {
 			return nil, err

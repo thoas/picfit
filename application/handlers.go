@@ -4,6 +4,7 @@ import (
 	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/extractors"
+	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"net/http"
 	"net/url"
@@ -19,7 +20,7 @@ func NotFoundHandler() http.Handler {
 
 type Request struct {
 	*muxer.Request
-	Method     *image.Method
+	Operation  *image.Operation
 	Connection kvstores.KVStoreConnection
 	Key        string
 	URL        *url.URL
@@ -34,7 +35,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	request := muxer.NewRequest(req)
 
-	method, err := extractors.Method(request)
+	operation, err := extractors.Operation(request)
 
 	res := muxer.NewResponse(w)
 
@@ -45,14 +46,16 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	url, err := extractors.URL(request)
 
-	filepath := request.Params["filepath"]
+	filepath := request.QueryString["path"]
 
 	if err != nil && filepath == "" {
 		res.BadRequest()
 		return
 	}
 
-	h(res, &Request{request, method, con, keyFromRequest(request), url, filepath})
+	key := hash.Tokey(hash.Serialize(request.QueryString))
+
+	h(res, &Request{request, operation, con, key, url, filepath})
 }
 
 var ImageHandler Handler = func(res muxer.Response, req *Request) {

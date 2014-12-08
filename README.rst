@@ -176,6 +176,8 @@ Load images from file system and store them in Amazon S3, keys on Redis
       }
     }
 
+With this config, you can load and store your images from different storage backends.
+
 Running
 =======
 
@@ -194,24 +196,92 @@ To see a list of all available options, run::
 Usage
 =====
 
+Format
+------
+
+The format to call the service is ::
+
+    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
+
+- *path*: The filepath to load the image using your source storage
+- *operation*: The method to perform (``resize``, ``thumbnail``)
+- *sig*: The signature key which is the representation of your query string and your secret key
+- *method*: The operation to perform (``get``, ``display``)
+- *url*: The url of the image to be processed (not required if **filepath** provided)
+- *width*: The desired width of the image, if ``0`` is provided the service will calculate the ratio with **height**
+- *height*: The desired height of the image, if ``0`` is provided the service will calculate the ratio with **width**
+- *upscale*: If your image is smaller than your desired dimensions, the service will upscale by default to fit your dimensions, you can disable this behavior by providing ``0``.
+
 To use this service, include the service url as replacement for your images, for example:::
 
     <img src="https://www.google.fr/images/srpr/logo11w.png" />
 
 will become::
 
-    <img src="http://localhost:3001/image/method/resize/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100"
+    <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100&op=resize"
+
+This will request the image served at the supplied url and resize it to 100x100 using the **resize** method.
+
+Using source storage
+--------------------
+
+If an image is stored in your source storage at the location ``path/to/file.png``, then you can call the service
+to load this file::
+
+    <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize"
 
 
 Security
 ========
 
-...
+In order to secure requests so that unknown third parties cannot easily
+use the resize service, the application can require that requests
+provide a signature. To enable this feature, set the ``secret_key``
+option in your config file.
+
+The signature is a hexadecimal digest generated from the client
+key and the query string using the HMAC-SHA1 message authentication code
+(MAC) algorithm. The below python code provides an example
+implementation.
+
+::
+
+    import hashlib
+    import hmac
+    import json
+    import six
+
+    def sign(key, *args, **kwargs):
+        m = hmac.new(key, None, hashlib.sha1)
+
+        for arg in args:
+            if arg is None:
+                continue
+            elif isinstance(arg, dict):
+                m.update(json.dumps(arg))
+            elif isinstance(arg, six.string_types):
+                m.update(arg)
+
+        return m.hexdigest()
+
+The signature is passed to the application by appending the ``sig``
+parameter to the query string; e.g.
+``w=100&h=100&sig=c9516346abf62876b6345817dba2f9a0c797ef26``.
+
+Note, the application does not include the leading question mark when verifying
+the supplied signature. To verify your signature implementation, see the
+``picfit.signature`` command described in the `Tools`_ section.
 
 Tools
 =====
 
-...
+To verify that your client application is generating correct signatures, use the signature command.
+
+::
+    $ picfit signature --key=abcdef "w=100&h=100&op=resize"
+    Query String: w=100&h=100&op=resize
+    Signature: 6f7a667559990dee9c30fb459b88c23776fad25e
+    Signed Query String: w=100&h=100&op=resize&sig=6f7a667559990dee9c30fb459b88c23776fad2
 
 Deployment
 ==========
@@ -224,6 +294,8 @@ Inspirations
 * `pilbox <https://github.com/agschwender/pilbox>`_
 * `thumbor <https://github.com/thumbor/thumbor>`_
 * `trousseau <https://github.com/oleiade/trousseau>`_
+
+Thanks to them, beautiful projects.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
