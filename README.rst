@@ -17,6 +17,8 @@ Build it
 3. Ensure your GOPATH_ is properly set.
 4. Download it
 
+::
+
     git clone https://github.com/thoas/picfit.git
 
 4. Run ``make build``
@@ -294,6 +296,7 @@ Tools
 To verify that your client application is generating correct signatures, use the signature command.
 
 ::
+
     $ picfit signature --key=abcdef "w=100&h=100&op=resize"
     Query String: w=100&h=100&op=resize
     Signature: 6f7a667559990dee9c30fb459b88c23776fad25e
