@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/thoas/kvstores"
+	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/storages"
 	"log"
@@ -34,7 +35,7 @@ type Application struct {
 }
 
 func (a *Application) ShardFilename(filename string) string {
-	results := shard(filename, a.Shard.Width, a.Shard.Depth, true)
+	results := hash.Shard(filename, a.Shard.Width, a.Shard.Depth, true)
 
 	return strings.Join(results, "/")
 }

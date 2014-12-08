@@ -3,6 +3,7 @@ package application
 import (
 	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
+	"github.com/thoas/picfit/extractors"
 	"github.com/thoas/picfit/image"
 	"net/http"
 	"net/url"
@@ -33,7 +34,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	request := muxer.NewRequest(req)
 
-	method, err := extractMethod(request)
+	method, err := extractors.Method(request)
 
 	res := muxer.NewResponse(w)
 
@@ -42,7 +43,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	url, err := extractURL(request)
+	url, err := extractors.URL(request)
 
 	filepath := request.Params["filepath"]
 

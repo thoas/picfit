@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit/signature"
 	"os"
 )
 
@@ -45,12 +46,12 @@ func main() {
 
 				qs := c.Args()[0]
 
-				signature := application.Sign(key, qs)
+				sig := signature.Sign(key, qs)
 
-				appended := application.AppendSign(key, qs)
+				appended := signature.AppendSign(key, qs)
 
 				application.App.Logger.Info.Printf("Query String: %s", qs)
-				application.App.Logger.Info.Printf("Signature: %s", signature)
+				application.App.Logger.Info.Printf("Signature: %s", sig)
 				application.App.Logger.Info.Printf("Signed Query String: %s", appended)
 			},
 		},
