@@ -15,7 +15,7 @@ Build it
 1. Make sure you have a Go language compiler >= 1.3 (mandatory) and git installed.
 2. Make sure you have the following go system dependencies in your $PATH: bzr, svn, hg, git
 3. Ensure your GOPATH_ is properly set.
-4. Download picfit::
+4. Download it
 
     git clone https://github.com/thoas/picfit.git
 
@@ -31,7 +31,7 @@ We will provide Debian package when we will be completely stable ;)
 Configuration
 =============
 
-picfit only accepts configuration in JSON format, this configuration should be stored in a file.
+In JSON format, this configuration should be stored in a file and readable.
 
 Basic
 -----
@@ -77,7 +77,7 @@ a dedicated request one time.
     }
 
 Store images on Amazon S3, keys in Redis and shard filename
----------------------------------------------------------------
+-----------------------------------------------------------
 
 * key/value store provided by Redis
 * Amazon S3 storage
@@ -111,9 +111,9 @@ Store images on Amazon S3, keys in Redis and shard filename
       }
     }
 
-With this config, we will store keys on Redis_.
+Keys will be stored on Redis_, we highly suggest to setup persistence_.
 
-Images will be stored on Amazon S3 at the location ``/path/to/directory``.
+Image files will be stored on Amazon S3 at the location ``/path/to/directory``.
 
 ``[ACL]`` can be:
 
@@ -151,7 +151,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
 =======================================================================
 
 * key/value store provided by Redis
-* File system to load images
+* File system to load images already processed
 * Amazon S3 storage to process images
 
 .. code-block:: json
@@ -187,15 +187,21 @@ With this config, you can load and store your images from different storage back
 Running
 =======
 
-To run the application, issue the following command::
+To run the application, issue the following command:
+
+::
 
     $ picfit config.json
 
-By default, this will run the application on port 8888 and can be accessed by visiting:::
+By default, this will run the application on port 8888 and can be accessed by visiting:
+
+::
 
     http://localhost:3001
 
-To see a list of all available options, run::
+To see a list of all available options, run
+
+::
 
     $ picfit --help
 
@@ -209,22 +215,26 @@ The format to call the service is ::
 
     <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
 
-- *path*: The filepath to load the image using your source storage
-- *operation*: The method to perform (``resize``, ``thumbnail``)
-- *sig*: The signature key which is the representation of your query string and your secret key
-- *method*: The operation to perform (``get``, ``display``)
-- *url*: The url of the image to be processed (not required if **filepath** provided)
-- *width*: The desired width of the image, if ``0`` is provided the service will calculate the ratio with **height**
-- *height*: The desired height of the image, if ``0`` is provided the service will calculate the ratio with **width**
-- *upscale*: If your image is smaller than your desired dimensions, the service will upscale by default to fit your dimensions, you can disable this behavior by providing ``0``.
+- **path** The filepath to load the image using your source storage
+- **operation** The method to perform (``resize``, ``thumbnail``)
+- **sig** The signature key which is the representation of your query string and your secret key
+- **method** The operation to perform (``get``, ``display``)
+- **url** The url of the image to be processed (not required if ``filepath`` provided)
+- **width** The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
+- **height** The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
+- **upscale** If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
 
-To use this service, include the service url as replacement for your images, for example:::
+To use this service, include the service url as replacement for your images, for example:
+
+::
 
     <img src="https://www.google.fr/images/srpr/logo11w.png" />
 
-will become::
+will become
 
-    <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100&op=resize"
+::
+
+    <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=1000&h=100&op=resize&upscale=0"
 
 This will request the image served at the supplied url and resize it to 100x100 using the **resize** method.
 
@@ -306,3 +316,4 @@ Thanks to them, beautiful projects.
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
 .. _varnish: https://www.varnish-cache.org/
+.. _persistence: http://redis.io/topics/persistence
