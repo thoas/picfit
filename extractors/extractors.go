@@ -11,7 +11,7 @@ import (
 func Operation(req *muxer.Request) (*image.Operation, error) {
 	operation, ok := image.Operations[req.QueryString["op"]]
 
-	if !ok || !operation.HasEnoughParams(req.QueryString) {
+	if !ok {
 		return nil, fmt.Errorf("Invalid method %s or invalid parameters", operation)
 	}
 

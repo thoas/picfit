@@ -57,6 +57,20 @@ func Run(path string) error {
 
 	App.Router = mux.NewRouter()
 	App.Router.NotFoundHandler = NotFoundHandler()
+	App.Router.Handle("/display/{sig}/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", ImageHandler)
+	App.Router.Handle("/display/{sig}/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", ImageHandler)
+	App.Router.Handle("/display/{sig}/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", ImageHandler)
+	App.Router.Handle("/display/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", ImageHandler)
+	App.Router.Handle("/display/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", ImageHandler)
+	App.Router.Handle("/display/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", ImageHandler)
+
+	App.Router.Handle("/get/{sig}/op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", GetHandler)
+	App.Router.Handle("/get/{sig}/op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", GetHandler)
+	App.Router.Handle("/get/{sig}/op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", GetHandler)
+	App.Router.Handle("/get/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", GetHandler)
+	App.Router.Handle("/get/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", GetHandler)
+	App.Router.Handle("/get/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", GetHandler)
+
 	App.Router.Handle("/display", ImageHandler)
 	App.Router.Handle("/get", GetHandler)
 

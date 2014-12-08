@@ -55,16 +55,28 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 
 	switch operation {
 	case Resize, Thumbnail:
-		w, err := strconv.Atoi(qs["w"])
+		var w int
+		var h int
+		var err error
 
-		if err != nil {
-			return nil, err
+		if _, ok := qs["w"]; !ok {
+			w = 0
+		} else {
+			w, err = strconv.Atoi(qs["w"])
+
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		h, err := strconv.Atoi(qs["h"])
+		if _, ok := qs["h"]; !ok {
+			h = 0
+		} else {
+			h, err = strconv.Atoi(qs["h"])
 
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		upscale, err := strconv.ParseBool(qs["upscale"])

@@ -35,6 +35,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	request := muxer.NewRequest(req)
 
+	for k, v := range request.Params {
+		request.QueryString[k] = v
+	}
+
 	operation, err := extractors.Operation(request)
 
 	res := muxer.NewResponse(w)
