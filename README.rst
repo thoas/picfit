@@ -63,7 +63,9 @@ a dedicated request one time.
         "type": "fs",
         "location": "/path/to/directory/"
       },
-      "kvstore": "cache",
+      "kvstore": {
+        "type": "cache"
+      },
     }
 
 Store images on Amazon AWS S3, keys in Redis and shard filename
@@ -105,6 +107,7 @@ With the following config, we will store keys on Redis_ and store the image file
 on Amazon AWS S3 at the location ``/path/to/directory``.
 
 ``[ACL]`` can be:
+
 * private
 * public-read
 * public-read-write
@@ -113,6 +116,7 @@ on Amazon AWS S3 at the location ``/path/to/directory``.
 * bucket-owner-full-control
 
 ``[REGION_NAME]`` can be:
+
 * us-gov-west-1
 * us-east-1
 * us-west-1
