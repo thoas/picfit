@@ -103,8 +103,9 @@ Store images on Amazon AWS S3, keys in Redis and shard filename
       }
     }
 
-With the following config, we will store keys on Redis_ and store the image file
-on Amazon AWS S3 at the location ``/path/to/directory``.
+With the following config, we will store keys on Redis_.
+
+Images will be stored on Amazon AWS S3 at the location ``/path/to/directory``.
 
 ``[ACL]`` can be:
 
@@ -129,9 +130,14 @@ on Amazon AWS S3 at the location ``/path/to/directory``.
 * sa-east-1
 * cn-north-1
 
-Filename will be sharded in 2 directories (``depth``) with 1 letter for each (``width``):
+**Filename** will be sharded:
 
-``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``.
+* ``depth``: 2 directories
+* ``width``: 1 letter for each directory
+
+Example:
+
+``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
 
 Running
 =======
