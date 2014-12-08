@@ -9,6 +9,8 @@ import (
 	"regexp"
 )
 
+var signRegex, _ = regexp.Compile("&?sig=[^&]*")
+
 func Sign(key string, qs string) string {
 	mac := hmac.New(sha1.New, []byte(key))
 	mac.Write([]byte(qs))
@@ -28,9 +30,7 @@ func AppendSign(key string, qs string) string {
 }
 
 func VerifySign(key string, qs string) bool {
-	r, _ := regexp.Compile("&?sig=[^&]*")
-
-	unsignedQueryString := r.ReplaceAllString(qs, "")
+	unsignedQueryString := signRegex.ReplaceAllString(qs, "")
 
 	sign := Sign(key, unsignedQueryString)
 	values, _ := url.ParseQuery(qs)

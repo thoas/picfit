@@ -53,7 +53,18 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	key := hash.Tokey(hash.Serialize(request.QueryString))
+	qs := request.QueryString
+
+	delete(qs, "sig")
+
+	key := hash.Tokey(hash.Serialize(qs))
+
+	reqURL := *req.URL
+
+	if !App.IsValidSign(reqURL.RawQuery) {
+		res.BadRequest()
+		return
+	}
 
 	h(res, &Request{request, operation, con, key, url, filepath})
 }

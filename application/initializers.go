@@ -10,14 +10,14 @@ import (
 
 type Initializer func(jq *jsonq.JsonQuery) error
 
-var Initializers = map[string]Initializer{
-	"kvstore": KVStoreInitializer,
-	"storage": StorageInitializer,
-	"shard":   ShardInitializer,
-	"format":  FormatInitializer,
+var Initializers = []Initializer{
+	KVStoreInitializer,
+	StorageInitializer,
+	ShardInitializer,
+	BasicInitializer,
 }
 
-var FormatInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	format, _ := jq.String("format")
 
 	if format != "" {
@@ -27,6 +27,8 @@ var FormatInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		App.Format = DefaultFormat
 		App.ContentType = DefaultContentType
 	}
+
+	App.SecretKey, _ = jq.String("secret_key")
 
 	return nil
 }

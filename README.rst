@@ -4,7 +4,7 @@ picfit
 picfit is a reusable Go server to manipulate (resizing, croping, etc.) images built
 on top of `negroni <https://github.com/codegangsta/negroni>`_ and `gorilla mux <https://github.com/gorilla/mux>`_.
 
-It will act as a proxy on top of your storage engine and served ideally behind an http cache system like varnish_.
+It will act as a proxy of your storage engine and will served ideally behind an http cache system like varnish_.
 
 Installation
 ============
@@ -273,9 +273,7 @@ implementation.
         m = hmac.new(key, None, hashlib.sha1)
 
         for arg in args:
-            if arg is None:
-                continue
-            elif isinstance(arg, dict):
+            if isinstance(arg, dict):
                 m.update(json.dumps(arg))
             elif isinstance(arg, six.string_types):
                 m.update(arg)

@@ -7,6 +7,7 @@ import (
 	"github.com/thoas/kvstores"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/signature"
 	"github.com/thoas/storages"
 	"log"
 	"strings"
@@ -23,6 +24,7 @@ type Logger struct {
 }
 
 type Application struct {
+	SecretKey     string
 	Format        string
 	ContentType   string
 	BaseURL       string
@@ -137,4 +139,12 @@ func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
 		"path":     a.DestStorage.Path(file.Filepath),
 		"url":      a.DestStorage.URL(file.Filepath),
 	})
+}
+
+func (a *Application) IsValidSign(qs string) bool {
+	if a.SecretKey == "" {
+		return true
+	}
+
+	return signature.VerifySign(a.SecretKey, qs)
 }
