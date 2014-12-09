@@ -315,7 +315,19 @@ To verify that your client application is generating correct signatures, use the
 Deployment
 ==========
 
-...
+It's recommended that the application run behind a CDN for larger applications or behind varnish for smaller ones.
+
+If you want to run the installed version from vagrant ::
+
+    $ vagrant up
+
+Then connect to vagrant ::
+
+    $ vagrant ssh
+
+The config is located to ``/etc/picfit/config.json`` on the vagrant box.
+
+You will find provisioning_ files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`.
 
 Roadmap
 =======
@@ -336,3 +348,4 @@ Thanks to these beautiful projects.
 .. _Redis: http://redis.io/
 .. _varnish: https://www.varnish-cache.org/
 .. _persistence: http://redis.io/topics/persistence
+.. _Ansible: http://www.ansible.com/home

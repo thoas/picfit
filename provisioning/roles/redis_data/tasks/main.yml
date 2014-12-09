@@ -15,7 +15,7 @@
     src=etc/redis/data.conf.j2
     dest=/etc/redis/data.conf
 
-- name: Create redis data supervisor config
+- name: Create redis data init config
   tags:
     - prepare
     - redis
@@ -23,3 +23,6 @@
     - upstart
     - redis-config
   copy: src=etc/init/redis-data.conf dest=/etc/init/redis-data.conf
+
+- name: Ensure redis is started
+  service: name=redis-data state=started

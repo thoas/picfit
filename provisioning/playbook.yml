@@ -6,6 +6,7 @@
     - bootstrap
     - tools
     - redis
+    - redis_data
     - varnish
     - golang
     - picfit

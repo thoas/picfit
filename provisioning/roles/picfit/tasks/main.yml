@@ -56,3 +56,6 @@
   copy:
     src=etc/init/picfit.conf
     dest=/etc/init/picfit.conf
+
+- name: Ensure picfit is started
+  service: name=picfit state=started
