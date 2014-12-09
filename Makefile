@@ -16,6 +16,7 @@ all: picfit
 
 build:
 	@(go get github.com/tools/godep)
+	@(godep restore)
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
 	@(godep go build -o $(BIN_DIR)/picfit)
