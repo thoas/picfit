@@ -44,7 +44,7 @@
     - prepare
     - picfit
     - config
-  copy: >
+  copy:
     src=etc/picfit/config.json
     dest=/etc/picfit/config.json
 
@@ -53,6 +53,6 @@
     - prepare
     - picfit
     - init
-  copy: >
+  copy:
     src=etc/init/picfit.conf
     dest=/etc/init/picfit.conf
