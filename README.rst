@@ -63,6 +63,8 @@ An image is processed and uploaded asynchronously to the storage.
 An unique key is generated and stored in a in-memory key/value store to process
 a dedicated request one time.
 
+``config.json``
+
 .. code-block:: json
 
     {
@@ -84,6 +86,8 @@ Store images on Amazon S3, keys in Redis and shard filename
 * key/value store provided by Redis
 * Amazon S3 storage
 * shard filename
+
+``config.json``
 
 .. code-block:: json
 
@@ -155,6 +159,8 @@ Load images from file system and store them in Amazon S3, keys on Redis
 * key/value store provided by Redis
 * File system to load images already processed
 * Amazon S3 storage to process images
+
+``config.json``
 
 .. code-block:: json
 

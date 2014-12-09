@@ -3,13 +3,13 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/storages"
-	"log"
 	"strings"
 )
 
@@ -19,8 +19,8 @@ type Shard struct {
 }
 
 type Logger struct {
-	Info  *log.Logger
-	Error *log.Logger
+	Info  *logrus.Logger
+	Error *logrus.Logger
 }
 
 type Application struct {
@@ -34,6 +34,18 @@ type Application struct {
 	Router        *mux.Router
 	Shard         Shard
 	Logger        Logger
+}
+
+func NewApplication() *Application {
+	var ErrorLogger = logrus.New()
+	ErrorLogger.Level = logrus.ErrorLevel
+
+	return &Application{
+		Logger: Logger{
+			Info:  logrus.New(),
+			Error: ErrorLogger,
+		},
+	}
 }
 
 func (a *Application) ShardFilename(filename string) string {

@@ -10,20 +10,13 @@ import (
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
 )
 
-var App = &Application{
-	Logger: Logger{
-		Info:  log.New(os.Stdout, "", 0),
-		Error: log.New(os.Stderr, "Error: ", 0),
-	},
-}
+var App = NewApplication()
 
 var KVStores = map[string]KVStoreParameter{
 	"redis": RedisKVStoreParameter,
