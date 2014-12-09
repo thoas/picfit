@@ -89,7 +89,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	var err error
 
 	// Image from the KVStore found
-	stored := req.Connection.Get(req.Key)
+	stored, err := kvstores.String(req.Connection.Get(req.Key))
 
 	file.Filepath = stored
 

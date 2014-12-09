@@ -22,7 +22,11 @@ func (k *DummyKVStoreConnection) Close() error {
 	return nil
 }
 
-func (k *DummyKVStoreConnection) Get(key string) string {
+func (k *DummyKVStoreConnection) Flush() error {
+	return nil
+}
+
+func (k *DummyKVStoreConnection) Get(key string) interface{} {
 	return ""
 }
 
@@ -34,6 +38,6 @@ func (k *DummyKVStoreConnection) Exists(key string) bool {
 	return false
 }
 
-func (k *DummyKVStoreConnection) Set(key string, value string) error {
+func (k *DummyKVStoreConnection) Set(key string, value interface{}) error {
 	return nil
 }

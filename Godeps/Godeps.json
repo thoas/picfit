@@ -83,7 +83,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/kvstores",
-			"Rev": "2b7b9ddfea2a9a28b25eee792f7a5971b722db0a"
+			"Rev": "38f07aa280a01122555ee0ea3133b22cd16c0d36"
 		},
 		{
 			"ImportPath": "github.com/thoas/muxer",
@@ -91,7 +91,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/storages",
-			"Rev": "5e8e1fbdb230b816411b088fdd6400cfe3ab6d0a"
+			"Rev": "66d28ee7f96732538050054979747b40c7827fb1"
 		},
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",
