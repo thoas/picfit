@@ -24,6 +24,7 @@ type Logger struct {
 }
 
 type Application struct {
+	Prefix        string
 	SecretKey     string
 	Format        string
 	ContentType   string
@@ -72,7 +73,7 @@ func (a *Application) Store(i *image.ImageFile) error {
 	} else {
 		a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
 
-		err = con.Set(i.Key, i.Filepath)
+		err = con.Set(a.WithPrefix(i.Key), i.Filepath)
 
 		if err != nil {
 			a.Logger.Info.Printf("Save key %s=%s to kvstore", i.Key, i.Filepath)
@@ -84,12 +85,16 @@ func (a *Application) Store(i *image.ImageFile) error {
 	return err
 }
 
+func (a *Application) WithPrefix(str string) string {
+	return a.Prefix + str
+}
+
 func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) (*image.ImageFile, error) {
 	var file *image.ImageFile = &image.ImageFile{Key: req.Key, Storage: a.DestStorage}
 	var err error
 
 	// Image from the KVStore found
-	stored, err := kvstores.String(req.Connection.Get(req.Key))
+	stored, err := kvstores.String(req.Connection.Get(a.WithPrefix(req.Key)))
 
 	file.Filepath = stored
 

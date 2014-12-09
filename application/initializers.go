@@ -78,12 +78,14 @@ var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		return err
 	}
 
-	store, err := parameter(mapInterfaceToMapString(config))
+	params := mapInterfaceToMapString(config)
+	store, err := parameter(params)
 
 	if err != nil {
 		return err
 	}
 
+	App.Prefix = params["prefix"]
 	App.KVStore = store
 
 	return nil
