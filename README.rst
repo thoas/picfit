@@ -4,7 +4,7 @@ picfit
 picfit is a reusable Go server to manipulate (resizing, thumbnailing, etc.) images built
 on top of `negroni <https://github.com/codegangsta/negroni>`_ and `gorilla mux <https://github.com/gorilla/mux>`_.
 
-It will act as a proxy of your storage engine and will served ideally behind an http cache system like varnish_.
+It will act as a proxy of your storage engine and will be served ideally behind an http cache system like varnish_.
 
 Installation
 ============
@@ -23,7 +23,7 @@ Build it
 
 4. Run ``make build``
 
-You have now a binary version of picfit in the ``bin`` directly which fits perfectly with your architecture.
+You have now a binary version of picfit in the ``bin`` directory which fits perfectly with your architecture.
 
 Debian and Ubuntu
 -----------------
@@ -33,7 +33,7 @@ We will provide Debian package when we will be completely stable ;)
 Configuration
 =============
 
-In JSON format, this configuration should be stored in a file and readable.
+This configuration in JSON format should be stored in a file and readable.
 
 Basic
 -----
