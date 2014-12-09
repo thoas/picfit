@@ -98,14 +98,12 @@
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 		},
 		{
-			"ImportPath": "golang.org/x/image/bmp",
-			"Comment": "null-45",
-			"Rev": "ecb55bf6755d151e154a780019bab0a812b3a8da"
+			"ImportPath": "github.com/golang/image/bmp",
+			"Rev": "b0cc87690b1d9e05b7a6f2971199f71efba4194c"
 		},
 		{
-			"ImportPath": "golang.org/x/image/tiff",
-			"Comment": "null-45",
-			"Rev": "ecb55bf6755d151e154a780019bab0a812b3a8da"
+			"ImportPath": "github.com/golang/image/tiff",
+			"Rev": "b0cc87690b1d9e05b7a6f2971199f71efba4194c"
 		}
 	]
 }
