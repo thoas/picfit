@@ -334,6 +334,10 @@ Roadmap
 
 see `issues <https://github.com/thoas/picfit/issues>`_
 
+Used in production
+==================
+
+- Ulule_: an european crowdfunding platform
 
 Inspirations
 ============
@@ -349,3 +353,4 @@ Thanks to these beautiful projects.
 .. _varnish: https://www.varnish-cache.org/
 .. _persistence: http://redis.io/topics/persistence
 .. _Ansible: http://www.ansible.com/home
+.. _Ulule: http://www.ulule.com
