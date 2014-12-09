@@ -1,0 +1,25 @@
+- name: Create redis data subdirectory
+  tags:
+    - prepare
+    - redis
+    - redis-config
+  file: path=/var/cache/redis/data/ state=directory
+
+- name: Create redis data config
+  tags:
+    - prepare
+    - redis
+    - data
+    - redis-config
+  template: >
+    src=etc/redis/data.conf.j2
+    dest=/etc/redis/data.conf
+
+- name: Create redis data supervisor config
+  tags:
+    - prepare
+    - redis
+    - data
+    - upstart
+    - redis-config
+  copy: src=etc/init.d/redis-data.conf dest=/etc/init.d/redis-data.conf

@@ -1,0 +1,58 @@
+- name: Add group admin
+  group: name=admin state=present
+
+- name: Add user picfit
+  user: name=picfit group=admin
+
+- name: Installing from git repository
+  git: repo=https://github.com/thoas/picfit.git
+       dest={{ picfit_path }}
+  tags:
+    - prepare
+    - picfit
+
+- name: Building picfit
+  command: make build chdir={{ picfit_path }}
+  environment:
+    GOPATH: "{{ go_path }}"
+    PATH: "{{ go_path }}/bin:/usr/local/go/bin:{{ ansible_env.PATH }}"
+  tags:
+    - picfit
+    - build
+
+- name: Installing picfit binary
+  command: cp -pf {{ picfit_path }}/bin/picfit /usr/local/bin
+  tags:
+    - picfit
+    - install
+
+- name: Cleaning up
+  command: rm -rf /tmp/picfit
+  tags:
+    - picfit
+    - clean
+
+- name: Create picfit etc directory
+  tags:
+    - prepare
+    - picfit
+    - config
+  file: path=/etc/picfit/ state=directory
+
+- name: Create picfit config
+  tags:
+    - prepare
+    - picfit
+    - config
+  copy: >
+    src=etc/picfit/config.json
+    dest=/etc/picfit/config.json
+
+- name: Create picfit init
+  tags:
+    - prepare
+    - picfit
+    - init
+  copy: >
+    src=etc/init/picfit.conf
+    dest=/etc/init/picfit.conf

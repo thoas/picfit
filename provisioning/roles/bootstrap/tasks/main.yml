@@ -1,0 +1,4 @@
+- name: Update packages
+  apt: update_cache=yes
+- name: Upgrade server
+  apt: upgrade=full

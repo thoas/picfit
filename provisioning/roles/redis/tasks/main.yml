@@ -1,0 +1,76 @@
+---
+- name: Register the current Redis version (if any)
+  command: /usr/local/bin/redis-cli --version
+  ignore_errors: yes
+  register: actual_redis_version
+
+- name: Download latest stable redis
+  get_url: url=http://download.redis.io/releases/redis-{{ redis_version }}.tar.gz
+           dest=/tmp/redis-{{ redis_version }}.tar.gz
+  tags:
+    - prepare
+    - redis
+  when: actual_redis_version|failed or actual_redis_version.stdout != redis_version_target
+
+- name: Untar redis
+  command: tar zxf /tmp/redis-{{ redis_version }}.tar.gz -C /tmp
+  tags:
+    - prepare
+    - redis
+  when: actual_redis_version|failed or actual_redis_version.stdout != redis_version_target
+
+- name: Build redis
+  command: make -C /tmp/redis-{{ redis_version }}
+  tags:
+    - prepare
+    - redis
+  when: actual_redis_version|failed or actual_redis_version.stdout != redis_version_target
+
+- name: Installing redis binaries
+  command: cp -pf /tmp/redis-{{ redis_version }}/src/{{ item }} /usr/local/bin
+  with_items:
+    - redis-server
+    - redis-cli
+    - redis-check-aof
+    - redis-check-dump
+  tags:
+    - prepare
+    - redis
+  when: actual_redis_version|failed or actual_redis_version.stdout != redis_version_target
+
+- name: cleaning up build files
+  command: rm -rf /tmp/{{ item }}
+  with_items:
+    - redis-{{ redis_version }}
+    - redis-{{ redis_version }}.tar.gz
+  tags:
+    - prepare
+    - redis
+
+- name: Create redis log directory
+  tags:
+    - prepare
+    - redis
+    - redis-config
+  file: path=/var/log/redis/ state=directory
+
+- name: Create redis etc directory
+  tags:
+    - prepare
+    - redis
+    - redis-config
+  file: path=/etc/redis/ state=directory
+
+- name: Create redis run directory
+  tags:
+    - prepare
+    - redis
+    - redis-config
+  file: path=/var/run/redis/ state=directory
+
+- name: Create redis cache directory
+  tags:
+    - prepare
+    - redis
+    - redis-config
+  file: path=/var/cache/redis/ state=directory

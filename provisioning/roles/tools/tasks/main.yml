@@ -1,0 +1,19 @@
+- name: Add tools packages
+  apt: pkg={{ item }} state=latest force=yes
+  with_items:
+    - build-essential
+    - libtool
+    - pkg-config
+    - make
+    - gcc
+    - cpp
+    - autoconf
+    - autotools-dev
+    - git-core
+    - subversion
+    - mercurial
+    - vim
+    - ack
+    - htop
+    - iotop
+    - tree

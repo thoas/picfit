@@ -1,0 +1,11 @@
+- hosts: vagrant
+  user: vagrant
+  sudo: True
+
+  roles:
+    - bootstrap
+    - tools
+    - redis
+    - varnish
+    - golang
+    - picfit

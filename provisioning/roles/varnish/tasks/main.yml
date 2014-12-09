@@ -1,0 +1,61 @@
+---
+
+# Targeting specific OSes or distributions:
+#
+#   - `ansible_system`               → Linux, BSD, ...
+#   - `ansible_os_family`            → Debian, RedHat, ...
+#   - `ansible_distribution`         → Debian, Ubuntu, RedHat, ...
+#   - `ansible_distribution_release` → precise, wheezy, ...
+#   - `ansible_pkg_mgr`              → apt, yum, ...
+
+- name: Add official APT repository
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  register: _repo
+  apt_repository:
+    repo: "deb http://repo.varnish-cache.org/{{ansible_distribution|lower()}}/ {{ansible_distribution_release}} varnish-{{varnish_version}}"
+  tags:
+    - repo
+    - varnish
+    - http-cache
+
+- name: Retrieve repo signing key
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  register: _repo_key
+  apt_key:
+    url: "http://repo.varnish-cache.org/{{ansible_distribution|lower()}}/GPG-key.txt"
+  tags:
+    - repo
+    - varnish
+    - http-cache
+
+- name: Update repository caches
+  when: ansible_os_family == 'Debian' and (_repo_key.changed or _repo.changed)
+  sudo: yes
+  apt: update_cache=yes
+  tags:
+    - repo
+    - varnish
+    - http-cache
+
+- name: Install Varnish
+  when: ansible_os_family == 'Debian'
+  sudo: yes
+  apt: name=varnish state=present
+  tags:
+    - deps
+    - varnish
+    - http-cache
+
+- name: Create varnish default.vcl
+  tags:
+    - config
+    - varnish
+  copy: src=etc/varnish/default.vcl dest=/etc/varnish/default.vcl
+
+- name: Create varnish default
+  tags:
+    - config
+    - varnish
+  copy: src=etc/default/varnish dest=/etc/default/varnish
