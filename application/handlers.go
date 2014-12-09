@@ -98,3 +98,11 @@ var GetHandler Handler = func(res muxer.Response, req *Request) {
 	res.ContentType("application/json")
 	res.ResponseWriter.Write(content)
 }
+
+var RedirectHandler Handler = func(res muxer.Response, req *Request) {
+	file, err := App.ImageFileFromRequest(req, false, false)
+
+	panicIf(err)
+
+	res.PermanentRedirect(file.GetURL())
+}

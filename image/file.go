@@ -110,6 +110,14 @@ func (i *ImageFile) ToBytes() ([]byte, error) {
 	return i.ToBytesWithFormat(format)
 }
 
+func (i *ImageFile) GetURL() string {
+	return i.Storage.URL(i.Filepath)
+}
+
+func (i *ImageFile) GetPath() string {
+	return i.Storage.Path(i.Filepath)
+}
+
 func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
 	buf := &bytes.Buffer{}
 

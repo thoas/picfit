@@ -85,7 +85,7 @@ func (a *Application) Store(i *image.ImageFile) error {
 }
 
 func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) (*image.ImageFile, error) {
-	var file *image.ImageFile = &image.ImageFile{Key: req.Key}
+	var file *image.ImageFile = &image.ImageFile{Key: req.Key, Storage: a.DestStorage}
 	var err error
 
 	// Image from the KVStore found
@@ -148,8 +148,8 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
 	return json.Marshal(map[string]string{
 		"filename": file.GetFilename(),
-		"path":     a.DestStorage.Path(file.Filepath),
-		"url":      a.DestStorage.URL(file.Filepath),
+		"path":     file.GetPath(),
+		"url":      file.GetURL(),
 	})
 }
 
