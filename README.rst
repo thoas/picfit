@@ -327,7 +327,7 @@ Then connect to vagrant ::
 
 The config is located to ``/etc/picfit/config.json`` on the vagrant box.
 
-You will find provisioning_ files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`.
+You will find provisioning_ files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
 
 Roadmap
 =======
