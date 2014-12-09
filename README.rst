@@ -320,14 +320,7 @@ Deployment
 Roadmap
 =======
 
-- [ ] Add ``pidfile`` option to store PID
-- [ ] Add ``logfile`` option to log output
-- [ ] Add POST handler to upload a new image
-- [ ] Add Delete handler to delete an image on storage
-- [ ] Add ``crop`` new operation
-- [ ] Add ``flip`` new operation
-- [ ] Add LRU cache to speed up popular images
-- [ ] Add sharding of cache keys accross multiple database (see nydus_)
+see `issues <https://github.com/thoas/picfit/issues>`_
 
 
 Inspirations
