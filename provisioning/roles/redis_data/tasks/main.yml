@@ -22,4 +22,4 @@
     - data
     - upstart
     - redis-config
-  copy: src=etc/init.d/redis-data.conf dest=/etc/init.d/redis-data.conf
+  copy: src=etc/init/redis-data.conf dest=/etc/init/redis-data.conf
