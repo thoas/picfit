@@ -64,7 +64,8 @@ Store images on file system and keys in an in-memory cache
 * key/value in-memory store
 * file system storage
 
-An image is processed and uploaded asynchronously to the storage.
+An image is processed from your source storage (``src``) and uploaded
+asynchronously to this storage.
 
 An unique key is generated and stored in a in-memory key/value store to process
 a dedicated request one time.
@@ -123,9 +124,9 @@ Store images on Amazon S3, keys in Redis and shard filename
       }
     }
 
-Keys will be stored on Redis_, we highly suggest to setup persistence_.
+Keys will be stored on Redis_, we highly suggest you to setup persistence_.
 
-Image files will be stored on Amazon S3 at the location ``path/to/directory``
+Image files will be loaded/stored on Amazon S3 at the location ``path/to/directory``
 in the bucket ``[BUCKET_NAME]``.
 
 ``[ACL]`` can be:
@@ -202,6 +203,9 @@ Load images from file system and store them in Amazon S3, keys on Redis
 With this config, you can load and store your images
 from different storage backends.
 
+Images will be loaded from the file system storage and processed to
+the Amazon S3 storage.
+
 Running
 =======
 
@@ -234,14 +238,14 @@ Parameters to call the service are ::
 
     <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
 
-- **path** The filepath to load the image using your source storage
-- **operation** The operation to perform, see Operations_
-- **sig** The signature key which is the representation of your query string and your secret key
-- **method** The method to perform, see Methods_
-- **url** The url of the image to be processed (not required if ``filepath`` provided)
-- **width** The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
-- **height** The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
-- **upscale** If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
+- **path** - The filepath to load the image using your source storage
+- **operation** - The operation to perform, see Operations_
+- **sig** - The signature key which is the representation of your query string and your secret key
+- **method** - The method to perform, see Methods_
+- **url** - The url of the image to be processed (not required if ``filepath`` provided)
+- **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
+- **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
+- **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
 
 To use this service, include the service url as replacement
 for your images, for example:
@@ -283,8 +287,8 @@ Resize resizes the image to the specified width and height and
 returns the transformed image.
 If one of width or height is 0, the image aspect ratio is preserved.
 
--  **w** The desired width of the image
--  **h** The desired height of the image
+-  **w** - The desired width of the image
+-  **h** - The desired height of the image
 
 You have to pass the ``resize`` value to the ``op`` parameter to use this operation.
 
@@ -295,8 +299,8 @@ Thumbnail
 Thumbnail scales the image up or down using the specified resample filter,
 crops it to the specified width and hight and returns the transformed image.
 
--  **w** The desired width of the image
--  **h** The desired height of the image
+-  **w** - The desired width of the image
+-  **h** - The desired height of the image
 
 You have to pass the ``thumbnail`` value to the ``op`` parameter
 to use this operation.
@@ -335,9 +339,9 @@ Retrieve information about the image.
 
 Your file will be processed synchronously then you will get these information:
 
-* **filename** Filename of your processed file
-* **path** Relative path of your processed file
-* **url** Complete absolute url of your processed file (only if ``base_url`` is available on your destination storage)
+* **filename** - Filename of your processed file
+* **path** - Relative path of your processed file
+* **url** - Absolute url of your processed file (only if ``base_url`` is available on your destination storage)
 
 The first query will be slower but next ones will be faster as the name
 of the processed file will be stored on your key/value store.
