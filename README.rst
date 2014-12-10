@@ -20,7 +20,7 @@ Build it
 1. Make sure you have a Go language compiler >= 1.3 (required) and git installed.
 2. Make sure you have the following go system dependencies in your $PATH: bzr, svn, hg, git
 3. Ensure your GOPATH_ is properly set.
-4. Download it
+4. Download it:
 
 ::
 
@@ -48,8 +48,6 @@ Basic
 * no image storage
 * images are given in absolute url
 
-Images are processed on the fly at each requests
-
 ``config.json``
 
 .. code-block:: json
@@ -57,6 +55,8 @@ Images are processed on the fly at each requests
     {
       "port": 3001,
     }
+
+Images are processed on the fly at each requests
 
 Store images on file system and keys in an in-memory cache
 ----------------------------------------------------------
@@ -221,7 +221,7 @@ can be accessed by visiting:
 
     http://localhost:3001
 
-To see a list of all available options, run
+To see a list of all available options, run:
 
 ::
 
@@ -253,7 +253,7 @@ for your images, for example:
 
     <img src="https://www.google.fr/images/srpr/logo11w.png" />
 
-will become
+will become:
 
 ::
 
@@ -266,7 +266,7 @@ Using source storage
 --------------------
 
 If an image is stored in your source storage at the
-location ``path/to/file.png``, then you can call the service to load this file
+location ``path/to/file.png``, then you can call the service to load this file:
 
 ::
 
@@ -343,7 +343,7 @@ Your file will be processed synchronously then you will get these information:
 The first query will be slower but next ones will be faster because the name
 of the processed file will be stored on your key/value store.
 
-Expect the following result
+Expect the following result:
 
 .. code-block:: json
 
