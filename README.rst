@@ -1,10 +1,15 @@
 picfit
 ======
 
-picfit is a reusable Go server to manipulate (resizing, thumbnailing, etc.) images built
-on top of `negroni <https://github.com/codegangsta/negroni>`_ and `gorilla mux <https://github.com/gorilla/mux>`_.
+picfit is a reusable Go server to manipulate (resizing, thumbnailing, etc.)
+images built on top of `negroni <https://github.com/codegangsta/negroni>`_
+and `gorilla mux <https://github.com/gorilla/mux>`_.
 
-It will act as a proxy of your storage engine and will be served ideally behind an http cache system like varnish_.
+It will act as a proxy of your storage engine and will be
+served ideally behind an http cache system like varnish_.
+
+picfit supports mutiple `storages <https://github.com/thoas/storages>`_ backends
+and multiple `key/value stores <https://github.com/thoas/kvstores>`_.
 
 Installation
 ============
@@ -23,7 +28,8 @@ Build it
 
 4. Run ``make build``
 
-You have now a binary version of picfit in the ``bin`` directory which fits perfectly with your architecture.
+You have now a binary version of picfit in the ``bin`` directory which
+fits perfectly with your architecture.
 
 Debian and Ubuntu
 -----------------
@@ -154,7 +160,7 @@ Example:
 ``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
 
 Load images from file system and store them in Amazon S3, keys on Redis
-=======================================================================
+-----------------------------------------------------------------------
 
 * key/value store provided by Redis
 * File system to load images already processed
@@ -190,7 +196,8 @@ Load images from file system and store them in Amazon S3, keys on Redis
       }
     }
 
-With this config, you can load and store your images from different storage backends.
+With this config, you can load and store your images
+from different storage backends.
 
 Running
 =======
@@ -201,7 +208,8 @@ To run the application, issue the following command:
 
     $ picfit config.json
 
-By default, this will run the application on port 8888 and can be accessed by visiting:
+By default, this will run the application on port 8888 and
+can be accessed by visiting:
 
 ::
 
@@ -232,7 +240,8 @@ Parameters to call the service are ::
 - **height** The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
 
-To use this service, include the service url as replacement for your images, for example:
+To use this service, include the service url as replacement
+for your images, for example:
 
 ::
 
@@ -244,13 +253,14 @@ will become
 
     <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=1000&h=100&op=resize&upscale=0"
 
-This will request the image served at the supplied url and resize it to 100x100 using the **resize** method.
+This will request the image served at the supplied url and resize it
+to 100x100 using the **resize** method.
 
 Using source storage
 --------------------
 
-If an image is stored in your source storage at the location ``path/to/file.png``, then you can call the service
-to load this file
+If an image is stored in your source storage at the
+location ``path/to/file.png``, then you can call the service to load this file
 
 ::
 
@@ -266,7 +276,8 @@ Operations
 Resize
 ------
 
-Resize resizes the image to the specified width and height and returns the transformed image.
+Resize resizes the image to the specified width and height and
+returns the transformed image.
 If one of width or height is 0, the image aspect ratio is preserved.
 
 -  **w**: The desired width of the image
@@ -278,13 +289,14 @@ Thumbnail
 ---------
 
 
-Thumbnail scales the image up or down using the specified resample filter, crops it
-to the specified width and hight and returns the transformed image.
+Thumbnail scales the image up or down using the specified resample filter,
+crops it to the specified width and hight and returns the transformed image.
 
 -  **w**: The desired width of the image
 -  **h**: The desired height of the image
 
-You have to pass the ``thumbnail`` value to the ``op`` parameter to use this operation.
+You have to pass the ``thumbnail`` value to the ``op`` parameter
+to use this operation.
 
 Security
 ========
@@ -328,7 +340,8 @@ the supplied signature. To verify your signature implementation, see the
 Tools
 =====
 
-To verify that your client application is generating correct signatures, use the signature command.
+To verify that your client application is generating correct signatures,
+use the signature command.
 
 ::
 
@@ -340,7 +353,8 @@ To verify that your client application is generating correct signatures, use the
 Deployment
 ==========
 
-It's recommended that the application run behind a CDN for larger applications or behind varnish for smaller ones.
+It's recommended that the application run behind a CDN for larger applications
+or behind varnish for smaller ones.
 
 If you want to run the installed version from vagrant ::
 
@@ -352,7 +366,8 @@ Then connect to vagrant ::
 
 The config is located to ``/etc/picfit/config.json`` on the vagrant box.
 
-You will find provisioning files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
+You will find provisioning files handled by Ansible_ in
+the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
 
 Roadmap
 =======
