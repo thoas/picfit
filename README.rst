@@ -216,15 +216,15 @@ To see a list of all available options, run
 Usage
 =====
 
-Format
-------
+General parameters
+------------------
 
-The format to call the service is ::
+Parameters to call the service are ::
 
     <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
 
 - **path** The filepath to load the image using your source storage
-- **operation** The method to perform (``resize``, ``thumbnail``)
+- **operation** The operation to perform, see Operations_
 - **sig** The signature key which is the representation of your query string and your secret key
 - **method** The operation to perform (``get``, ``display``)
 - **url** The url of the image to be processed (not required if ``filepath`` provided)
@@ -260,6 +260,31 @@ to load this file
 
     <img src="http://localhost:3001/display/resize/100x100/path/to/file.png"
 
+Operations
+==========
+
+Resize
+------
+
+Resize resizes the image to the specified width and height and returns the transformed image.
+If one of width or height is 0, the image aspect ratio is preserved.
+
+-  **w**: The desired width of the image
+-  **h**: The desired height of the image
+
+You have to pass the ``resize`` value to the ``op`` parameter to use this operation.
+
+Thumbnail
+---------
+
+
+Thumbnail scales the image up or down using the specified resample filter, crops it
+to the specified width and hight and returns the transformed image.
+
+-  **w**: The desired width of the image
+-  **h**: The desired height of the image
+
+You have to pass the ``thumbnail`` value to the ``op`` parameter to use this operation.
 
 Security
 ========
