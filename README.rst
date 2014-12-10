@@ -327,15 +327,15 @@ Then connect to vagrant ::
 
 The config is located to ``/etc/picfit/config.json`` on the vagrant box.
 
-You will find provisioning_ files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
+You will find provisioning files handled by Ansible_ in the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
 
 Roadmap
 =======
 
 see `issues <https://github.com/thoas/picfit/issues>`_
 
-Used in production
-==================
+In production
+=============
 
 - Ulule_: an european crowdfunding platform
 
