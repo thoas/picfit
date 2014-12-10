@@ -6,9 +6,9 @@ images built on top of `negroni <https://github.com/codegangsta/negroni>`_
 and `gorilla mux <https://github.com/gorilla/mux>`_.
 
 It will act as a proxy of your storage engine and will be
-erved ideally behind an http cache system like varnish_.
+served ideally behind an http cache system like varnish_.
 
-picfit supports mutiple `storages backends <https://github.com/thoas/storages>`_
+It supports mutiple `storages backends <https://github.com/thoas/storages>`_
 and multiple `key/value stores <https://github.com/thoas/kvstores>`_.
 
 Installation
@@ -39,7 +39,7 @@ We will provide Debian package when we will be completely stable ;)
 Configuration
 =============
 
-Configuration in JSON format should be stored in a file and readable.
+Configuration should be stored in a readable file and in JSON format.
 
 Basic
 -----
@@ -161,7 +161,7 @@ Example:
 
 ``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
 
-This can be really useful when using the file system storage backend.
+It would be useful if you are using the file system storage backend.
 
 Load images from file system and store them in Amazon S3, keys on Redis
 -----------------------------------------------------------------------
@@ -200,11 +200,10 @@ Load images from file system and store them in Amazon S3, keys on Redis
       }
     }
 
-With this config, you can load and store your images
-from different storage backends.
+You will be able to load and store your images from different storage backends.
 
-Images will be loaded from the file system storage and processed to
-the Amazon S3 storage.
+Int this example, images will be loaded from the file system storage
+and processed to the Amazon S3 storage.
 
 Running
 =======
@@ -295,7 +294,6 @@ You have to pass the ``resize`` value to the ``op`` parameter to use this operat
 Thumbnail
 ---------
 
-
 Thumbnail scales the image up or down using the specified resample filter,
 crops it to the specified width and hight and returns the transformed image.
 
@@ -311,8 +309,7 @@ Methods
 Display
 -------
 
-Display the image processed by picfit, useful when you
-are using an ``img`` tag.
+Display the image, useful when you are using an ``img`` tag.
 
 The image processed itself will be stored asynchronously on your
 favorite storage backend.
@@ -324,12 +321,12 @@ to allow you to use an http cache system.
 Redirect
 --------
 
-Redirect to the image.
+Redirect to an image.
 
 Your file will be processed synchronously then the redirection
 will be performed.
 
-The first query will be slower but next ones will be faster as the name
+The first query will be slower but next ones will be faster because the name
 of the processed file will be stored on your key/value store.
 
 Get
@@ -343,7 +340,7 @@ Your file will be processed synchronously then you will get these information:
 * **path** - Relative path of your processed file
 * **url** - Absolute url of your processed file (only if ``base_url`` is available on your destination storage)
 
-The first query will be slower but next ones will be faster as the name
+The first query will be slower but next ones will be faster because the name
 of the processed file will be stored on your key/value store.
 
 Expect the following result
