@@ -6,9 +6,9 @@ images built on top of `negroni <https://github.com/codegangsta/negroni>`_
 and `gorilla mux <https://github.com/gorilla/mux>`_.
 
 It will act as a proxy of your storage engine and will be
-served ideally behind an http cache system like varnish_.
+erved ideally behind an http cache system like varnish_.
 
-picfit supports mutiple `storages <https://github.com/thoas/storages>`_ backends
+picfit supports mutiple `storages backends <https://github.com/thoas/storages>`_
 and multiple `key/value stores <https://github.com/thoas/kvstores>`_.
 
 Installation
@@ -17,7 +17,7 @@ Installation
 Build it
 --------
 
-1. Make sure you have a Go language compiler >= 1.3 (mandatory) and git installed.
+1. Make sure you have a Go language compiler >= 1.3 (required) and git installed.
 2. Make sure you have the following go system dependencies in your $PATH: bzr, svn, hg, git
 3. Ensure your GOPATH_ is properly set.
 4. Download it
@@ -39,7 +39,7 @@ We will provide Debian package when we will be completely stable ;)
 Configuration
 =============
 
-This configuration in JSON format should be stored in a file and readable.
+Configuration in JSON format should be stored in a file and readable.
 
 Basic
 -----
@@ -125,7 +125,8 @@ Store images on Amazon S3, keys in Redis and shard filename
 
 Keys will be stored on Redis_, we highly suggest to setup persistence_.
 
-Image files will be stored on Amazon S3 at the location ``/path/to/directory``.
+Image files will be stored on Amazon S3 at the location ``path/to/directory``
+in the bucket ``[BUCKET_NAME]``.
 
 ``[ACL]`` can be:
 
@@ -158,6 +159,8 @@ Image files will be stored on Amazon S3 at the location ``/path/to/directory``.
 Example:
 
 ``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
+
+This can be really useful when using the file system storage backend.
 
 Load images from file system and store them in Amazon S3, keys on Redis
 -----------------------------------------------------------------------
@@ -206,9 +209,9 @@ To run the application, issue the following command:
 
 ::
 
-    $ picfit config.json
+    $ picfit -c config.json
 
-By default, this will run the application on port 8888 and
+By default, this will run the application on port 3001 and
 can be accessed by visiting:
 
 ::
@@ -234,7 +237,7 @@ Parameters to call the service are ::
 - **path** The filepath to load the image using your source storage
 - **operation** The operation to perform, see Operations_
 - **sig** The signature key which is the representation of your query string and your secret key
-- **method** The operation to perform (``get``, ``display``)
+- **method** The method to perform, see Methods_
 - **url** The url of the image to be processed (not required if ``filepath`` provided)
 - **width** The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
@@ -280,8 +283,8 @@ Resize resizes the image to the specified width and height and
 returns the transformed image.
 If one of width or height is 0, the image aspect ratio is preserved.
 
--  **w**: The desired width of the image
--  **h**: The desired height of the image
+-  **w** The desired width of the image
+-  **h** The desired height of the image
 
 You have to pass the ``resize`` value to the ``op`` parameter to use this operation.
 
@@ -292,11 +295,62 @@ Thumbnail
 Thumbnail scales the image up or down using the specified resample filter,
 crops it to the specified width and hight and returns the transformed image.
 
--  **w**: The desired width of the image
--  **h**: The desired height of the image
+-  **w** The desired width of the image
+-  **h** The desired height of the image
 
 You have to pass the ``thumbnail`` value to the ``op`` parameter
 to use this operation.
+
+Methods
+=======
+
+Display
+-------
+
+Display the image processed by picfit, useful when you
+are using an ``img`` tag.
+
+The image processed itself will be stored asynchronously on your
+favorite storage backend.
+
+A couple of headers (``Content-Type``, ``If-Modified-Since``) will be set
+to allow you to use an http cache system.
+
+
+Redirect
+--------
+
+Redirect to the image.
+
+Your file will be processed synchronously then the redirection
+will be performed.
+
+The first query will be slower but next ones will be faster as the name
+of the processed file will be stored on your key/value store.
+
+Get
+---
+
+Retrieve information about the image.
+
+Your file will be processed synchronously then you will get these information:
+
+* **filename** Filename of your processed file
+* **path** Relative path of your processed file
+* **url** Complete absolute url of your processed file (only if ``base_url`` is available on your destination storage)
+
+The first query will be slower but next ones will be faster as the name
+of the processed file will be stored on your key/value store.
+
+Expect the following result
+
+.. code-block:: json
+
+    {
+        "filename":"a661f8d197a42d21d0190d33e629e4.png",
+        "path":"processed/6/7/a661f8d197a42d21d0190d33e629e4.png",
+        "url":"https://ds9xhxfkunhky.cloudfront.net/processed/6/7/a661f8d197a42d21d0190d33e629e4.png"
+    }
 
 Security
 ========
@@ -382,7 +436,7 @@ In production
 Inspirations
 ============
 
-* `pilbox <https://github.com/agschwender/pilbox>`_
+* pilbox_
 * `thumbor <https://github.com/thumbor/thumbor>`_
 * `trousseau <https://github.com/oleiade/trousseau>`_
 
@@ -390,6 +444,7 @@ Thanks to these beautiful projects.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
+.. _pilbox: https://github.com/agschwender/pilbox
 .. _varnish: https://www.varnish-cache.org/
 .. _persistence: http://redis.io/topics/persistence
 .. _Ansible: http://www.ansible.com/home
