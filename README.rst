@@ -233,7 +233,9 @@ Usage
 General parameters
 ------------------
 
-Parameters to call the service are ::
+Parameters to call the service are:
+
+::
 
     <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
 
