@@ -2,6 +2,7 @@ package application
 
 import (
 	"fmt"
+	"github.com/getsentry/raven-go"
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/image"
@@ -15,6 +16,25 @@ var Initializers = []Initializer{
 	StorageInitializer,
 	ShardInitializer,
 	BasicInitializer,
+	SentryInitializer,
+}
+
+var SentryInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+	dsn, err := jq.String("sentry_dsn")
+
+	if err != nil {
+		return nil
+	}
+
+	client, err := raven.NewClient(dsn, map[string]string{})
+
+	if err != nil {
+		return err
+	}
+
+	App.Raven = client
+
+	return nil
 }
 
 var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {

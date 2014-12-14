@@ -6,8 +6,6 @@ import (
 
 func panicIf(err error) {
 	if err != nil {
-		App.Logger.Error.Print(err)
-
 		panic(err)
 	}
 }

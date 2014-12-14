@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/jsonq"
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
+	"github.com/thoas/picfit/middleware"
 	"io/ioutil"
 	"net/http"
 	"runtime"
@@ -78,7 +79,13 @@ func Run(path string) error {
 	allowedOrigins, err := jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := jq.ArrayOfStrings("allowed_methods")
 
-	n := negroni.Classic()
+	n := negroni.New(&middleware.Recovery{
+		Raven:      App.Raven,
+		Logger:     App.Logger.Error,
+		PrintStack: true,
+		StackAll:   false,
+		StackSize:  1024 * 8,
+	}, &middleware.Logger{App.Logger.Info})
 	n.Use(cors.New(cors.Options{
 		AllowedOrigins: allowedOrigins,
 		AllowedMethods: allowedMethods,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/picfit/hash"
@@ -35,6 +36,7 @@ type Application struct {
 	Router        *mux.Router
 	Shard         Shard
 	Logger        Logger
+	Raven         *raven.Client
 }
 
 func NewApplication() *Application {
