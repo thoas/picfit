@@ -5,7 +5,6 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/picfit/dummy"
-	"github.com/thoas/picfit/image"
 	"github.com/thoas/storages"
 )
 
@@ -42,10 +41,8 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 
 	if format != "" {
 		App.Format = format
-		App.ContentType = image.ContentTypes[format]
 	} else {
 		App.Format = DefaultFormat
-		App.ContentType = DefaultContentType
 	}
 
 	App.SecretKey, _ = jq.String("secret_key")

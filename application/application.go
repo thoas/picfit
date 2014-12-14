@@ -28,7 +28,6 @@ type Application struct {
 	Prefix        string
 	SecretKey     string
 	Format        string
-	ContentType   string
 	BaseURL       string
 	KVStore       kvstores.KVStore
 	SourceStorage storages.Storage
@@ -133,7 +132,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 		format := file.Format()
 
 		if format == "" {
-			format = DefaultFormat
+			format = App.Format
 		}
 
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
