@@ -55,5 +55,13 @@ var S3StorageParameter StorageParameter = func(params map[string]string) (storag
 		return nil, fmt.Errorf("The Region %s does not exist", params["region"])
 	}
 
-	return storages.NewS3Storage(params["access_key_id"], params["secret_access_key"], params["bucket_name"], params["location"], Region, ACL, params["base_url"]), nil
+	return storages.NewS3Storage(
+		params["access_key_id"],
+		params["secret_access_key"],
+		params["bucket_name"],
+		params["location"],
+		Region,
+		ACL,
+		params["base_url"],
+	), nil
 }
