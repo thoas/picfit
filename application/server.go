@@ -79,10 +79,16 @@ func Run(path string) error {
 	allowedOrigins, err := jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := jq.ArrayOfStrings("allowed_methods")
 
+	debug, err := jq.Bool("debug")
+
+	if err != nil {
+		debug = true
+	}
+
 	n := negroni.New(&middleware.Recovery{
 		Raven:      App.Raven,
 		Logger:     App.Logger.Error,
-		PrintStack: true,
+		PrintStack: debug,
 		StackAll:   false,
 		StackSize:  1024 * 8,
 	}, &middleware.Logger{App.Logger.Info})
