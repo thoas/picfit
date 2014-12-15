@@ -30,7 +30,7 @@ func trace() *raven.Stacktrace {
 
 func (rec *Recovery) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	defer func() {
-		if err := recover(); r != nil {
+		if err := recover(); err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			stack := make([]byte, rec.StackSize)
 			stack = stack[:runtime.Stack(stack, rec.StackAll)]

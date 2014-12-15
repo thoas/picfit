@@ -62,11 +62,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	delete(qs, "sig")
 
-	key := hash.Tokey(hash.Serialize(util.SortMapString(qs)))
+	sorted := util.SortMapString(qs)
 
-	reqURL := *req.URL
+	key := hash.Tokey(hash.Serialize(sorted))
 
-	if !App.IsValidSign(reqURL.RawQuery) {
+	if !App.IsValidSign(sorted) {
 		res.BadRequest()
 		return
 	}

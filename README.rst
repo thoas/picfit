@@ -372,15 +372,15 @@ implementation.
 
     import hashlib
     import hmac
-    import json
     import six
+    import urllib
 
     def sign(key, *args, **kwargs):
         m = hmac.new(key, None, hashlib.sha1)
 
         for arg in args:
             if isinstance(arg, dict):
-                m.update(json.dumps(arg))
+                m.update(urllib.urlencode(arg))
             elif isinstance(arg, six.string_types):
                 m.update(arg)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/storages"
+	"net/url"
 	"strings"
 )
 
@@ -159,10 +160,15 @@ func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
 	})
 }
 
-func (a *Application) IsValidSign(qs string) bool {
+func (a *Application) IsValidSign(qs map[string]string) bool {
 	if a.SecretKey == "" {
 		return true
 	}
 
-	return signature.VerifySign(a.SecretKey, qs)
+	params := url.Values{}
+	for k, v := range qs {
+		params.Set(k, v)
+	}
+
+	return signature.VerifySign(a.SecretKey, params.Encode())
 }
