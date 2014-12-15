@@ -61,7 +61,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	delete(qs, "sig")
 
-	key := hash.Tokey(hash.Serialize(qs))
+	key := hash.Tokey(hash.Serialize(sortMapString(qs)))
 
 	reqURL := *req.URL
 
