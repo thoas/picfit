@@ -10,6 +10,7 @@ import (
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
 	"github.com/thoas/picfit/middleware"
+	"github.com/thoas/picfit/util"
 	"io/ioutil"
 	"net/http"
 	"runtime"
@@ -46,7 +47,7 @@ func Run(path string) error {
 	for _, initializer := range Initializers {
 		err = initializer(jq)
 
-		panicIf(err)
+		util.PanicIf(err)
 	}
 
 	App.Router = mux.NewRouter()

@@ -1,17 +1,11 @@
-package application
+package util
 
 import (
 	"fmt"
 	"sort"
 )
 
-func panicIf(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func mapInterfaceToMapString(obj map[string]interface{}) map[string]string {
+func MapInterfaceToMapString(obj map[string]interface{}) map[string]string {
 	results := make(map[string]string)
 
 	for k, v := range obj {
@@ -21,7 +15,7 @@ func mapInterfaceToMapString(obj map[string]interface{}) map[string]string {
 	return results
 }
 
-func sortMapString(obj map[string]string) map[string]string {
+func SortMapString(obj map[string]string) map[string]string {
 	mk := make([]string, len(obj))
 
 	i := 0
@@ -39,4 +33,10 @@ func sortMapString(obj map[string]string) map[string]string {
 	}
 
 	return results
+}
+
+func PanicIf(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

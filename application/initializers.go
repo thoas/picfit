@@ -5,6 +5,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/picfit/dummy"
+	"github.com/thoas/picfit/util"
 	"github.com/thoas/storages"
 )
 
@@ -95,7 +96,7 @@ var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		return err
 	}
 
-	params := mapInterfaceToMapString(config)
+	params := util.MapInterfaceToMapString(config)
 	store, err := parameter(params)
 
 	if err != nil {
@@ -123,7 +124,7 @@ func getStorageFromConfig(key string, jq *jsonq.JsonQuery) (storages.Storage, er
 		return nil, err
 	}
 
-	storage, err := parameter(mapInterfaceToMapString(config))
+	storage, err := parameter(util.MapInterfaceToMapString(config))
 
 	if err != nil {
 		return nil, err

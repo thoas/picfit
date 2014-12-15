@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/signature"
@@ -22,6 +23,14 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
+		{
+			Name:      "version",
+			ShortName: "v",
+			Usage:     "Retrieve the version number",
+			Action: func(c *cli.Context) {
+				fmt.Printf("picfit %s\n", application.Version)
+			},
+		},
 		{
 			Name:      "signature",
 			ShortName: "s",
