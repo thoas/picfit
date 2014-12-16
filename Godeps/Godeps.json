@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/thoas/picfit",
-	"GoVersion": "go1.3.3",
+	"GoVersion": "go1.4",
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -52,6 +52,10 @@
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
 			"Rev": "cca3df8fa0670249a3f746bcc062c69aeba0517c"
+		},
+		{
+			"ImportPath": "github.com/getsentry/raven-go",
+			"Rev": "3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
