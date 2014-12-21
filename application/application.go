@@ -29,7 +29,6 @@ type Application struct {
 	Prefix        string
 	SecretKey     string
 	Format        string
-	BaseURL       string
 	KVStore       kvstores.KVStore
 	SourceStorage storages.Storage
 	DestStorage   storages.Storage
