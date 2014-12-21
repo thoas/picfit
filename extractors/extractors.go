@@ -19,12 +19,12 @@ func Operation(req *muxer.Request) (*image.Operation, error) {
 }
 
 func URL(req *muxer.Request) (*url.URL, error) {
-	urlValue := req.QueryString["url"]
+	value, ok := req.QueryString["url"]
 
-	if urlValue != "" {
-		url, err := url.Parse(urlValue)
+	if ok {
+		url, err := url.Parse(value)
 
-		mimetype := mime.TypeByExtension(urlValue)
+		mimetype := mime.TypeByExtension(value)
 
 		_, ok := image.Formats[mimetype]
 
@@ -33,5 +33,5 @@ func URL(req *muxer.Request) (*url.URL, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("URL %s is not valid", urlValue)
+	return nil, fmt.Errorf("URL %s is not valid", value)
 }

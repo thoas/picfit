@@ -187,7 +187,12 @@ func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error
 			return nil, err
 		}
 
-		return &ImageFile{Source: dest, Storage: storage, Header: headers, Filepath: i.Filepath}, nil
+		return &ImageFile{
+			Source:   dest,
+			Storage:  storage,
+			Header:   headers,
+			Filepath: i.Filepath,
+		}, nil
 	}
 
 	return file, err
