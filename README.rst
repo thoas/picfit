@@ -229,7 +229,7 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
       "storage": {
         "src": {
           "type": "fs",
-          "base_url": "http://media.example.com"
+          "base_url": "http://media.example.com",
           "location": "path/to/directory"
         },
         "dest": {
@@ -466,7 +466,7 @@ CORS
 picfit supports CORS headers customization in your config file.
 
 To enable this feature, set ``allowed_origins`` and ``allowed_methods``,
-for example ::
+for example:
 
 ``config.json``
 
