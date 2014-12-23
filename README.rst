@@ -167,7 +167,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
 -----------------------------------------------------------------------
 
 * key/value store provided by Redis
-* File system to load images already processed
+* File system to load images
 * Amazon S3 storage to process images
 
 ``config.json``
@@ -204,6 +204,50 @@ You will be able to load and store your images from different storage backends.
 
 In this example, images will be loaded from the file system storage
 and processed to the Amazon S3 storage.
+
+Load images from storage backend base url, store them in Amazon S3, keys prefixed on Redis
+----------------------------------------------------------------------------------------------
+
+* key/value store provided by Redis
+* File system to load images using HTTP method
+* Amazon S3 storage to process images
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "kvstore": {
+        "type": "redis",
+        "host": "127.0.0.1",
+        "port": "6379",
+        "password": "",
+        "prefix": "dummy:",
+        "db": 0
+      },
+      "port": 3001,
+      "storage": {
+        "src": {
+          "type": "fs",
+          "base_url": "http://media.example.com"
+          "location": "path/to/directory"
+        },
+        "dest": {
+          "type": "s3",
+          "access_key_id": "[ACCESS_KEY_ID]",
+          "secret_access_key": "[SECRET_ACCESS_KEY]",
+          "bucket_name": "[BUCKET_NAME]",
+          "acl": "[ACL]",
+          "region": "[REGION_NAME]",
+          "location": "path/to/directory"
+        }
+      }
+    }
+
+In this example, images will be loaded from the file system storage
+using HTTP with ``base_url`` option and processed to the Amazon S3 storage.
+
+Keys will be stored on Redis_ using the prefix ``dummy:``.
 
 Running
 =======
@@ -437,6 +481,8 @@ Roadmap
 =======
 
 see `issues <https://github.com/thoas/picfit/issues>`_
+
+Don't hesitate to send patch or improvements.
 
 In production
 =============
