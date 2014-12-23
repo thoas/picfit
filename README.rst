@@ -407,6 +407,14 @@ use the signature command.
     Signature: 6f7a667559990dee9c30fb459b88c23776fad25e
     Signed Query String: w=100&h=100&op=resize&sig=6f7a667559990dee9c30fb459b88c23776fad2
 
+Error reporting
+===============
+
+picfit logs events by default in ``stderr`` and ``stdout``, you can implement sentry_
+to log errors using raven_.
+
+To enable this feature, set the ``sentry_dsn`` option in your config file.
+
 Deployment
 ==========
 
@@ -452,3 +460,5 @@ Thanks to these beautiful projects.
 .. _persistence: http://redis.io/topics/persistence
 .. _Ansible: http://www.ansible.com/home
 .. _Ulule: http://www.ulule.com
+.. _sentry: https://github.com/getsentry/sentry
+.. _raven: https://github.com/getsentry/raven-go

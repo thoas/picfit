@@ -74,10 +74,12 @@ func (a *Application) Store(i *image.ImageFile) error {
 	} else {
 		a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
 
-		err = con.Set(a.WithPrefix(i.Key), i.Filepath)
+		key := a.WithPrefix(i.Key)
+
+		err = con.Set(key, i.Filepath)
 
 		if err != nil {
-			a.Logger.Info.Printf("Save key %s=%s to kvstore", i.Key, i.Filepath)
+			a.Logger.Info.Printf("Save key %s=%s to kvstore", key, i.Filepath)
 		} else {
 			a.Logger.Error.Print(err)
 		}

@@ -51,9 +51,9 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	url, err := extractors.URL(request)
 
-	filepath := request.QueryString["path"]
+	filepath, ok := request.QueryString["path"]
 
-	if err != nil && filepath == "" {
+	if err != nil && !ok {
 		res.BadRequest()
 		return
 	}
@@ -71,7 +71,14 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	h(res, &Request{request, operation, con, key, url, filepath})
+	h(res, &Request{
+		request,
+		operation,
+		con,
+		key,
+		url,
+		filepath,
+	})
 }
 
 var ImageHandler Handler = func(res muxer.Response, req *Request) {
