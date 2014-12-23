@@ -151,7 +151,7 @@ var StorageInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 
 	App.SourceStorage = sourceStorage
 
-	destStorage, err := getStorageFromConfig("dest", jq)
+	destStorage, err := getStorageFromConfig("dst", jq)
 
 	if err != nil {
 		App.DestStorage = sourceStorage

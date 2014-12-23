@@ -188,7 +188,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
           "type": "fs",
           "location": "path/to/directory"
         },
-        "dest": {
+        "dst": {
           "type": "s3",
           "access_key_id": "[ACCESS_KEY_ID]",
           "secret_access_key": "[SECRET_ACCESS_KEY]",
@@ -232,7 +232,7 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
           "base_url": "http://media.example.com",
           "location": "path/to/directory"
         },
-        "dest": {
+        "dst": {
           "type": "s3",
           "access_key_id": "[ACCESS_KEY_ID]",
           "secret_access_key": "[SECRET_ACCESS_KEY]",
