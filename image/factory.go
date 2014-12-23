@@ -33,5 +33,9 @@ func ImageFileFromURL(u *url.URL) (*ImageFile, error) {
 		}
 	}
 
-	return &ImageFile{Source: dest, Header: headers, Filepath: u.Path[1:]}, nil
+	return &ImageFile{
+		Source:   dest,
+		Header:   headers,
+		Filepath: u.Path[1:],
+	}, nil
 }

@@ -313,8 +313,8 @@ to 100x100 using the **resize** method.
 Using source storage
 --------------------
 
-If an image is stored in your source storage at the
-location ``path/to/file.png``, then you can call the service to load this file:
+If an image is stored in your source storage at the location ``path/to/file.png``,
+then you can call the service to load this file:
 
 ::
 
@@ -459,6 +459,23 @@ picfit logs events by default in ``stderr`` and ``stdout``, you can implement se
 to log errors using raven_.
 
 To enable this feature, set ``sentry_dsn`` option in your config file.
+
+CORS
+====
+
+picfit supports CORS headers customization in your config file.
+
+To enable this feature, set ``allowed_origins`` and ``allowed_methods``,
+for example ::
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "allowed_origins": ["*.ulule.com"],
+      "allowed_methods": ["GET", "HEAD"]
+    }
 
 Deployment
 ==========
