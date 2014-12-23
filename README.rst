@@ -126,7 +126,7 @@ Store images on Amazon S3, keys in Redis and shard filename
 
 Keys will be stored on Redis_, we highly suggest you to setup persistence_.
 
-Image files will be loaded/stored on Amazon S3 at the location ``path/to/directory``
+Image files will be loaded and stored on Amazon S3 at the location ``path/to/directory``
 in the bucket ``[BUCKET_NAME]``.
 
 ``[ACL]`` can be:
@@ -202,7 +202,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
 
 You will be able to load and store your images from different storage backends.
 
-Int this example, images will be loaded from the file system storage
+In this example, images will be loaded from the file system storage
 and processed to the Amazon S3 storage.
 
 Running
@@ -259,7 +259,7 @@ will become:
 
 ::
 
-    <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=1000&h=100&op=resize&upscale=0"
+    <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100&op=resize&upscale=0"
 
 This will request the image served at the supplied url and resize it
 to 100x100 using the **resize** method.
@@ -284,7 +284,7 @@ Operations
 Resize
 ------
 
-Resize resizes the image to the specified width and height and
+Resize the image to the specified width and height and
 returns the transformed image.
 If one of width or height is 0, the image aspect ratio is preserved.
 
@@ -313,8 +313,8 @@ Display
 
 Display the image, useful when you are using an ``img`` tag.
 
-The image processed itself will be stored asynchronously on your
-favorite storage backend.
+The processed image will be stored asynchronously on your
+destination storage backend.
 
 A couple of headers (``Content-Type``, ``If-Modified-Since``) will be set
 to allow you to use an http cache system.
@@ -336,7 +336,7 @@ Get
 
 Retrieve information about the image.
 
-Your file will be processed synchronously then you will get these information:
+Your file will be processed synchronously then you will get the following information:
 
 * **filename** - Filename of your processed file
 * **path** - Relative path of your processed file
@@ -359,9 +359,8 @@ Security
 ========
 
 In order to secure requests so that unknown third parties cannot easily
-use the resize service, the application can require that requests
-provide a signature. To enable this feature, set the ``secret_key``
-option in your config file.
+use the service, the application can require a request to provide a signature.
+To enable this feature, set the ``secret_key`` option in your config file.
 
 The signature is a hexadecimal digest generated from the client
 key and the query string using the HMAC-SHA1 message authentication code
