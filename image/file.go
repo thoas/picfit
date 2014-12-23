@@ -9,6 +9,7 @@ import (
 	"math"
 	"mime"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -23,7 +24,7 @@ type ImageFile struct {
 
 type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
 
-func (i *ImageFile) GetImageSize() (int, int) {
+func (i *ImageFile) ImageSize() (int, int) {
 	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
 }
 
@@ -32,7 +33,7 @@ func (i *ImageFile) scale(width int, height int, trans Transformation) *image.NR
 }
 
 func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *image.NRGBA {
-	width, height := i.GetImageSize()
+	width, height := i.ImageSize()
 
 	factor := scalingFactor(width, height, geometry[0], geometry[1])
 
@@ -101,7 +102,7 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 }
 
 func (i *ImageFile) ToBytes() ([]byte, error) {
-	format, ok := Formats[i.GetContentType()]
+	format, ok := Formats[i.ContentType()]
 
 	if !ok {
 		format = DefaultFormat
@@ -110,11 +111,11 @@ func (i *ImageFile) ToBytes() ([]byte, error) {
 	return i.ToBytesWithFormat(format)
 }
 
-func (i *ImageFile) GetURL() string {
+func (i *ImageFile) URL() string {
 	return i.Storage.URL(i.Filepath)
 }
 
-func (i *ImageFile) GetPath() string {
+func (i *ImageFile) Path() string {
 	return i.Storage.Path(i.Filepath)
 }
 
@@ -131,15 +132,19 @@ func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
 }
 
 func (i *ImageFile) Format() string {
-	return Extensions[i.GetContentType()]
+	return Extensions[i.ContentType()]
 }
 
-func (i *ImageFile) GetContentType() string {
-	return mime.TypeByExtension(i.GetFilename())
+func (i *ImageFile) ContentType() string {
+	return mime.TypeByExtension(i.FilenameExt())
 }
 
-func (i *ImageFile) GetFilename() string {
+func (i *ImageFile) Filename() string {
 	return i.Filepath[strings.LastIndex(i.Filepath, "/")+1:]
+}
+
+func (i *ImageFile) FilenameExt() string {
+	return path.Ext(i.Filename())
 }
 
 func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error) {
@@ -172,7 +177,7 @@ func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error
 			return nil, err
 		}
 
-		contentType := i.GetContentType()
+		contentType := i.ContentType()
 
 		headers := map[string]string{
 			"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),

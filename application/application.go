@@ -162,9 +162,9 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
 	return json.Marshal(map[string]string{
-		"filename": file.GetFilename(),
-		"path":     file.GetPath(),
-		"url":      file.GetURL(),
+		"filename": file.Filename(),
+		"path":     file.Path(),
+		"url":      file.URL(),
 	})
 }
 

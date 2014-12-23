@@ -112,5 +112,5 @@ var RedirectHandler Handler = func(res muxer.Response, req *Request) {
 
 	util.PanicIf(err)
 
-	res.PermanentRedirect(file.GetURL())
+	res.PermanentRedirect(file.URL())
 }
