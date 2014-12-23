@@ -90,7 +90,7 @@ var ImageHandler Handler = func(res muxer.Response, req *Request) {
 
 	util.PanicIf(err)
 
-	res.SetHeaders(file.Header, true)
+	res.SetHeaders(file.Headers, true)
 	res.ResponseWriter.Write(content)
 }
 

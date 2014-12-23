@@ -17,7 +17,7 @@ import (
 type ImageFile struct {
 	Source   image.Image
 	Key      string
-	Header   map[string]string
+	Headers  map[string]string
 	Filepath string
 	Storage  storages.Storage
 }
@@ -91,7 +91,7 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 		file := &ImageFile{
 			Source:   dest,
 			Key:      i.Key,
-			Header:   i.Header,
+			Headers:  i.Headers,
 			Filepath: i.Filepath,
 		}
 
@@ -195,7 +195,7 @@ func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error
 		return &ImageFile{
 			Source:   dest,
 			Storage:  storage,
-			Header:   headers,
+			Headers:  headers,
 			Filepath: i.Filepath,
 		}, nil
 	}
