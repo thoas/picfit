@@ -206,7 +206,7 @@ In this example, images will be loaded from the file system storage
 and processed to the Amazon S3 storage.
 
 Load images from storage backend base url, store them in Amazon S3, keys prefixed on Redis
-----------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 * key/value store provided by Redis
 * File system to load images using HTTP method
@@ -264,6 +264,8 @@ can be accessed by visiting:
 ::
 
     http://localhost:3001
+
+The port number can be configured with ``port`` option in your config file.
 
 To see a list of all available options, run:
 
@@ -456,7 +458,7 @@ Error reporting
 picfit logs events by default in ``stderr`` and ``stdout``, you can implement sentry_
 to log errors using raven_.
 
-To enable this feature, set the ``sentry_dsn`` option in your config file.
+To enable this feature, set ``sentry_dsn`` option in your config file.
 
 Deployment
 ==========
