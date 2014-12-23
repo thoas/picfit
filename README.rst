@@ -380,7 +380,7 @@ of the processed file will be stored on your key/value store.
 Get
 ---
 
-Retrieve information about the image.
+Retrieve information about an image.
 
 Your file will be processed synchronously then you will get the following information:
 

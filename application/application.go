@@ -71,21 +71,25 @@ func (a *Application) Store(i *image.ImageFile) error {
 
 	if err != nil {
 		a.Logger.Error.Print(err)
-	} else {
-		a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
 
-		key := a.WithPrefix(i.Key)
-
-		err = con.Set(key, i.Filepath)
-
-		if err != nil {
-			a.Logger.Info.Printf("Save key %s=%s to kvstore", key, i.Filepath)
-		} else {
-			a.Logger.Error.Print(err)
-		}
+		return err
 	}
 
-	return err
+	a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
+
+	key := a.WithPrefix(i.Key)
+
+	err = con.Set(key, i.Filepath)
+
+	if err != nil {
+		a.Logger.Error.Print(err)
+
+		return err
+	}
+
+	a.Logger.Info.Printf("Save key %s=%s to kvstore", key, i.Filepath)
+
+	return nil
 }
 
 func (a *Application) WithPrefix(str string) string {
@@ -93,7 +97,10 @@ func (a *Application) WithPrefix(str string) string {
 }
 
 func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) (*image.ImageFile, error) {
-	var file *image.ImageFile = &image.ImageFile{Key: req.Key, Storage: a.DestStorage}
+	var file *image.ImageFile = &image.ImageFile{
+		Key:     req.Key,
+		Storage: a.DestStorage,
+	}
 	var err error
 
 	// Image from the KVStore found
