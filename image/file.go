@@ -28,10 +28,6 @@ func (i *ImageFile) ImageSize() (int, int) {
 	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
 }
 
-func (i *ImageFile) scale(width int, height int, trans Transformation) *image.NRGBA {
-	return trans(i.Source, width, height, imaging.Lanczos)
-}
-
 func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *image.NRGBA {
 	width, height := i.ImageSize()
 
@@ -41,7 +37,7 @@ func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *i
 		width = int(float64(width) * factor)
 		height = int(float64(height) * factor)
 
-		return i.scale(width, height, trans)
+		return trans(i.Source, width, height, imaging.Lanczos)
 	}
 
 	return imaging.Clone(i.Source)
