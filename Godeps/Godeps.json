@@ -95,7 +95,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/storages",
-			"Rev": "6fc8b7e5354b16740d415375a874d3ea58e95de1"
+			"Rev": "4c52cfdff7393d1468211b2d6068de3784224770"
 		},
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",
