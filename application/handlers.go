@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/json"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/extractors"
@@ -99,7 +100,11 @@ var GetHandler Handler = func(res muxer.Response, req *Request) {
 
 	util.PanicIf(err)
 
-	content, err := App.ToJSON(file)
+	content, err := json.Marshal(map[string]string{
+		"filename": file.Filename(),
+		"path":     file.Path(),
+		"url":      file.URL(),
+	})
 
 	util.PanicIf(err)
 

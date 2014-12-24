@@ -1,7 +1,6 @@
 package application
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/getsentry/raven-go"
@@ -106,6 +105,8 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	// Image from the KVStore found
 	stored, err := kvstores.String(req.Connection.Get(a.WithPrefix(req.Key)))
 
+	file.Filepath = stored
+
 	if stored != "" {
 		if load {
 			file, err = image.FromStorage(a.SourceStorage, stored)
@@ -155,15 +156,6 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	return file, err
 }
-
-func (a *Application) ToJSON(file *image.ImageFile) ([]byte, error) {
-	return json.Marshal(map[string]string{
-		"filename": file.Filename(),
-		"path":     file.Path(),
-		"url":      file.URL(),
-	})
-}
-
 func (a *Application) IsValidSign(qs map[string]string) bool {
 	if a.SecretKey == "" {
 		return true
