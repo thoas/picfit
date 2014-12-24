@@ -1,9 +1,11 @@
 package image
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/franela/goreq"
+	"github.com/thoas/storages"
 	"net/http"
 	"net/url"
 )
@@ -38,4 +40,62 @@ func ImageFileFromURL(u *url.URL) (*ImageFile, error) {
 		Headers:  headers,
 		Filepath: u.Path[1:],
 	}, nil
+}
+
+func ImageFromStorage(storage storages.Storage, filepath string) (*ImageFile, error) {
+	var file *ImageFile
+	var err error
+
+	// URL provided we use http protocol to retrieve it
+	if storage.HasBaseURL() {
+		u, err := url.Parse(storage.URL(filepath))
+
+		if err != nil {
+			return nil, err
+		}
+
+		file, err = ImageFileFromURL(u)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		body, err := storage.Open(filepath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		modifiedTime, err := storage.ModifiedTime(filepath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		i := &ImageFile{Filepath: filepath}
+
+		contentType := i.ContentType()
+
+		headers := map[string]string{
+			"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
+			"Content-Type":  contentType,
+		}
+
+		reader := bytes.NewReader(body)
+
+		dest, err := imaging.Decode(reader)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &ImageFile{
+			Source:   dest,
+			Storage:  storage,
+			Headers:  headers,
+			Filepath: filepath,
+		}, nil
+	}
+
+	return file, err
 }

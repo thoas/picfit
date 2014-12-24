@@ -106,11 +106,9 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	// Image from the KVStore found
 	stored, err := kvstores.String(req.Connection.Get(a.WithPrefix(req.Key)))
 
-	file.Filepath = stored
-
 	if stored != "" {
 		if load {
-			file, err = file.LoadFromStorage(a.DestStorage)
+			file, err = image.ImageFromStorage(a.SourceStorage, stored)
 
 			if err != nil {
 				return nil, err
@@ -123,9 +121,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			file, err = image.ImageFileFromURL(req.URL)
 		} else {
 			// URL provided we use http protocol to retrieve it
-			file.Filepath = req.Filepath
-
-			file, err = file.LoadFromStorage(a.SourceStorage)
+			file, err = image.ImageFromStorage(a.SourceStorage, req.Filepath)
 		}
 
 		if err != nil {

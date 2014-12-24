@@ -8,7 +8,6 @@ import (
 	"image"
 	"math"
 	"mime"
-	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -141,62 +140,6 @@ func (i *ImageFile) Filename() string {
 
 func (i *ImageFile) FilenameExt() string {
 	return path.Ext(i.Filename())
-}
-
-func (i *ImageFile) LoadFromStorage(storage storages.Storage) (*ImageFile, error) {
-	var file *ImageFile
-	var err error
-
-	// URL provided we use http protocol to retrieve it
-	if storage.HasBaseURL() {
-		u, err := url.Parse(storage.URL(i.Filepath))
-
-		if err != nil {
-			return nil, err
-		}
-
-		file, err = ImageFileFromURL(u)
-
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		body, err := storage.Open(i.Filepath)
-
-		if err != nil {
-			return nil, err
-		}
-
-		modifiedTime, err := storage.ModifiedTime(i.Filepath)
-
-		if err != nil {
-			return nil, err
-		}
-
-		contentType := i.ContentType()
-
-		headers := map[string]string{
-			"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
-			"Content-Type":  contentType,
-		}
-
-		reader := bytes.NewReader(body)
-
-		dest, err := imaging.Decode(reader)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return &ImageFile{
-			Source:   dest,
-			Storage:  storage,
-			Headers:  headers,
-			Filepath: i.Filepath,
-		}, nil
-	}
-
-	return file, err
 }
 
 func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
