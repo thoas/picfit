@@ -10,7 +10,7 @@ import (
 	"net/url"
 )
 
-func ImageFileFromURL(u *url.URL) (*ImageFile, error) {
+func FromURL(u *url.URL) (*ImageFile, error) {
 	content, err := goreq.Request{Uri: u.String()}.Do()
 
 	if err != nil {
@@ -42,7 +42,7 @@ func ImageFileFromURL(u *url.URL) (*ImageFile, error) {
 	}, nil
 }
 
-func ImageFromStorage(storage storages.Storage, filepath string) (*ImageFile, error) {
+func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) {
 	var file *ImageFile
 	var err error
 
@@ -54,7 +54,7 @@ func ImageFromStorage(storage storages.Storage, filepath string) (*ImageFile, er
 			return nil, err
 		}
 
-		file, err = ImageFileFromURL(u)
+		file, err = FromURL(u)
 
 		if err != nil {
 			return nil, err

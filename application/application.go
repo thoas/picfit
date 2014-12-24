@@ -108,7 +108,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	if stored != "" {
 		if load {
-			file, err = image.ImageFromStorage(a.SourceStorage, stored)
+			file, err = image.FromStorage(a.SourceStorage, stored)
 
 			if err != nil {
 				return nil, err
@@ -118,10 +118,10 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
 		if req.URL != nil {
-			file, err = image.ImageFileFromURL(req.URL)
+			file, err = image.FromURL(req.URL)
 		} else {
 			// URL provided we use http protocol to retrieve it
-			file, err = image.ImageFromStorage(a.SourceStorage, req.Filepath)
+			file, err = image.FromStorage(a.SourceStorage, req.Filepath)
 		}
 
 		if err != nil {
