@@ -83,7 +83,7 @@ Basic
       "port": 3001,
     }
 
-Images are processed on the fly at each requests
+Images are generated on the fly at each requests
 
 Store images on file system and keys in an in-memory cache
 ----------------------------------------------------------
@@ -91,7 +91,7 @@ Store images on file system and keys in an in-memory cache
 * key/value in-memory store
 * file system storage
 
-An image is processed from your source storage (``src``) and uploaded
+An image is generated from your source storage (``src``) and uploaded
 asynchronously to this storage.
 
 An unique key is generated and stored in a in-memory key/value store to process
@@ -230,7 +230,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
 You will be able to load and store your images from different storage backends.
 
 In this example, images will be loaded from the file system storage
-and processed to the Amazon S3 storage.
+and generated to the Amazon S3 storage.
 
 Load images from storage backend base url, store them in Amazon S3, keys prefixed on Redis
 ------------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
     }
 
 In this example, images will be loaded from the file system storage
-using HTTP with ``base_url`` option and processed to the Amazon S3 storage.
+using HTTP with ``base_url`` option and generated to the Amazon S3 storage.
 
 Keys will be stored on Redis_ using the prefix ``dummy:``.
 
@@ -316,7 +316,7 @@ Parameters to call the service are:
 - **operation** - The operation to perform, see Operations_
 - **sig** - The signature key which is the representation of your query string and your secret key
 - **method** - The method to perform, see Methods_
-- **url** - The url of the image to be processed (not required if ``filepath`` provided)
+- **url** - The url of the image to generate (not required if ``filepath`` provided)
 - **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
@@ -386,7 +386,7 @@ Display
 
 Display the image, useful when you are using an ``img`` tag.
 
-The processed image will be stored asynchronously on your
+The generated image will be stored asynchronously on your
 destination storage backend.
 
 A couple of headers (``Content-Type``, ``If-Modified-Since``) will be set
@@ -398,25 +398,25 @@ Redirect
 
 Redirect to an image.
 
-Your file will be processed synchronously then the redirection
+Your file will be generated synchronously then the redirection
 will be performed.
 
 The first query will be slower but next ones will be faster because the name
-of the processed file will be stored on your key/value store.
+of the generated file will be stored on your key/value store.
 
 Get
 ---
 
 Retrieve information about an image.
 
-Your file will be processed synchronously then you will get the following information:
+Your file will be generated synchronously then you will get the following information:
 
-* **filename** - Filename of your processed file
-* **path** - Relative path of your processed file
-* **url** - Absolute url of your processed file (only if ``base_url`` is available on your destination storage)
+* **filename** - Filename of your generated file
+* **path** - Path of your generated file
+* **url** - Absolute url of your generated file (only if ``base_url`` is available on your destination storage)
 
 The first query will be slower but next ones will be faster because the name
-of the processed file will be stored on your key/value store.
+of the generated file will be stored on your key/value store.
 
 Expect the following result:
 
@@ -424,8 +424,8 @@ Expect the following result:
 
     {
         "filename":"a661f8d197a42d21d0190d33e629e4.png",
-        "path":"processed/6/7/a661f8d197a42d21d0190d33e629e4.png",
-        "url":"https://ds9xhxfkunhky.cloudfront.net/processed/6/7/a661f8d197a42d21d0190d33e629e4.png"
+        "path":"cache/6/7/a661f8d197a42d21d0190d33e629e4.png",
+        "url":"https://ds9xhxfkunhky.cloudfront.net/cache/6/7/a661f8d197a42d21d0190d33e629e4.png"
     }
 
 Security
