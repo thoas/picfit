@@ -41,6 +41,33 @@ Configuration
 
 Configuration should be stored in a readable file and in JSON format.
 
+``config.json``
+
+.. code-block:: json
+
+    {
+      "kvstore": {
+        "type": "[KVSTORE]"
+      },
+      "storage": {
+        "src": {
+          "type": "[STORAGE]"
+        }
+      }
+    }
+
+``[KVSTORE]`` can be:
+
+- **redis** - Store generated keys in Redis_, see below how you can customize connection parameters
+- **cache** - Store generated keys in an in-memory cache
+
+``[STORAGE]`` can be:
+
+- **fs** - Store generated images in your File system
+- **http+fs** - Store generated images in your File system and load them using HTTP protocol
+- **s3** - Store generated images in Amazon S3
+- **http+s3** - Store generated images in Amazon S3 and load them using HTTP protocol
+
 Basic
 -----
 
@@ -131,31 +158,31 @@ in the bucket ``[BUCKET_NAME]``.
 
 ``[ACL]`` can be:
 
-* private
-* public-read
-* public-read-write
-* authenticated-read
-* bucket-owner-read
-* bucket-owner-full-control
+- private
+- public-read
+- public-read-write
+- authenticated-read
+- bucket-owner-read
+- bucket-owner-full-control
 
 ``[REGION_NAME]`` can be:
 
-* us-gov-west-1
-* us-east-1
-* us-west-1
-* us-west-2
-* eu-west-1
-* eu-central-1
-* ap-southeast-1
-* ap-southeast-2
-* ap-northeast-1
-* sa-east-1
-* cn-north-1
+- us-gov-west-1
+- us-east-1
+- us-west-1
+- us-west-2
+- eu-west-1
+- eu-central-1
+- ap-southeast-1
+- ap-southeast-2
+- ap-northeast-1
+- sa-east-1
+- cn-north-1
 
 **Filename** will be sharded:
 
-* ``depth``: 2 directories
-* ``width``: 1 letter for each directory
+- ``depth`` - 2 directories
+- ``width`` - 1 letter for each directory
 
 Example:
 
