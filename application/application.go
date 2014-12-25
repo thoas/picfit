@@ -109,7 +109,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	if stored != "" {
 		if load {
-			file, err = image.FromStorage(a.SourceStorage, stored)
+			file, err = image.FromStorage(a.DestStorage, stored)
 
 			if err != nil {
 				return nil, err
