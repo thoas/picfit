@@ -52,15 +52,15 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	format, errfmt := extractors.Format(request)
 
-	qs := request.QueryString
+	sorted := util.SortMapString(request.QueryString)
 
-	delete(qs, "sig")
+	valid := App.IsValidSign(sorted)
 
-	sorted := util.SortMapString(qs)
+	delete(sorted, "sig")
 
 	key := hash.Tokey(hash.Serialize(sorted))
 
-	if (err != nil && !ok) || errfmt != nil || errop != nil || !App.IsValidSign(sorted) {
+	if (err != nil && !ok) || errfmt != nil || errop != nil || !valid {
 		res.BadRequest()
 		return
 	}
