@@ -49,6 +49,10 @@ var HTTPFileSystemStorageParameter StorageParameter = func(params map[string]str
 		return nil, err
 	}
 
+	if _, ok := params["base_url"]; !ok {
+		return nil, fmt.Errorf("You can't use the http wrapper without setting *base_url* in your config file")
+	}
+
 	return &http.HTTPStorage{storage}, nil
 }
 
@@ -57,6 +61,10 @@ var HTTPS3StorageParameter StorageParameter = func(params map[string]string) (st
 
 	if err != nil {
 		return nil, err
+	}
+
+	if _, ok := params["base_url"]; !ok {
+		return nil, fmt.Errorf("You can't use the http wrapper without setting *base_url* in your config file")
 	}
 
 	return &http.HTTPStorage{storage}, nil
