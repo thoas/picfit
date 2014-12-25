@@ -26,8 +26,10 @@ var KVStores = map[string]KVStoreParameter{
 }
 
 var Storages = map[string]StorageParameter{
-	"s3": S3StorageParameter,
-	"fs": FileSystemStorageParameter,
+	"http+s3": HTTPS3StorageParameter,
+	"s3":      S3StorageParameter,
+	"http+fs": HTTPFileSystemStorageParameter,
+	"fs":      FileSystemStorageParameter,
 }
 
 func Run(path string) error {

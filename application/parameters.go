@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/thoas/kvstores"
+	"github.com/thoas/picfit/http"
 	"github.com/thoas/storages"
 	"strconv"
 )
@@ -39,6 +40,26 @@ var RedisKVStoreParameter KVStoreParameter = func(params map[string]string) (kvs
 
 var FileSystemStorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
 	return storages.NewFileSystemStorage(params["location"], params["base_url"]), nil
+}
+
+var HTTPFileSystemStorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
+	storage, err := FileSystemStorageParameter(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &http.HTTPStorage{storage}, nil
+}
+
+var HTTPS3StorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
+	storage, err := S3StorageParameter(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &http.HTTPStorage{storage}, nil
 }
 
 var S3StorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {

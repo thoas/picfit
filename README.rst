@@ -228,7 +228,7 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
       "port": 3001,
       "storage": {
         "src": {
-          "type": "fs",
+          "type": "http+fs",
           "base_url": "http://media.example.com",
           "location": "path/to/directory"
         },
