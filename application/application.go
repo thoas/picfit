@@ -135,10 +135,10 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		format := file.Format()
+		format := req.Format
 
 		if format == "" {
-			format = App.Format
+			format = a.Format
 		}
 
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)

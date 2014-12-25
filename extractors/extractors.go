@@ -18,6 +18,20 @@ func Operation(req *muxer.Request) (*image.Operation, error) {
 	return operation, nil
 }
 
+func Format(req *muxer.Request) (string, error) {
+	format, ok := req.QueryString["fmt"]
+
+	if !ok {
+		return "", nil
+	}
+
+	if _, ok := image.ContentTypes[format]; !ok {
+		return "", fmt.Errorf("Unknown format %s", format)
+	}
+
+	return format, nil
+}
+
 func URL(req *muxer.Request) (*url.URL, error) {
 	value, ok := req.QueryString["url"]
 

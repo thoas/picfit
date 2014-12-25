@@ -2,6 +2,7 @@ package application
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/extractors"
@@ -27,6 +28,7 @@ type Request struct {
 	Key        string
 	URL        *url.URL
 	Filepath   string
+	Format     string
 }
 
 type Handler func(muxer.Response, *Request)
@@ -59,6 +61,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	format, err := extractors.Format(request)
+
+	if err != nil {
+		res.BadRequest()
+		return
+	}
+
 	qs := request.QueryString
 
 	delete(qs, "sig")
@@ -79,6 +88,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		key,
 		url,
 		filepath,
+		format,
 	})
 }
 
