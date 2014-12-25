@@ -77,7 +77,7 @@ func Run(path string) error {
 	debug, err := jq.Bool("debug")
 
 	if err != nil {
-		debug = true
+		debug = false
 	}
 
 	n := negroni.New(&middleware.Recovery{

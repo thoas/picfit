@@ -487,6 +487,21 @@ to log errors using raven_.
 
 To enable this feature, set ``sentry_dsn`` option in your config file.
 
+Debug
+=====
+
+Debug is disabled by default.
+
+To enable this feature set ``debug`` option to ``true`` in your config file::
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "debug": true
+    }
+
 CORS
 ====
 
