@@ -320,7 +320,7 @@ Parameters to call the service are:
 - **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
-- **format** - The output format to save as, defaults to the source format, see Format_
+- **format** - The output format to save as, defaults to the source format, see Formats_
 
 To use this service, include the service url as replacement
 for your images, for example:
