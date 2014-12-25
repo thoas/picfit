@@ -310,7 +310,7 @@ Parameters to call the service are:
 
 ::
 
-    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}"
+    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}"
 
 - **path** - The filepath to load the image using your source storage
 - **operation** - The operation to perform, see Operations_
@@ -320,6 +320,7 @@ Parameters to call the service are:
 - **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
+- **format** - The output format to save as, defaults to the source format, see Format_
 
 To use this service, include the service url as replacement
 for your images, for example:
@@ -350,6 +351,16 @@ then you can call the service to load this file:
     or
 
     <img src="http://localhost:3001/display/resize/100x100/path/to/file.png"
+
+Formats
+=======
+
+picfit currently supports the following formats:
+
+- ``image/jpeg`` with the keyword ``jpg`` or ``jpeg``
+- ``image/png`` with the keyword ``png``
+- ``image/gif`` with the keyword ``gif``
+- ``image/bmp`` with the keyword ``bmp``
 
 Operations
 ==========
