@@ -42,30 +42,15 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		request.QueryString[k] = v
 	}
 
-	operation, err := extractors.Operation(request)
+	operation, errop := extractors.Operation(request)
 
 	res := muxer.NewResponse(w)
-
-	if err != nil {
-		res.BadRequest()
-		return
-	}
 
 	url, err := extractors.URL(request)
 
 	filepath, ok := request.QueryString["path"]
 
-	if err != nil && !ok {
-		res.BadRequest()
-		return
-	}
-
-	format, err := extractors.Format(request)
-
-	if err != nil {
-		res.BadRequest()
-		return
-	}
+	format, errfmt := extractors.Format(request)
 
 	qs := request.QueryString
 
@@ -75,7 +60,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	key := hash.Tokey(hash.Serialize(sorted))
 
-	if !App.IsValidSign(sorted) {
+	if (err != nil && !ok) || errfmt != nil || errop != nil || !App.IsValidSign(sorted) {
 		res.BadRequest()
 		return
 	}

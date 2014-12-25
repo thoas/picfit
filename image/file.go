@@ -21,8 +21,6 @@ type ImageFile struct {
 	Storage  storages.Storage
 }
 
-type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
-
 func (i *ImageFile) ImageSize() (int, int) {
 	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
 }

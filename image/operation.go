@@ -2,7 +2,10 @@ package image
 
 import (
 	"github.com/disintegration/imaging"
+	"image"
 )
+
+type Transformation func(img image.Image, width, height int, filter imaging.ResampleFilter) *image.NRGBA
 
 type Operation struct {
 	Name           string
