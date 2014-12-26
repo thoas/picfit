@@ -496,7 +496,20 @@ Error reporting
 picfit logs events by default in ``stderr`` and ``stdout``, you can implement sentry_
 to log errors using raven_.
 
-To enable this feature, set ``sentry_dsn`` option in your config file.
+To enable this feature, set ``sentry`` option in your config file.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "sentry": {
+        "dsn": "[YOUR_SENTRY_DSN]",
+        "tags": {
+          "foo": "bar"
+        }
+      }
+    }
 
 Debug
 =====

@@ -20,13 +20,23 @@ var Initializers = []Initializer{
 }
 
 var SentryInitializer Initializer = func(jq *jsonq.JsonQuery) error {
-	dsn, err := jq.String("sentry_dsn")
+	dsn, err := jq.String("sentry", "dsn")
 
 	if err != nil {
 		return nil
 	}
 
-	client, err := raven.NewClient(dsn, map[string]string{})
+	results, err := jq.Object("sentry", "tags")
+
+	var tags map[string]string
+
+	if err != nil {
+		tags = map[string]string{}
+	} else {
+		tags = util.MapInterfaceToMapString(results)
+	}
+
+	client, err := raven.NewClient(dsn, tags)
 
 	if err != nil {
 		return err
