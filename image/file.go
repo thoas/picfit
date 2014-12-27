@@ -25,16 +25,13 @@ func (i *ImageFile) ImageSize() (int, int) {
 	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
 }
 
-func (i *ImageFile) Scale(geometry []int, upscale bool, trans Transformation) *image.NRGBA {
+func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Transformation) *image.NRGBA {
 	width, height := i.ImageSize()
 
-	factor := scalingFactor(width, height, geometry[0], geometry[1])
+	factor := scalingFactor(width, height, dstWidth, dstHeight)
 
 	if factor < 1 || upscale {
-		width = int(float64(width) * factor)
-		height = int(float64(height) * factor)
-
-		return trans(i.Source, width, height, imaging.Lanczos)
+		return trans(i.Source, dstWidth, dstHeight, imaging.Lanczos)
 	}
 
 	return imaging.Clone(i.Source)
@@ -79,7 +76,7 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 			return nil, err
 		}
 
-		dest := i.Scale([]int{w, h}, upscale, operation.Transformation)
+		dest := i.Scale(w, h, upscale, operation.Transformation)
 
 		file := &ImageFile{
 			Source:   dest,
