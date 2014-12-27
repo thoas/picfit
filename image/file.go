@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/disintegration/imaging"
+	"github.com/imdario/mergo"
 	"github.com/thoas/storages"
 	"image"
 	"math"
@@ -38,22 +39,23 @@ func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Trans
 }
 
 func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*ImageFile, error) {
-	if _, ok := qs["upscale"]; !ok {
-		qs["upscale"] = "1"
+
+	params := map[string]string{
+		"upscale": "1",
+		"h":       "0",
+		"w":       "0",
+	}
+
+	err := mergo.Merge(&qs, params)
+
+	if err != nil {
+		return nil, err
 	}
 
 	upscale, err := strconv.ParseBool(qs["upscale"])
 
 	if err != nil {
 		return nil, err
-	}
-
-	if _, ok := qs["w"]; !ok {
-		qs["w"] = "0"
-	}
-
-	if _, ok := qs["h"]; !ok {
-		qs["h"] = "0"
 	}
 
 	w, err := strconv.Atoi(qs["w"])
