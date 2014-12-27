@@ -38,44 +38,38 @@ func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Trans
 }
 
 func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*ImageFile, error) {
-	_, ok := qs["upscale"]
-
-	if !ok {
+	if _, ok := qs["upscale"]; !ok {
 		qs["upscale"] = "1"
+	}
+
+	upscale, err := strconv.ParseBool(qs["upscale"])
+
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := qs["w"]; !ok {
+		qs["w"] = "0"
+	}
+
+	if _, ok := qs["h"]; !ok {
+		qs["h"] = "0"
+	}
+
+	w, err := strconv.Atoi(qs["w"])
+
+	if err != nil {
+		return nil, err
+	}
+
+	h, err := strconv.Atoi(qs["h"])
+
+	if err != nil {
+		return nil, err
 	}
 
 	switch operation {
 	case Resize, Thumbnail:
-		var w int
-		var h int
-		var err error
-
-		if _, ok := qs["w"]; !ok {
-			w = 0
-		} else {
-			w, err = strconv.Atoi(qs["w"])
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		if _, ok := qs["h"]; !ok {
-			h = 0
-		} else {
-			h, err = strconv.Atoi(qs["h"])
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		upscale, err := strconv.ParseBool(qs["upscale"])
-
-		if err != nil {
-			return nil, err
-		}
-
 		dest := i.Scale(w, h, upscale, operation.Transformation)
 
 		file := &ImageFile{
