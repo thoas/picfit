@@ -516,7 +516,7 @@ Debug
 
 Debug is disabled by default.
 
-To enable this feature set ``debug`` option to ``true`` in your config file::
+To enable this feature set ``debug`` option to ``true`` in your config file:
 
 ``config.json``
 
