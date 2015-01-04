@@ -1,7 +1,7 @@
 picfit
 ======
 
-picfit is a reusable Go server to manipulate (resizing, thumbnailing, etc.)
+picfit is a reusable Go server to manipulate (resize, thumbnail, etc.)
 images built on top of `negroni <https://github.com/codegangsta/negroni>`_
 and `gorilla mux <https://github.com/gorilla/mux>`_.
 
@@ -58,15 +58,15 @@ Configuration should be stored in a readable file and in JSON format.
 
 ``[KVSTORE]`` can be:
 
-- **redis** - Store generated keys in Redis_, see below how you can customize connection parameters
+- **redis** - Store generated keys in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
 - **cache** - Store generated keys in an in-memory cache
 
 ``[STORAGE]`` can be:
 
 - **fs** - Store generated images in your File system
-- **http+fs** - Store generated images in your File system and load them using HTTP protocol
+- **http+fs** - Store generated images in your File system and loaded using HTTP protocol
 - **s3** - Store generated images in Amazon S3
-- **http+s3** - Store generated images in Amazon S3 and load them using HTTP protocol
+- **http+s3** - Store generated images in Amazon S3 and loaded using HTTP protocol
 
 Basic
 -----
@@ -83,7 +83,7 @@ Basic
       "port": 3001,
     }
 
-Images are generated on the fly at each requests
+Images are generated on the fly at each request
 
 Store images on file system and keys in an in-memory cache
 ----------------------------------------------------------
@@ -94,8 +94,8 @@ Store images on file system and keys in an in-memory cache
 An image is generated from your source storage (``src``) and uploaded
 asynchronously to this storage.
 
-An unique key is generated and stored in a in-memory key/value store to process
-a dedicated request one time.
+A unique key is generated and stored in a in-memory key/value store to process
+a dedicated request only once.
 
 ``config.json``
 
@@ -151,7 +151,7 @@ Store images on Amazon S3, keys in Redis and shard filename
       }
     }
 
-Keys will be stored on Redis_, we highly suggest you to setup persistence_.
+Keys will be stored on Redis_, (you better setup persistence_).
 
 Image files will be loaded and stored on Amazon S3 at the location ``path/to/directory``
 in the bucket ``[BUCKET_NAME]``.
@@ -227,7 +227,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
       }
     }
 
-You will be able to load and store your images from different storage backends.
+You will be able to load and store your images from different storages backend.
 
 In this example, images will be loaded from the file system storage
 and generated to the Amazon S3 storage.
@@ -306,7 +306,7 @@ Usage
 General parameters
 ------------------
 
-Parameters to call the service are:
+Parameters to call the picfit service are:
 
 ::
 
@@ -314,13 +314,13 @@ Parameters to call the service are:
 
 - **path** - The filepath to load the image using your source storage
 - **operation** - The operation to perform, see Operations_
-- **sig** - The signature key which is the representation of your query string and your secret key
+- **sig** - The signature key which is the representation of your query string and your secret key, see Security_
 - **method** - The method to perform, see Methods_
 - **url** - The url of the image to generate (not required if ``filepath`` provided)
 - **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
-- **format** - The output format to save as, defaults to the source format, see Formats_
+- **format** - The output format to save the image, by default the format will be the source format (a ``GIF`` image source will be saved as ``GIF``),  see Formats_
 
 To use this service, include the service url as replacement
 for your images, for example:
@@ -335,8 +335,8 @@ will become:
 
     <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100&op=resize&upscale=0"
 
-This will request the image served at the supplied url and resize it
-to 100x100 using the **resize** method.
+This will retrieve the image used in the ``url`` parameter and resize it
+to 100x100.
 
 Using source storage
 --------------------
@@ -368,12 +368,12 @@ Operations
 Resize
 ------
 
-Resize the image to the specified width and height and
-returns the transformed image.
-If one of width or height is 0, the image aspect ratio is preserved.
+This operation will able you to resize the image to the specified width and height.
 
--  **w** - The desired width of the image
--  **h** - The desired height of the image
+If width or height value is 0, the image aspect ratio is preserved.
+
+-  **w** - The desired image's width
+-  **h** - The desired image's height
 
 You have to pass the ``resize`` value to the ``op`` parameter to use this operation.
 
@@ -442,16 +442,15 @@ Expect the following result:
 Security
 ========
 
-In order to secure requests so that unknown third parties cannot easily
+In order to secure requests and avoid unknown third parties to
 use the service, the application can require a request to provide a signature.
 To enable this feature, set the ``secret_key`` option in your config file.
 
-The signature is a hexadecimal digest generated from the client
+The signature is an hexadecimal digest generated from the client
 key and the query string using the HMAC-SHA1 message authentication code
-(MAC) algorithm. The below python code provides an example
-implementation.
+(MAC) algorithm.
 
-::
+The below python code provides an implementation example::
 
     import hashlib
     import hmac
@@ -481,9 +480,7 @@ Tools
 =====
 
 To verify that your client application is generating correct signatures,
-use the signature command.
-
-::
+use the command::
 
     $ picfit signature --key=abcdef "w=100&h=100&op=resize"
     Query String: w=100&h=100&op=resize
@@ -493,7 +490,7 @@ use the signature command.
 Error reporting
 ===============
 
-picfit logs events by default in ``stderr`` and ``stdout``, you can implement sentry_
+picfit logs events by default in ``stderr`` and ``stdout``. You can implement sentry_
 to log errors using raven_.
 
 To enable this feature, set ``sentry`` option in your config file.
