@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/thoas/kvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/extractors"
