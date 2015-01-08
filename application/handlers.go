@@ -61,8 +61,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	key := hash.Tokey(hash.Serialize(sorted))
 
-	fmt.Print(key, hash.Serialize(sorted))
-
 	if (err != nil && !ok) || errfmt != nil || errop != nil || !valid {
 		res.BadRequest()
 		return
@@ -96,8 +94,6 @@ var GetHandler Handler = func(res muxer.Response, req *Request) {
 	file, err := App.ImageFileFromRequest(req, false, false)
 
 	util.PanicIf(err)
-
-	fmt.Println(file.Storage, file.Filepath)
 
 	content, err := json.Marshal(map[string]string{
 		"filename": file.Filename(),
