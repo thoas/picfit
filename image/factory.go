@@ -54,7 +54,10 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 		return nil, err
 	}
 
-	file = &ImageFile{Filepath: filepath}
+	file = &ImageFile{
+		Filepath: filepath,
+		Storage:  storage,
+	}
 
 	contentType := file.ContentType()
 
@@ -72,7 +75,6 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 	}
 
 	file.Source = dest
-	file.Storage = storage
 	file.Headers = headers
 
 	return file, err

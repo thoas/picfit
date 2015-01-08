@@ -105,6 +105,26 @@ func (i *ImageFile) Path() string {
 	return i.Storage.Path(i.Filepath)
 }
 
+func (i *ImageFile) Save() error {
+	content, err := i.ToBytes()
+
+	if err != nil {
+		return err
+	}
+
+	return i.Storage.Save(i.Filepath, content)
+}
+
+func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
+	content, err := i.ToBytesWithFormat(format)
+
+	if err != nil {
+		return err
+	}
+
+	return i.Storage.Save(i.Filepath, content)
+}
+
 func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
 	buf := &bytes.Buffer{}
 

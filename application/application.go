@@ -59,18 +59,10 @@ func (a *Application) Store(i *image.ImageFile) error {
 	con := App.KVStore.Connection()
 	defer con.Close()
 
-	content, err := i.ToBytes()
+	err := i.Save()
 
 	if err != nil {
 		a.Logger.Error.Print(err)
-		return err
-	}
-
-	err = a.DestStorage.Save(i.Filepath, content)
-
-	if err != nil {
-		a.Logger.Error.Print(err)
-
 		return err
 	}
 
@@ -142,6 +134,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 		}
 
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
+		file.Storage = a.DestStorage
 	}
 
 	file.Key = req.Key
