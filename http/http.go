@@ -22,14 +22,20 @@ var HeaderKeys = []string{
 	"Etag",
 }
 
-func (s *HTTPStorage) Open(filepath string) ([]byte, error) {
+func (s *HTTPStorage) Open(filepath string) (storages.File, error) {
 	u, err := url.Parse(s.URL(filepath))
 
 	if err != nil {
 		return nil, err
 	}
 
-	return s.OpenFromURL(u)
+	content, err := s.OpenFromURL(u)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return storages.NewContentFile(content), nil
 }
 
 func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {

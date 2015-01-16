@@ -112,7 +112,7 @@ func (i *ImageFile) Save() error {
 		return err
 	}
 
-	return i.Storage.Save(i.Filepath, content)
+	return i.Storage.Save(i.Filepath, storages.NewContentFile(content))
 }
 
 func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
@@ -122,7 +122,7 @@ func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
 		return err
 	}
 
-	return i.Storage.Save(i.Filepath, content)
+	return i.Storage.Save(i.Filepath, storages.NewContentFile(content))
 }
 
 func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {

@@ -42,7 +42,13 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 	var file *ImageFile
 	var err error
 
-	body, err := storage.Open(filepath)
+	f, err := storage.Open(filepath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
 
 	if err != nil {
 		return nil, err
@@ -66,9 +72,7 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 		"Content-Type":  contentType,
 	}
 
-	reader := bytes.NewReader(body)
-
-	dest, err := imaging.Decode(reader)
+	dest, err := imaging.Decode(f)
 
 	if err != nil {
 		return nil, err

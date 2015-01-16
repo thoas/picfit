@@ -1,13 +1,14 @@
 package dummy
 
 import (
+	"github.com/thoas/storages"
 	"time"
 )
 
 type DummyStorage struct {
 }
 
-func (s *DummyStorage) Save(filepath string, content []byte) error {
+func (s *DummyStorage) Save(filepath string, file storages.File) error {
 	return nil
 }
 
@@ -23,7 +24,7 @@ func (s *DummyStorage) Delete(filepath string) error {
 	return nil
 }
 
-func (s *DummyStorage) Open(filepath string) ([]byte, error) {
+func (s *DummyStorage) Open(filepath string) (storages.File, error) {
 	return nil, nil
 }
 
