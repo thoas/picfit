@@ -43,7 +43,12 @@ func Run(path string) error {
 
 	data := map[string]interface{}{}
 	dec := json.NewDecoder(strings.NewReader(string(content)))
-	dec.Decode(&data)
+	err = dec.Decode(&data)
+
+	if err != nil {
+		return err
+	}
+
 	jq := jsonq.NewQuery(data)
 
 	for _, initializer := range Initializers {
