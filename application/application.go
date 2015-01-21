@@ -19,11 +19,6 @@ type Shard struct {
 	Width int
 }
 
-type Logger struct {
-	Info  *logrus.Logger
-	Error *logrus.Logger
-}
-
 type Application struct {
 	Prefix        string
 	SecretKey     string
@@ -33,19 +28,13 @@ type Application struct {
 	DestStorage   storages.Storage
 	Router        *mux.Router
 	Shard         Shard
-	Logger        Logger
 	Raven         *raven.Client
+	Logger        *logrus.Logger
 }
 
 func NewApplication() *Application {
-	var ErrorLogger = logrus.New()
-	ErrorLogger.Level = logrus.ErrorLevel
-
 	return &Application{
-		Logger: Logger{
-			Info:  logrus.New(),
-			Error: ErrorLogger,
-		},
+		Logger: logrus.New(),
 	}
 }
 
@@ -62,23 +51,23 @@ func (a *Application) Store(i *image.ImageFile) error {
 	err := i.Save()
 
 	if err != nil {
-		a.Logger.Error.Print(err)
+		a.Logger.Fatal(err)
 		return err
 	}
 
-	a.Logger.Info.Printf("Save thumbnail %s to storage", i.Filepath)
+	a.Logger.Info("Save thumbnail %s to storage", i.Filepath)
 
 	key := a.WithPrefix(i.Key)
 
 	err = con.Set(key, i.Filepath)
 
 	if err != nil {
-		a.Logger.Error.Print(err)
+		a.Logger.Fatal(err)
 
 		return err
 	}
 
-	a.Logger.Info.Printf("Save key %s=%s to kvstore", key, i.Filepath)
+	a.Logger.Info("Save key %s=%s to kvstore", key, i.Filepath)
 
 	return nil
 }

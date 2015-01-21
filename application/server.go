@@ -10,7 +10,6 @@ import (
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
 	"github.com/thoas/picfit/middleware"
-	"github.com/thoas/picfit/util"
 	"io/ioutil"
 	"net/http"
 	"runtime"
@@ -38,7 +37,7 @@ func Run(path string) error {
 	content, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Your config file %s cannot be loaded: %s", path, err)
 	}
 
 	data := map[string]interface{}{}
@@ -46,7 +45,7 @@ func Run(path string) error {
 	err = dec.Decode(&data)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Your config file %s cannot be parsed: %s", path, err)
 	}
 
 	jq := jsonq.NewQuery(data)
@@ -54,7 +53,9 @@ func Run(path string) error {
 	for _, initializer := range Initializers {
 		err = initializer(jq)
 
-		util.PanicIf(err)
+		if err != nil {
+			return fmt.Errorf("An error occured during init: %s", err)
+		}
 	}
 
 	App.Router = mux.NewRouter()
@@ -87,11 +88,11 @@ func Run(path string) error {
 
 	n := negroni.New(&middleware.Recovery{
 		Raven:      App.Raven,
-		Logger:     App.Logger.Error,
+		Logger:     App.Logger,
 		PrintStack: debug,
 		StackAll:   false,
 		StackSize:  1024 * 8,
-	}, &middleware.Logger{App.Logger.Info})
+	}, &middleware.Logger{App.Logger})
 	n.Use(cors.New(cors.Options{
 		AllowedOrigins: allowedOrigins,
 		AllowedMethods: allowedMethods,

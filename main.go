@@ -44,12 +44,12 @@ func main() {
 			Action: func(c *cli.Context) {
 				key := c.String("key")
 				if key == "" {
-					application.App.Logger.Info.Printf("You must provide a key")
+					application.App.Logger.Info("You must provide a key")
 					os.Exit(1)
 				}
 
 				if len(c.Args()) < 1 {
-					application.App.Logger.Info.Printf("You must provide a Query String")
+					application.App.Logger.Info("You must provide a Query String")
 					os.Exit(1)
 				}
 
@@ -59,9 +59,9 @@ func main() {
 
 				appended := signature.AppendSign(key, qs)
 
-				application.App.Logger.Info.Printf("Query String: %s", qs)
-				application.App.Logger.Info.Printf("Signature: %s", sig)
-				application.App.Logger.Info.Printf("Signed Query String: %s", appended)
+				application.App.Logger.Info("Query String: %s", qs)
+				application.App.Logger.Info("Signature: %s", sig)
+				application.App.Logger.Info("Signed Query String: %s", appended)
 			},
 		},
 	}
@@ -70,18 +70,18 @@ func main() {
 
 		if config != "" {
 			if _, err := os.Stat(config); err != nil {
-				application.App.Logger.Error.Printf("Can't find config file `%s`\n", config)
+				application.App.Logger.Info("Can't find config file `%s`\n", config)
 				os.Exit(1)
 			}
 		} else {
-			application.App.Logger.Error.Print("Can't find config file\n")
+			application.App.Logger.Info("Can't find config file\n")
 			os.Exit(1)
 		}
 
 		err := application.Run(config)
 
 		if err != nil {
-			application.App.Logger.Error.Print(err)
+			application.App.Logger.Fatal(err)
 			os.Exit(1)
 		}
 	}
