@@ -15,7 +15,8 @@ import (
 )
 
 type ImageFile struct {
-	Source   image.Image
+	Source   []byte
+	Image    image.Image
 	Key      string
 	Headers  map[string]string
 	Filepath string
@@ -23,7 +24,7 @@ type ImageFile struct {
 }
 
 func (i *ImageFile) ImageSize() (int, int) {
-	return i.Source.Bounds().Max.X, i.Source.Bounds().Max.Y
+	return i.Image.Bounds().Max.X, i.Image.Bounds().Max.Y
 }
 
 func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Transformation) *image.NRGBA {
@@ -32,13 +33,23 @@ func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Trans
 	factor := scalingFactor(width, height, dstWidth, dstHeight)
 
 	if factor < 1 || upscale {
-		return trans(i.Source, dstWidth, dstHeight, imaging.Lanczos)
+		return trans(i.Image, dstWidth, dstHeight, imaging.Lanczos)
 	}
 
-	return imaging.Clone(i.Source)
+	return imaging.Clone(i.Image)
 }
 
 func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*ImageFile, error) {
+
+	if i.Image == nil {
+		image, err := imaging.Decode(bytes.NewReader(i.Source))
+
+		if err != nil {
+			return nil, err
+		}
+
+		i.Image = image
+	}
 
 	params := map[string]string{
 		"upscale": "1",
@@ -75,7 +86,8 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 		dest := i.Scale(w, h, upscale, operation.Transformation)
 
 		file := &ImageFile{
-			Source:   dest,
+			Image:    dest,
+			Source:   i.Source,
 			Key:      i.Key,
 			Headers:  i.Headers,
 			Filepath: i.Filepath,
@@ -126,15 +138,19 @@ func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
 }
 
 func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
-	buf := &bytes.Buffer{}
+	if i.Image != nil {
+		buf := &bytes.Buffer{}
 
-	err := imaging.Encode(buf, i.Source, format)
+		err := imaging.Encode(buf, i.Image, format)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		return buf.Bytes(), nil
 	}
 
-	return buf.Bytes(), nil
+	return i.Source, nil
 }
 
 func (i *ImageFile) Format() string {

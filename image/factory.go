@@ -1,10 +1,9 @@
 package image
 
 import (
-	"bytes"
-	"github.com/disintegration/imaging"
 	"github.com/thoas/picfit/http"
 	"github.com/thoas/storages"
+	"io/ioutil"
 	"net/url"
 )
 
@@ -17,14 +16,6 @@ func FromURL(u *url.URL) (*ImageFile, error) {
 		return nil, err
 	}
 
-	reader := bytes.NewReader(content)
-
-	dest, err := imaging.Decode(reader)
-
-	if err != nil {
-		return nil, err
-	}
-
 	headers, err := storage.HeadersFromURL(u)
 
 	if err != nil {
@@ -32,7 +23,7 @@ func FromURL(u *url.URL) (*ImageFile, error) {
 	}
 
 	return &ImageFile{
-		Source:   dest,
+		Source:   content,
 		Headers:  headers,
 		Filepath: u.Path[1:],
 	}, nil
@@ -72,13 +63,13 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 		"Content-Type":  contentType,
 	}
 
-	dest, err := imaging.Decode(f)
+	buf, err := ioutil.ReadAll(f)
 
 	if err != nil {
 		return nil, err
 	}
 
-	file.Source = dest
+	file.Source = buf
 	file.Headers = headers
 
 	return file, err
