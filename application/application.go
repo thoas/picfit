@@ -55,7 +55,7 @@ func (a *Application) Store(i *image.ImageFile) error {
 		return err
 	}
 
-	a.Logger.Info("Save thumbnail %s to storage", i.Filepath)
+	a.Logger.Infof("Save thumbnail %s to storage", i.Filepath)
 
 	key := a.WithPrefix(i.Key)
 
@@ -67,7 +67,7 @@ func (a *Application) Store(i *image.ImageFile) error {
 		return err
 	}
 
-	a.Logger.Info("Save key %s=%s to kvstore", key, i.Filepath)
+	a.Logger.Infof("Save key %s=%s to kvstore", key, i.Filepath)
 
 	return nil
 }
