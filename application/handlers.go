@@ -58,7 +58,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	delete(sorted, "sig")
 
-	key := hash.Tokey(hash.Serialize(sorted))
+	serialized := hash.Serialize(sorted)
+
+	key := hash.Tokey(serialized)
+
+	App.Logger.Infof("Generating key %s from request: %s", key, serialized)
 
 	if (err != nil && !ok) || errfmt != nil || errop != nil || !valid {
 		res.BadRequest()

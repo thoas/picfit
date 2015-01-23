@@ -67,7 +67,7 @@ func (a *Application) Store(i *image.ImageFile) error {
 		return err
 	}
 
-	a.Logger.Infof("Save key %s=%s to kvstore", key, i.Filepath)
+	a.Logger.Infof("Save key %s => %s to kvstore", key, i.Filepath)
 
 	return nil
 }
@@ -83,12 +83,16 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	}
 	var err error
 
+	key := a.WithPrefix(req.Key)
+
 	// Image from the KVStore found
-	stored, err := kvstores.String(req.Connection.Get(a.WithPrefix(req.Key)))
+	stored, err := kvstores.String(req.Connection.Get(key))
 
 	file.Filepath = stored
 
 	if stored != "" {
+		a.Logger.Infof("Key %s found in kvstore: %s", key, stored)
+
 		if load {
 			file, err = image.FromStorage(a.DestStorage, stored)
 
@@ -97,6 +101,8 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			}
 		}
 	} else {
+		a.Logger.Infof("Key not found in kvstore", key)
+
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
 		if req.URL != nil {
