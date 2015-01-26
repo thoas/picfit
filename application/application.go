@@ -101,7 +101,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			}
 		}
 	} else {
-		a.Logger.Infof("Key not found in kvstore", key)
+		a.Logger.Infof("Key %s not found in kvstore", key)
 
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
