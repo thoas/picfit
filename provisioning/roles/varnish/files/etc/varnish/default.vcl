@@ -1,3 +1,5 @@
+vcl 4.0;
+
 backend default {
     .host = "127.0.0.1";
     .port = "8080";
@@ -9,6 +11,6 @@ sub vcl_recv {
 }
 
 # Remove all cookies
-sub vcl_fetch {
+sub vcl_backend_response {
     unset beresp.http.set-cookie;
 }
