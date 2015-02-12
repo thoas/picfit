@@ -546,6 +546,14 @@ Deployment
 It's recommended that the application run behind a CDN for larger applications
 or behind varnish for smaller ones.
 
+Provisioning is handled by Ansible_, you will find files in
+the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
+
+You must have Ansible_ installed on your laptop, basically if you have python
+already installed you can do ::
+
+    $ pip install ansible
+
 If you want to run the installed version from vagrant ::
 
     $ vagrant up
@@ -555,9 +563,6 @@ Then connect to vagrant ::
     $ vagrant ssh
 
 The config is located to ``/etc/picfit/config.json`` on the vagrant box.
-
-You will find provisioning files handled by Ansible_ in
-the `repository <https://github.com/thoas/picfit/tree/master/provisioning>`_.
 
 Roadmap
 =======
