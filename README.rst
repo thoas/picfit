@@ -8,7 +8,7 @@ and `gorilla mux <https://github.com/gorilla/mux>`_.
 It will act as a proxy of your storage engine and will be
 served ideally behind an http cache system like varnish_.
 
-It supports mutiple `storages backends <https://github.com/thoas/storages>`_
+It supports multiple `storages backends <https://github.com/thoas/storages>`_
 and multiple `key/value stores <https://github.com/thoas/kvstores>`_.
 
 Installation
@@ -381,7 +381,7 @@ Thumbnail
 ---------
 
 Thumbnail scales the image up or down using the specified resample filter,
-crops it to the specified width and hight and returns the transformed image.
+crops it to the specified width and height and returns the transformed image.
 
 -  **w** - The desired width of the image
 -  **h** - The desired height of the image
