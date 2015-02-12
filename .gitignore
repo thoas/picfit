@@ -22,5 +22,4 @@ _testmain.go
 *.exe
 *.test
 *.prof
-config.json
 .DS_Store
