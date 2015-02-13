@@ -316,7 +316,7 @@ Parameters to call the picfit service are:
 - **operation** - The operation to perform, see Operations_
 - **sig** - The signature key which is the representation of your query string and your secret key, see Security_
 - **method** - The method to perform, see Methods_
-- **url** - The url of the image to generate (not required if ``filepath`` provided)
+- **url** - The url of the image to generate (not required if ``path`` provided)
 - **width** - The desired width of the image, if ``0`` is provided the service will calculate the ratio with ``height``
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
