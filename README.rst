@@ -564,6 +564,19 @@ Then connect to vagrant ::
 
 The config is located to ``/etc/picfit/config.json`` on the vagrant box.
 
+Limitations
+===========
+
+CMYK non-support
+----------------
+
+Go image doesn't currently support `CMYK color mode <https://github.com/golang/go/issues/4500>`_.
+
+Before passing an image to picfit, you must convert it to RGB.
+
+I'm planning to support multiple image engines like `ImageMagick <http://www.imagemagick.org/>`_ to avoid
+this.
+
 Roadmap
 =======
 
