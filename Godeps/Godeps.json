@@ -91,7 +91,7 @@
 			"Rev": "2d3baec0901daab5cc25673fb44388add33de30b"
 		},
 		{
-			"ImportPath": "github.com/thoas/kvstores",
+			"ImportPath": "github.com/thoas/gokvstores",
 			"Rev": "38f07aa280a01122555ee0ea3133b22cd16c0d36"
 		},
 		{
@@ -99,7 +99,7 @@
 			"Rev": "1df676b0c6d030a113000a25709961a1ee262f87"
 		},
 		{
-			"ImportPath": "github.com/thoas/storages",
+			"ImportPath": "github.com/thoas/gostorages",
 			"Rev": "ff4abc52394134c8f23dd6925eed6570b26eaadb"
 		},
 		{
