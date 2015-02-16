@@ -1,13 +1,13 @@
 package dummy
 
 import (
-	"github.com/thoas/kvstores"
+	"github.com/thoas/gokvstores"
 )
 
 type DummyKVStore struct {
 }
 
-func (k *DummyKVStore) Connection() kvstores.KVStoreConnection {
+func (k *DummyKVStore) Connection() gokvstores.KVStoreConnection {
 	return &DummyKVStoreConnection{}
 }
 

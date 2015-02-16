@@ -2,7 +2,7 @@ package application
 
 import (
 	"encoding/json"
-	"github.com/thoas/kvstores"
+	"github.com/thoas/gokvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/extractors"
 	"github.com/thoas/picfit/hash"
@@ -23,7 +23,7 @@ func NotFoundHandler() http.Handler {
 type Request struct {
 	*muxer.Request
 	Operation  *image.Operation
-	Connection kvstores.KVStoreConnection
+	Connection gokvstores.KVStoreConnection
 	Key        string
 	URL        *url.URL
 	Filepath   string

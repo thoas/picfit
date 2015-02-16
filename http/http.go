@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/franela/goreq"
-	"github.com/thoas/storages"
+	"github.com/thoas/gostorages"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -11,7 +11,7 @@ import (
 )
 
 type HTTPStorage struct {
-	storages.Storage
+	gostorages.Storage
 }
 
 var HeaderKeys = []string{
@@ -22,7 +22,7 @@ var HeaderKeys = []string{
 	"Etag",
 }
 
-func (s *HTTPStorage) Open(filepath string) (storages.File, error) {
+func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 	u, err := url.Parse(s.URL(filepath))
 
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *HTTPStorage) Open(filepath string) (storages.File, error) {
 		return nil, err
 	}
 
-	return storages.NewContentFile(content), nil
+	return gostorages.NewContentFile(content), nil
 }
 
 func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
@@ -96,5 +96,5 @@ func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("Last-Modified header not found")
 	}
 
-	return time.Parse(storages.LastModifiedFormat, lastModified)
+	return time.Parse(gostorages.LastModifiedFormat, lastModified)
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/getsentry/raven-go"
 	"github.com/jmoiron/jsonq"
+	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/util"
-	"github.com/thoas/storages"
 )
 
 type Initializer func(jq *jsonq.JsonQuery) error
@@ -119,7 +119,7 @@ var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	return nil
 }
 
-func getStorageFromConfig(key string, jq *jsonq.JsonQuery) (storages.Storage, error) {
+func getStorageFromConfig(key string, jq *jsonq.JsonQuery) (gostorages.Storage, error) {
 	storageType, err := jq.String("storage", key, "type")
 
 	parameter, ok := Storages[storageType]

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
-	"github.com/thoas/storages"
+	"github.com/thoas/gostorages"
 	"image"
 	"math"
 	"mime"
@@ -20,7 +20,7 @@ type ImageFile struct {
 	Key      string
 	Headers  map[string]string
 	Filepath string
-	Storage  storages.Storage
+	Storage  gostorages.Storage
 }
 
 func (i *ImageFile) ImageSize() (int, int) {
@@ -124,7 +124,7 @@ func (i *ImageFile) Save() error {
 		return err
 	}
 
-	return i.Storage.Save(i.Filepath, storages.NewContentFile(content))
+	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(content))
 }
 
 func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
@@ -134,7 +134,7 @@ func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
 		return err
 	}
 
-	return i.Storage.Save(i.Filepath, storages.NewContentFile(content))
+	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(content))
 }
 
 func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {

@@ -92,7 +92,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/gokvstores",
-			"Rev": "38f07aa280a01122555ee0ea3133b22cd16c0d36"
+			"Rev": "c9be15c374e706810be9f09770644507bb58a3fd"
 		},
 		{
 			"ImportPath": "github.com/thoas/muxer",
@@ -100,7 +100,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/gostorages",
-			"Rev": "ff4abc52394134c8f23dd6925eed6570b26eaadb"
+			"Rev": "e7e7037a58b15340c916412357583750a5d25ea6"
 		},
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",

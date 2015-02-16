@@ -5,11 +5,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
-	"github.com/thoas/kvstores"
+	"github.com/thoas/gokvstores"
+	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/signature"
-	"github.com/thoas/storages"
 	"net/url"
 	"strings"
 )
@@ -23,9 +23,9 @@ type Application struct {
 	Prefix        string
 	SecretKey     string
 	Format        string
-	KVStore       kvstores.KVStore
-	SourceStorage storages.Storage
-	DestStorage   storages.Storage
+	KVStore       gokvstores.KVStore
+	SourceStorage gostorages.Storage
+	DestStorage   gostorages.Storage
 	Router        *mux.Router
 	Shard         Shard
 	Raven         *raven.Client
@@ -86,7 +86,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	key := a.WithPrefix(req.Key)
 
 	// Image from the KVStore found
-	stored, err := kvstores.String(req.Connection.Get(key))
+	stored, err := gokvstores.String(req.Connection.Get(key))
 
 	file.Filepath = stored
 

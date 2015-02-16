@@ -1,8 +1,8 @@
 package image
 
 import (
+	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/http"
-	"github.com/thoas/storages"
 	"io/ioutil"
 	"net/url"
 )
@@ -29,7 +29,7 @@ func FromURL(u *url.URL) (*ImageFile, error) {
 	}, nil
 }
 
-func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) {
+func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error) {
 	var file *ImageFile
 	var err error
 
@@ -59,7 +59,7 @@ func FromStorage(storage storages.Storage, filepath string) (*ImageFile, error) 
 	contentType := file.ContentType()
 
 	headers := map[string]string{
-		"Last-Modified": modifiedTime.Format(storages.LastModifiedFormat),
+		"Last-Modified": modifiedTime.Format(gostorages.LastModifiedFormat),
 		"Content-Type":  contentType,
 	}
 

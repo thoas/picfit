@@ -3,16 +3,16 @@ package application
 import (
 	"fmt"
 	"github.com/mitchellh/goamz/aws"
-	"github.com/thoas/kvstores"
+	"github.com/thoas/gokvstores"
+	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/http"
-	"github.com/thoas/storages"
 	"strconv"
 )
 
-type KVStoreParameter func(params map[string]string) (kvstores.KVStore, error)
-type StorageParameter func(params map[string]string) (storages.Storage, error)
+type KVStoreParameter func(params map[string]string) (gokvstores.KVStore, error)
+type StorageParameter func(params map[string]string) (gostorages.Storage, error)
 
-var CacheKVStoreParameter KVStoreParameter = func(params map[string]string) (kvstores.KVStore, error) {
+var CacheKVStoreParameter KVStoreParameter = func(params map[string]string) (gokvstores.KVStore, error) {
 	value, ok := params["max_entries"]
 
 	var maxEntries int
@@ -23,10 +23,10 @@ var CacheKVStoreParameter KVStoreParameter = func(params map[string]string) (kvs
 		maxEntries, _ = strconv.Atoi(value)
 	}
 
-	return kvstores.NewCacheKVStore(maxEntries), nil
+	return gokvstores.NewCacheKVStore(maxEntries), nil
 }
 
-var RedisKVStoreParameter KVStoreParameter = func(params map[string]string) (kvstores.KVStore, error) {
+var RedisKVStoreParameter KVStoreParameter = func(params map[string]string) (gokvstores.KVStore, error) {
 	host := params["host"]
 
 	password := params["password"]
@@ -35,14 +35,14 @@ var RedisKVStoreParameter KVStoreParameter = func(params map[string]string) (kvs
 
 	db, _ := strconv.Atoi(params["db"])
 
-	return kvstores.NewRedisKVStore(host, port, password, db), nil
+	return gokvstores.NewRedisKVStore(host, port, password, db), nil
 }
 
-var FileSystemStorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
-	return storages.NewFileSystemStorage(params["location"], params["base_url"]), nil
+var FileSystemStorageParameter StorageParameter = func(params map[string]string) (gostorages.Storage, error) {
+	return gostorages.NewFileSystemStorage(params["location"], params["base_url"]), nil
 }
 
-var HTTPFileSystemStorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
+var HTTPFileSystemStorageParameter StorageParameter = func(params map[string]string) (gostorages.Storage, error) {
 	storage, err := FileSystemStorageParameter(params)
 
 	if err != nil {
@@ -56,7 +56,7 @@ var HTTPFileSystemStorageParameter StorageParameter = func(params map[string]str
 	return &http.HTTPStorage{storage}, nil
 }
 
-var HTTPS3StorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
+var HTTPS3StorageParameter StorageParameter = func(params map[string]string) (gostorages.Storage, error) {
 	storage, err := S3StorageParameter(params)
 
 	if err != nil {
@@ -70,9 +70,9 @@ var HTTPS3StorageParameter StorageParameter = func(params map[string]string) (st
 	return &http.HTTPStorage{storage}, nil
 }
 
-var S3StorageParameter StorageParameter = func(params map[string]string) (storages.Storage, error) {
+var S3StorageParameter StorageParameter = func(params map[string]string) (gostorages.Storage, error) {
 
-	ACL, ok := storages.ACLs[params["acl"]]
+	ACL, ok := gostorages.ACLs[params["acl"]]
 
 	if !ok {
 		return nil, fmt.Errorf("The ACL %s does not exist", params["acl"])
@@ -84,7 +84,7 @@ var S3StorageParameter StorageParameter = func(params map[string]string) (storag
 		return nil, fmt.Errorf("The Region %s does not exist", params["region"])
 	}
 
-	return storages.NewS3Storage(
+	return gostorages.NewS3Storage(
 		params["access_key_id"],
 		params["secret_access_key"],
 		params["bucket_name"],
