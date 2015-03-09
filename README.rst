@@ -1,6 +1,10 @@
 picfit
 ======
 
+.. image:: https://secure.travis-ci.org/thoas/picfit.png?branch=master
+    :alt: Build Status
+    :target: http://travis-ci.org/thoas/picfit
+
 picfit is a reusable Go server to manipulate (resize, thumbnail, etc.)
 images built on top of `negroni <https://github.com/codegangsta/negroni>`_
 and `gorilla mux <https://github.com/gorilla/mux>`_.
