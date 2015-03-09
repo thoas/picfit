@@ -5,6 +5,8 @@ picfit
     :alt: Build Status
     :target: http://travis-ci.org/thoas/picfit
 
+.. image:: https://d262ilb51hltx0.cloudfront.net/max/800/1*oR04S6Ie7s1JctwjsDsN0w.png
+
 picfit is a reusable Go server to manipulate (resize, thumbnail, etc.)
 images built on top of `negroni <https://github.com/codegangsta/negroni>`_
 and `gorilla mux <https://github.com/gorilla/mux>`_.
