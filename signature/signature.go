@@ -9,7 +9,7 @@ import (
 	"regexp"
 )
 
-var signRegex, _ = regexp.Compile("&?sig=[^&]*")
+var signRegex = regexp.MustCompile("&?sig=[^&]*")
 
 func Sign(key string, qs string) string {
 	mac := hmac.New(sha1.New, []byte(key))
