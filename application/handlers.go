@@ -12,12 +12,10 @@ import (
 	"net/url"
 )
 
-func NotFound(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "404 not found", http.StatusNotFound)
-}
-
 func NotFoundHandler() http.Handler {
-	return http.HandlerFunc(NotFound)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "404 not found", http.StatusNotFound)
+	})
 }
 
 type Request struct {
