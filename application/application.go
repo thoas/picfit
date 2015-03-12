@@ -122,7 +122,11 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		format := req.Format
+		format := file.Format()
+
+		if req.Format != "" {
+			format = req.Format
+		}
 
 		if format == "" {
 			format = a.Format
