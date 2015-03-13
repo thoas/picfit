@@ -16,6 +16,7 @@ var Extractors = map[string]extractors.Extractor{
 	"op":  extractors.Operation,
 	"fmt": extractors.Format,
 	"url": extractors.URL,
+	"q":   extractors.Quality,
 }
 
 func NotFoundHandler() http.Handler {
@@ -25,7 +26,8 @@ func NotFoundHandler() http.Handler {
 }
 
 type Options struct {
-	Format string
+	Format  string
+	Quality int
 }
 
 type Request struct {
@@ -82,6 +84,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var u *url.URL
 	var path string
 	var format string
+	var quality int
 
 	value, ok := extracted["url"]
 
@@ -106,7 +109,13 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		format = string(path)
 	}
 
-	options := &Options{Format: format}
+	value, ok = extracted["q"]
+
+	if ok && value != nil {
+		quality = value.(int)
+	}
+
+	options := &Options{Quality: quality, Format: format}
 
 	h(res, &Request{
 		request,

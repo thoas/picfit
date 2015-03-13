@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/url"
 	"path/filepath"
+	"strconv"
 )
 
 type Extractor func(key string, req *muxer.Request) (interface{}, error)
@@ -33,6 +34,26 @@ var Format Extractor = func(key string, req *muxer.Request) (interface{}, error)
 	}
 
 	return format, nil
+}
+
+var Quality Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+	q, ok := req.QueryString[key]
+
+	if !ok {
+		return nil, nil
+	}
+
+	quality, err := strconv.Atoi(q)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if quality > 100 {
+		return nil, fmt.Errorf("Quality should be <= 100")
+	}
+
+	return quality, nil
 }
 
 var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {

@@ -316,7 +316,7 @@ Parameters to call the picfit service are:
 
 ::
 
-    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}"
+    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}&q={quality}"
 
 - **path** - The filepath to load the image using your source storage
 - **operation** - The operation to perform, see Operations_
@@ -327,6 +327,7 @@ Parameters to call the picfit service are:
 - **height** - The desired height of the image, if ``0`` is provided the service will calculate the ratio with ``width``
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
 - **format** - The output format to save the image, by default the format will be the source format (a ``GIF`` image source will be saved as ``GIF``),  see Formats_
+- **quality** - The quality to save the image, by default the quality will be the highest possible, it will be apply only on ``JPEG`` format
 
 To use this service, include the service url as replacement
 for your images, for example:
