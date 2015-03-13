@@ -1,7 +1,7 @@
 package image
 
 import (
-	"github.com/disintegration/imaging"
+	"github.com/thoas/imaging"
 	"image"
 )
 

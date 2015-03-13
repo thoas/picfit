@@ -3,9 +3,9 @@ package image
 import (
 	"bytes"
 	"fmt"
-	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
 	"github.com/thoas/gostorages"
+	"github.com/thoas/imaging"
 	"image"
 	"math"
 	"mime"

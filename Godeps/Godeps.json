@@ -18,8 +18,8 @@
 			"Rev": "ae96f1c1ac9eb11be7dff4fe4cb42f6846b93d77"
 		},
 		{
-			"ImportPath": "github.com/disintegration/imaging",
-			"Rev": "56d1f5abd5d1bf5ddf76a691fb3f121052a2e42d"
+			"ImportPath": "github.com/thoas/imaging",
+			"Rev": "fdb301fb4bf44bea4f76ce0e614638d80f921e68"
 		},
 		{
 			"ImportPath": "github.com/facebookgo/clock",
