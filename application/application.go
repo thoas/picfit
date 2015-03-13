@@ -124,8 +124,8 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 		format := file.Format()
 
-		if req.Format != "" {
-			format = req.Format
+		if req.Options.Format != "" {
+			format = req.Options.Format
 		}
 
 		if format == "" {

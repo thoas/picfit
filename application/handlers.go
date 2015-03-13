@@ -12,10 +12,20 @@ import (
 	"net/url"
 )
 
+var Extractors = map[string]extractors.Extractor{
+	"op":  extractors.Operation,
+	"fmt": extractors.Format,
+	"url": extractors.URL,
+}
+
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found", http.StatusNotFound)
 	})
+}
+
+type Options struct {
+	Format string
 }
 
 type Request struct {
@@ -25,7 +35,7 @@ type Request struct {
 	Key        string
 	URL        *url.URL
 	Filepath   string
-	Format     string
+	Options    *Options
 }
 
 type Handler func(muxer.Response, *Request)
@@ -40,15 +50,22 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		request.QueryString[k] = v
 	}
 
-	operation, errop := extractors.Operation(request)
-
 	res := muxer.NewResponse(w)
 
-	url, err := extractors.URL(request)
+	extracted := map[string]interface{}{}
 
-	filepath, ok := request.QueryString["path"]
+	for key, extractor := range Extractors {
+		result, err := extractor(key, request)
 
-	format, errfmt := extractors.Format(request)
+		if err != nil {
+			App.Logger.Info(err)
+
+			res.BadRequest()
+			return
+		}
+
+		extracted[key] = result
+	}
 
 	sorted := util.SortMapString(request.QueryString)
 
@@ -62,19 +79,43 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	App.Logger.Infof("Generating key %s from request: %s", key, serialized)
 
-	if (err != nil && !ok) || errfmt != nil || errop != nil || !valid {
+	var u *url.URL
+	var path string
+	var format string
+
+	value, ok := extracted["url"]
+
+	if ok {
+		u = value.(*url.URL)
+	}
+
+	value, ok = extracted["path"]
+
+	if ok {
+		path = string(path)
+	}
+
+	if !valid || (u == nil && path == "") {
 		res.BadRequest()
 		return
 	}
 
+	value, ok = extracted["fmt"]
+
+	if ok {
+		format = string(path)
+	}
+
+	options := &Options{Format: format}
+
 	h(res, &Request{
 		request,
-		operation,
+		extracted["op"].(*image.Operation),
 		con,
 		key,
-		url,
-		filepath,
-		format,
+		u,
+		path,
+		options,
 	})
 }
 

@@ -6,10 +6,13 @@ import (
 	"github.com/thoas/picfit/image"
 	"mime"
 	"net/url"
+	"path/filepath"
 )
 
-func Operation(req *muxer.Request) (*image.Operation, error) {
-	operation, ok := image.Operations[req.QueryString["op"]]
+type Extractor func(key string, req *muxer.Request) (interface{}, error)
+
+var Operation Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+	operation, ok := image.Operations[req.QueryString[key]]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid method %s or invalid parameters", operation)
@@ -18,34 +21,44 @@ func Operation(req *muxer.Request) (*image.Operation, error) {
 	return operation, nil
 }
 
-func Format(req *muxer.Request) (string, error) {
-	format, ok := req.QueryString["fmt"]
+var Format Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+	format, ok := req.QueryString[key]
 
 	if !ok {
-		return "", nil
+		return nil, nil
 	}
 
 	if _, ok := image.ContentTypes[format]; !ok {
-		return "", fmt.Errorf("Unknown format %s", format)
+		return nil, fmt.Errorf("Unknown format %s", format)
 	}
 
 	return format, nil
 }
 
-func URL(req *muxer.Request) (*url.URL, error) {
-	value, ok := req.QueryString["url"]
+var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+	value, ok := req.QueryString[key]
 
-	if ok {
-		url, err := url.Parse(value)
-
-		mimetype := mime.TypeByExtension(value)
-
-		_, ok := image.Formats[mimetype]
-
-		if ok || err == nil {
-			return url, nil
-		}
+	if !ok {
+		return nil, nil
 	}
 
-	return nil, fmt.Errorf("URL %s is not valid", value)
+	url, err := url.Parse(value)
+
+	if err != nil {
+		return nil, fmt.Errorf("URL %s is not valid", value)
+	}
+
+	mimetype := mime.TypeByExtension(filepath.Ext(value))
+
+	_, ok = image.Formats[mimetype]
+
+	if !ok {
+		return nil, fmt.Errorf("Mimetype %s is not supported", mimetype)
+	}
+
+	return url, nil
+}
+
+var Path Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+	return req.QueryString[key], nil
 }
