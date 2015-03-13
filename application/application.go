@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/gostorages"
+	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/signature"
@@ -30,6 +31,7 @@ type Application struct {
 	Shard         Shard
 	Raven         *raven.Client
 	Logger        *logrus.Logger
+	Engine        engines.Engine
 }
 
 func NewApplication() *Application {
@@ -116,23 +118,18 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		file, err = file.Transform(req.Operation, req.QueryString)
-
-		if err != nil {
-			return nil, err
-		}
-
 		format := file.Format()
-
-		if req.Options.Format != "" {
-			format = req.Options.Format
-		}
 
 		if format == "" {
 			format = a.Format
 		}
 
-		file.Quality = req.Options.Quality
+		file, err = file.Transform(a.Engine, req.Operation, req.QueryString, &engines.Options{Format: format})
+
+		if err != nil {
+			return nil, err
+		}
+
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
 		file.Storage = a.DestStorage
 	}
@@ -149,6 +146,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	return file, err
 }
+
 func (a *Application) IsValidSign(qs map[string]string) bool {
 	if a.SecretKey == "" {
 		return true

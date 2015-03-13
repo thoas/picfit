@@ -14,9 +14,7 @@ import (
 
 var Extractors = map[string]extractors.Extractor{
 	"op":   extractors.Operation,
-	"fmt":  extractors.Format,
 	"url":  extractors.URL,
-	"q":    extractors.Quality,
 	"path": extractors.Path,
 }
 
@@ -26,11 +24,6 @@ func NotFoundHandler() http.Handler {
 	})
 }
 
-type Options struct {
-	Format  string
-	Quality int
-}
-
 type Request struct {
 	*muxer.Request
 	Operation  *image.Operation
@@ -38,7 +31,6 @@ type Request struct {
 	Key        string
 	URL        *url.URL
 	Filepath   string
-	Options    *Options
 }
 
 type Handler func(muxer.Response, *Request)
@@ -84,8 +76,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	var u *url.URL
 	var path string
-	var format string
-	var quality int
 
 	value, ok := extracted["url"]
 
@@ -104,20 +94,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	value, ok = extracted["fmt"]
-
-	if ok && value != nil {
-		format = value.(string)
-	}
-
-	value, ok = extracted["q"]
-
-	if ok && value != nil {
-		quality = value.(int)
-	}
-
-	options := &Options{Quality: quality, Format: format}
-
 	h(res, &Request{
 		request,
 		extracted["op"].(*image.Operation),
@@ -125,7 +101,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		key,
 		u,
 		path,
-		options,
 	})
 }
 
@@ -134,12 +109,8 @@ var ImageHandler Handler = func(res muxer.Response, req *Request) {
 
 	util.PanicIf(err)
 
-	content, err := file.ToBytes()
-
-	util.PanicIf(err)
-
 	res.SetHeaders(file.Headers, true)
-	res.ResponseWriter.Write(content)
+	res.ResponseWriter.Write(file.Content())
 }
 
 var GetHandler Handler = func(res muxer.Response, req *Request) {

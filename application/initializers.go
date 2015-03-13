@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/jsonq"
 	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/dummy"
+	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/util"
 )
 
@@ -57,6 +58,7 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 	}
 
 	App.SecretKey, _ = jq.String("secret_key")
+	App.Engine = engines.NewGoImageEngine()
 
 	return nil
 }

@@ -1,18 +1,5 @@
 package image
 
-import (
-	"github.com/thoas/imaging"
-)
-
-const DefaultFormat = imaging.PNG
-
-var Formats = map[string]imaging.Format{
-	"image/jpeg": imaging.JPEG,
-	"image/png":  imaging.PNG,
-	"image/gif":  imaging.GIF,
-	"image/bmp":  imaging.BMP,
-}
-
 var ContentTypes = map[string]string{
 	"jpeg": "image/jpeg",
 	"jpg":  "image/jpeg",

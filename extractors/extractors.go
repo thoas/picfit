@@ -7,7 +7,6 @@ import (
 	"mime"
 	"net/url"
 	"path/filepath"
-	"strconv"
 )
 
 type Extractor func(key string, req *muxer.Request) (interface{}, error)
@@ -20,40 +19,6 @@ var Operation Extractor = func(key string, req *muxer.Request) (interface{}, err
 	}
 
 	return operation, nil
-}
-
-var Format Extractor = func(key string, req *muxer.Request) (interface{}, error) {
-	format, ok := req.QueryString[key]
-
-	if !ok {
-		return nil, nil
-	}
-
-	if _, ok := image.ContentTypes[format]; !ok {
-		return nil, fmt.Errorf("Unknown format %s", format)
-	}
-
-	return format, nil
-}
-
-var Quality Extractor = func(key string, req *muxer.Request) (interface{}, error) {
-	q, ok := req.QueryString[key]
-
-	if !ok {
-		return nil, nil
-	}
-
-	quality, err := strconv.Atoi(q)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if quality > 100 {
-		return nil, fmt.Errorf("Quality should be <= 100")
-	}
-
-	return quality, nil
 }
 
 var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {
@@ -71,7 +36,7 @@ var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {
 
 	mimetype := mime.TypeByExtension(filepath.Ext(value))
 
-	_, ok = image.Formats[mimetype]
+	_, ok = image.Extensions[mimetype]
 
 	if !ok {
 		return nil, fmt.Errorf("Mimetype %s is not supported", mimetype)

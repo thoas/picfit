@@ -1,13 +1,10 @@
 package image
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/imdario/mergo"
 	"github.com/thoas/gostorages"
-	"github.com/thoas/imaging"
-	"image"
-	"image/jpeg"
+	"github.com/thoas/picfit/engines"
 	"math"
 	"mime"
 	"path"
@@ -16,42 +13,23 @@ import (
 )
 
 type ImageFile struct {
-	Source   []byte
-	Image    image.Image
-	Key      string
-	Headers  map[string]string
-	Filepath string
-	Storage  gostorages.Storage
-	Quality  int
+	Source    []byte
+	Processed []byte
+	Key       string
+	Headers   map[string]string
+	Filepath  string
+	Storage   gostorages.Storage
 }
 
-func (i *ImageFile) ImageSize() (int, int) {
-	return i.Image.Bounds().Max.X, i.Image.Bounds().Max.Y
-}
-
-func (i *ImageFile) Scale(dstWidth int, dstHeight int, upscale bool, trans Transformation) *image.NRGBA {
-	width, height := i.ImageSize()
-
-	factor := scalingFactor(width, height, dstWidth, dstHeight)
-
-	if factor < 1 || upscale {
-		return trans(i.Image, dstWidth, dstHeight, imaging.Lanczos)
+func (i *ImageFile) Content() []byte {
+	if i.Processed != nil {
+		return i.Processed
 	}
 
-	return imaging.Clone(i.Image)
+	return i.Source
 }
 
-func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*ImageFile, error) {
-
-	if i.Image == nil {
-		image, err := imaging.Decode(bytes.NewReader(i.Source))
-
-		if err != nil {
-			return nil, err
-		}
-
-		i.Image = image
-	}
+func (i *ImageFile) Transform(engine engines.Engine, operation *Operation, qs map[string]string, defaultOptions *engines.Options) (*ImageFile, error) {
 
 	params := map[string]string{
 		"upscale": "1",
@@ -83,32 +61,70 @@ func (i *ImageFile) Transform(operation *Operation, qs map[string]string) (*Imag
 		return nil, err
 	}
 
-	switch operation {
-	case Resize, Thumbnail:
-		dest := i.Scale(w, h, upscale, operation.Transformation)
+	q, ok := qs["q"]
 
-		file := &ImageFile{
-			Image:    dest,
-			Source:   i.Source,
-			Key:      i.Key,
-			Headers:  i.Headers,
-			Filepath: i.Filepath,
+	var quality int
+	var format string
+
+	if ok {
+		quality, err := strconv.Atoi(q)
+
+		if err != nil {
+			return nil, err
 		}
+
+		if quality > 100 {
+			return nil, fmt.Errorf("Quality should be <= 100")
+		}
+	}
+
+	format, ok = qs["fmt"]
+
+	if ok {
+		if _, ok := ContentTypes[format]; !ok {
+			return nil, fmt.Errorf("Unknown format %s", format)
+		}
+	} else {
+		format = defaultOptions.Format
+	}
+
+	file := &ImageFile{
+		Source:   i.Source,
+		Key:      i.Key,
+		Headers:  i.Headers,
+		Filepath: i.Filepath,
+	}
+
+	options := &engines.Options{
+		Quality: quality,
+		Format:  format,
+		Upscale: upscale,
+	}
+
+	switch operation {
+	case Resize:
+		content, err := engine.Resize(i.Source, w, h, options)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file.Processed = content
+
+		return file, err
+	case Thumbnail:
+		content, err := engine.Thumbnail(i.Source, w, h, options)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file.Processed = content
 
 		return file, err
 	}
 
 	return nil, fmt.Errorf("Operation not found for %s", operation)
-}
-
-func (i *ImageFile) ToBytes() ([]byte, error) {
-	format, ok := Formats[i.ContentType()]
-
-	if !ok {
-		format = DefaultFormat
-	}
-
-	return i.ToBytesWithFormat(format)
 }
 
 func (i *ImageFile) URL() string {
@@ -120,45 +136,7 @@ func (i *ImageFile) Path() string {
 }
 
 func (i *ImageFile) Save() error {
-	content, err := i.ToBytes()
-
-	if err != nil {
-		return err
-	}
-
-	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(content))
-}
-
-func (i *ImageFile) SaveWithFormat(format imaging.Format) error {
-	content, err := i.ToBytesWithFormat(format)
-
-	if err != nil {
-		return err
-	}
-
-	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(content))
-}
-
-func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
-	if i.Image != nil {
-		buf := &bytes.Buffer{}
-
-		var err error
-
-		if format == imaging.JPEG && i.Quality > 0 {
-			err = imaging.EncodeWithOptions(buf, i.Image, format, &jpeg.Options{Quality: i.Quality})
-		} else {
-			err = imaging.Encode(buf, i.Image, format)
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		return buf.Bytes(), nil
-	}
-
-	return i.Source, nil
+	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(i.Content()))
 }
 
 func (i *ImageFile) Format() string {
