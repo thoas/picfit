@@ -132,6 +132,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			format = a.Format
 		}
 
+		file.Quality = req.Options.Quality
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
 		file.Storage = a.DestStorage
 	}

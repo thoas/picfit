@@ -7,6 +7,7 @@ import (
 	"github.com/thoas/gostorages"
 	"github.com/thoas/imaging"
 	"image"
+	"image/jpeg"
 	"math"
 	"mime"
 	"path"
@@ -21,6 +22,7 @@ type ImageFile struct {
 	Headers  map[string]string
 	Filepath string
 	Storage  gostorages.Storage
+	Quality  int
 }
 
 func (i *ImageFile) ImageSize() (int, int) {
@@ -141,7 +143,13 @@ func (i *ImageFile) ToBytesWithFormat(format imaging.Format) ([]byte, error) {
 	if i.Image != nil {
 		buf := &bytes.Buffer{}
 
-		err := imaging.Encode(buf, i.Image, format)
+		var err error
+
+		if format == imaging.JPEG && i.Quality > 0 {
+			err = imaging.EncodeWithOptions(buf, i.Image, format, &jpeg.Options{Quality: i.Quality})
+		} else {
+			err = imaging.Encode(buf, i.Image, format)
+		}
 
 		if err != nil {
 			return nil, err
