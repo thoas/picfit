@@ -95,7 +95,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	value, ok = extracted["path"]
 
-	if ok {
+	if ok && value != nil {
 		path = value.(string)
 	}
 
@@ -106,7 +106,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	value, ok = extracted["fmt"]
 
-	if ok {
+	if ok && value != nil {
 		format = value.(string)
 	}
 
