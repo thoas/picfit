@@ -107,7 +107,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	value, ok = extracted["fmt"]
 
 	if ok {
-		format = string(path)
+		format = value.(string)
 	}
 
 	value, ok = extracted["q"]
