@@ -13,10 +13,11 @@ import (
 )
 
 var Extractors = map[string]extractors.Extractor{
-	"op":  extractors.Operation,
-	"fmt": extractors.Format,
-	"url": extractors.URL,
-	"q":   extractors.Quality,
+	"op":   extractors.Operation,
+	"fmt":  extractors.Format,
+	"url":  extractors.URL,
+	"q":    extractors.Quality,
+	"path": extractors.Path,
 }
 
 func NotFoundHandler() http.Handler {
@@ -88,14 +89,14 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	value, ok := extracted["url"]
 
-	if ok {
+	if ok && value != nil {
 		u = value.(*url.URL)
 	}
 
 	value, ok = extracted["path"]
 
 	if ok {
-		path = string(path)
+		path = value.(string)
 	}
 
 	if !valid || (u == nil && path == "") {
