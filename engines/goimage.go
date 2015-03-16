@@ -168,21 +168,19 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		return nil, err
 	}
 
-	upscale, err := strconv.ParseBool(qs["upscale"])
+	var upscale bool
+	var w int
+	var h int
 
-	if err != nil {
+	if upscale, err = strconv.ParseBool(qs["upscale"]); err != nil {
 		return nil, err
 	}
 
-	w, err := strconv.Atoi(qs["w"])
-
-	if err != nil {
+	if w, err = strconv.Atoi(qs["w"]); err != nil {
 		return nil, err
 	}
 
-	h, err := strconv.Atoi(qs["h"])
-
-	if err != nil {
+	if h, err = strconv.Atoi(qs["h"]); err != nil {
 		return nil, err
 	}
 
