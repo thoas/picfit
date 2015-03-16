@@ -7,21 +7,21 @@ import (
 	"github.com/thoas/imaging"
 	imagefile "github.com/thoas/picfit/image"
 	"image"
+	"image/draw"
+	"image/gif"
 	"image/jpeg"
 	"math"
 	"strconv"
 )
 
-var Formats = map[string]imaging.Format{
-	"jpeg": imaging.JPEG,
-	"jpg":  imaging.JPEG,
-	"png":  imaging.PNG,
-	"gif":  imaging.GIF,
-	"bmp":  imaging.BMP,
-}
-
 type GoImageEngine struct {
 	DefaultFormat string
+}
+
+type Result struct {
+	Paletted *image.Paletted
+	Image    *image.NRGBA
+	Position int
 }
 
 func NewGoImageEngine(DefaultFormat string) Engine {
@@ -52,7 +52,68 @@ func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upsc
 	return imaging.Clone(img)
 }
 
+func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height int, options *Options, trans Transformation) ([]byte, error) {
+	g, err := gif.DecodeAll(bytes.NewReader(img.Source))
+
+	if err != nil {
+		return nil, err
+	}
+
+	length := len(g.Image)
+	done := make(chan *Result)
+	images := make([]*image.Paletted, length)
+	processed := 0
+
+	for i := range g.Image {
+		go func(paletted *image.Paletted, width int, height int, position int, options *Options) {
+			done <- &Result{
+				Image:    e.Scale(paletted, width, height, options.Upscale, imaging.Resize),
+				Position: position,
+				Paletted: image.NewPaletted(image.Rect(0, 0, width, height), paletted.Palette),
+			}
+		}(g.Image[i], width, height, i, options)
+	}
+
+	for {
+		result := <-done
+
+		draw.Draw(result.Paletted, image.Rect(0, 0, width, height), result.Image, image.Pt(0, 0), draw.Src)
+
+		images[result.Position] = result.Paletted
+
+		processed++
+
+		if processed == length {
+			break
+		}
+	}
+
+	close(done)
+
+	g.Image = images
+
+	buf := &bytes.Buffer{}
+
+	err = gif.EncodeAll(buf, g)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
 func (e *GoImageEngine) Resize(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, width, height, options, imaging.Resize)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
 	image, err := e.Source(img)
 
 	if err != nil {
@@ -71,6 +132,16 @@ func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
 }
 
 func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, width, height, options, imaging.Thumbnail)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
 	image, err := e.Source(img)
 
 	if err != nil {
@@ -139,6 +210,10 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, fmt.Errorf("Unknown format %s", format)
 		}
 	} else {
+		format = img.Format()
+	}
+
+	if format == "" {
 		format = e.DefaultFormat
 	}
 
@@ -151,7 +226,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 	options := &Options{
 		Quality: quality,
-		Format:  format,
+		Format:  Formats[format],
 		Upscale: upscale,
 	}
 
@@ -181,17 +256,15 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	return nil, fmt.Errorf("Operation not found for %s", operation)
 }
 
-func (e *GoImageEngine) ToBytes(img image.Image, format string, quality int) ([]byte, error) {
+func (e *GoImageEngine) ToBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
 	var err error
 
-	f := Formats[format]
-
-	if f == imaging.JPEG && quality > 0 {
-		err = imaging.EncodeWithOptions(buf, img, f, &jpeg.Options{Quality: quality})
+	if format == imaging.JPEG && quality > 0 {
+		err = imaging.EncodeWithOptions(buf, img, format, &jpeg.Options{Quality: quality})
 	} else {
-		err = imaging.Encode(buf, img, f)
+		err = imaging.Encode(buf, img, format)
 	}
 
 	if err != nil {

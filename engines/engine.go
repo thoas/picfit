@@ -1,12 +1,13 @@
 package engines
 
 import (
+	"github.com/thoas/imaging"
 	"github.com/thoas/picfit/image"
 )
 
 type Options struct {
 	Upscale bool
-	Format  string
+	Format  imaging.Format
 	Quality int
 }
 
