@@ -117,17 +117,17 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		file, err := a.Engine.Transform(file, req.Operation, req.QueryString)
+		file, err = a.Engine.Transform(file, req.Operation, req.QueryString)
 
 		if err != nil {
 			return nil, err
 		}
 
 		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), file.Format())
-		file.Storage = a.DestStorage
 	}
 
 	file.Key = req.Key
+	file.Storage = a.DestStorage
 
 	if stored == "" {
 		if async == true {

@@ -59,7 +59,11 @@ func (e *GoImageEngine) Resize(img *imagefile.ImageFile, width int, height int, 
 		return nil, err
 	}
 
-	return e.ToBytes(e.Scale(image, width, height, options.Upscale, imaging.Resize), options.Format, options.Quality)
+	return e.resize(image, width, height, options)
+}
+
+func (e *GoImageEngine) resize(img image.Image, width int, height int, options *Options) ([]byte, error) {
+	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Resize), options.Format, options.Quality)
 }
 
 func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
@@ -73,7 +77,11 @@ func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height in
 		return nil, err
 	}
 
-	return e.ToBytes(e.Scale(image, width, height, options.Upscale, imaging.Thumbnail), options.Format, options.Quality)
+	return e.thumbnail(image, width, height, options)
+}
+
+func (e *GoImageEngine) thumbnail(img image.Image, width int, height int, options *Options) ([]byte, error) {
+	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Thumbnail), options.Format, options.Quality)
 }
 
 func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation, qs map[string]string) (*imagefile.ImageFile, error) {
