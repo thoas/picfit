@@ -2,7 +2,6 @@ package image
 
 import (
 	"github.com/thoas/gostorages"
-	"math"
 	"mime"
 	"path"
 	"strings"
@@ -51,8 +50,4 @@ func (i *ImageFile) Filename() string {
 
 func (i *ImageFile) FilenameExt() string {
 	return path.Ext(i.Filename())
-}
-
-func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
-	return math.Max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
 }
