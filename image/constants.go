@@ -1,13 +1,5 @@
 package image
 
-var ContentTypes = map[string]string{
-	"jpeg": "image/jpeg",
-	"jpg":  "image/jpeg",
-	"png":  "image/png",
-	"bmp":  "image/bmp",
-	"gif":  "image/gif",
-}
-
 var Extensions = map[string]string{
 	"image/jpeg": "jpg",
 	"image/png":  "png",

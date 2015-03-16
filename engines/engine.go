@@ -11,7 +11,7 @@ type Options struct {
 }
 
 type Engine interface {
-	Resize(source []byte, width int, height int, options *Options) ([]byte, error)
-	Thumbnail(source []byte, width int, height int, options *Options) ([]byte, error)
+	Resize(img *image.ImageFile, width int, height int, options *Options) ([]byte, error)
+	Thumbnail(img *image.ImageFile, width int, height int, options *Options) ([]byte, error)
 	Transform(img *image.ImageFile, operation *Operation, qs map[string]string) (*image.ImageFile, error)
 }

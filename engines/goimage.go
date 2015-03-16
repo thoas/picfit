@@ -52,8 +52,8 @@ func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upsc
 	return imaging.Clone(img)
 }
 
-func (e *GoImageEngine) Resize(source []byte, width int, height int, options *Options) ([]byte, error) {
-	image, err := e.ImageFromSource(source)
+func (e *GoImageEngine) Resize(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
@@ -62,12 +62,12 @@ func (e *GoImageEngine) Resize(source []byte, width int, height int, options *Op
 	return e.ToBytes(e.Scale(image, width, height, options.Upscale, imaging.Resize), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) ImageFromSource(source []byte) (image.Image, error) {
-	return imaging.Decode(bytes.NewReader(source))
+func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
+	return imaging.Decode(bytes.NewReader(img.Source))
 }
 
-func (e *GoImageEngine) Thumbnail(source []byte, width int, height int, options *Options) ([]byte, error) {
-	image, err := e.ImageFromSource(source)
+func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	format, ok = qs["fmt"]
 
 	if ok {
-		if _, ok := imagefile.ContentTypes[format]; !ok {
+		if _, ok := ContentTypes[format]; !ok {
 			return nil, fmt.Errorf("Unknown format %s", format)
 		}
 	} else {
@@ -149,7 +149,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 	switch operation {
 	case Resize:
-		content, err := e.Resize(img.Source, w, h, options)
+		content, err := e.Resize(img, w, h, options)
 
 		if err != nil {
 			return nil, err
@@ -159,7 +159,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 		return file, err
 	case Thumbnail:
-		content, err := e.Thumbnail(img.Source, w, h, options)
+		content, err := e.Thumbnail(img, w, h, options)
 
 		if err != nil {
 			return nil, err
@@ -179,8 +179,6 @@ func (e *GoImageEngine) ToBytes(img image.Image, format string, quality int) ([]
 	var err error
 
 	f := Formats[format]
-
-	fmt.Println(format)
 
 	if f == imaging.JPEG && quality > 0 {
 		err = imaging.EncodeWithOptions(buf, img, f, &jpeg.Options{Quality: quality})
