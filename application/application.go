@@ -23,7 +23,6 @@ type Shard struct {
 type Application struct {
 	Prefix        string
 	SecretKey     string
-	Format        string
 	KVStore       gokvstores.KVStore
 	SourceStorage gostorages.Storage
 	DestStorage   gostorages.Storage
@@ -118,19 +117,13 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 			return nil, err
 		}
 
-		format := file.Format()
-
-		if format == "" {
-			format = a.Format
-		}
-
-		file, err = file.Transform(a.Engine, req.Operation, req.QueryString, &engines.Options{Format: format})
+		file, err := a.Engine.Transform(file, req.Operation, req.QueryString)
 
 		if err != nil {
 			return nil, err
 		}
 
-		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), format)
+		file.Filepath = fmt.Sprintf("%s.%s", a.ShardFilename(req.Key), file.Format())
 		file.Storage = a.DestStorage
 	}
 

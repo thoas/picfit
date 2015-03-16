@@ -49,16 +49,18 @@ var SentryInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 }
 
 var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
-	format, _ := jq.String("format")
+	f, _ := jq.String("format")
 
-	if format != "" {
-		App.Format = format
+	var format string
+
+	if f != "" {
+		format = f
 	} else {
-		App.Format = DefaultFormat
+		format = DefaultFormat
 	}
 
 	App.SecretKey, _ = jq.String("secret_key")
-	App.Engine = engines.NewGoImageEngine()
+	App.Engine = engines.NewGoImageEngine(format)
 
 	return nil
 }

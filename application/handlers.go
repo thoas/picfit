@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/muxer"
+	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/extractors"
 	"github.com/thoas/picfit/hash"
-	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/util"
 	"net/http"
 	"net/url"
@@ -26,7 +26,7 @@ func NotFoundHandler() http.Handler {
 
 type Request struct {
 	*muxer.Request
-	Operation  *image.Operation
+	Operation  *engines.Operation
 	Connection gokvstores.KVStoreConnection
 	Key        string
 	URL        *url.URL
@@ -96,7 +96,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	h(res, &Request{
 		request,
-		extracted["op"].(*image.Operation),
+		extracted["op"].(*engines.Operation),
 		con,
 		key,
 		u,

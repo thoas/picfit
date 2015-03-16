@@ -3,6 +3,7 @@ package extractors
 import (
 	"fmt"
 	"github.com/thoas/muxer"
+	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/image"
 	"mime"
 	"net/url"
@@ -12,7 +13,7 @@ import (
 type Extractor func(key string, req *muxer.Request) (interface{}, error)
 
 var Operation Extractor = func(key string, req *muxer.Request) (interface{}, error) {
-	operation, ok := image.Operations[req.QueryString[key]]
+	operation, ok := engines.Operations[req.QueryString[key]]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid method %s or invalid parameters", operation)

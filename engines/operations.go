@@ -1,4 +1,4 @@
-package image
+package engines
 
 type Operation struct {
 	Name string
