@@ -63,6 +63,7 @@ func newHTTPServer() *httptest.Server {
 func TestDummyApplication(t *testing.T) {
 	ts := newHTTPServer()
 	defer ts.Close()
+	defer ts.CloseClientConnections()
 
 	app := newDummyApplication()
 
