@@ -2,8 +2,8 @@ package application
 
 import (
 	"fmt"
+	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
-	"github.com/thoas/imaging"
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/engines"
 	"io/ioutil"
