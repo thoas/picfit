@@ -26,7 +26,7 @@ type TestRequest struct {
 	Dimensions *Dimension
 }
 
-var filenames = []string{"avatar.png", "schwarzy.jpg", "giphy.gif"}
+var filenames = []string{"avatar.png", "schwarzy.jpg"}
 
 func newDummyApplication() *Application {
 	app := NewApplication()
