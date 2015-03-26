@@ -8,18 +8,6 @@ import (
 	"strconv"
 )
 
-var KVStores = map[string]KVStoreParameter{
-	"redis": RedisKVStoreParameter,
-	"cache": CacheKVStoreParameter,
-}
-
-var Storages = map[string]StorageParameter{
-	"http+s3": HTTPS3StorageParameter,
-	"s3":      S3StorageParameter,
-	"http+fs": HTTPFileSystemStorageParameter,
-	"fs":      FileSystemStorageParameter,
-}
-
 func Run(path string) error {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 

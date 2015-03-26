@@ -20,6 +20,18 @@ var Initializers = []Initializer{
 	SentryInitializer,
 }
 
+var KVStores = map[string]KVStoreParameter{
+	"redis": RedisKVStoreParameter,
+	"cache": CacheKVStoreParameter,
+}
+
+var Storages = map[string]StorageParameter{
+	"http+s3": HTTPS3StorageParameter,
+	"s3":      S3StorageParameter,
+	"http+fs": HTTPFileSystemStorageParameter,
+	"fs":      FileSystemStorageParameter,
+}
+
 var SentryInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	dsn, err := jq.String("sentry", "dsn")
 
