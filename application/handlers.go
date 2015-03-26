@@ -5,16 +5,9 @@ import (
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
-	"github.com/thoas/picfit/extractors"
 	"net/http"
 	"net/url"
 )
-
-var Extractors = map[string]extractors.Extractor{
-	"op":   extractors.Operation,
-	"url":  extractors.URL,
-	"path": extractors.Path,
-}
 
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

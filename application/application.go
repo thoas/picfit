@@ -14,6 +14,7 @@ import (
 	"github.com/thoas/gostorages"
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
+	"github.com/thoas/picfit/extractors"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/middleware"
@@ -24,6 +25,12 @@ import (
 	"net/url"
 	"strings"
 )
+
+var Extractors = map[string]extractors.Extractor{
+	"op":   extractors.Operation,
+	"url":  extractors.URL,
+	"path": extractors.Path,
+}
 
 type Shard struct {
 	Depth int
