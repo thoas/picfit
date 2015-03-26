@@ -27,8 +27,6 @@ type TestRequest struct {
 	ContentType string
 }
 
-var filenames = []string{"avatar.png", "schwarzy.jpg"}
-
 func newDummyApplication() *Application {
 	app := NewApplication()
 	app.SourceStorage = &dummy.DummyStorage{}
@@ -68,7 +66,7 @@ func TestDummyApplication(t *testing.T) {
 
 	app := newDummyApplication()
 
-	for _, filename := range filenames {
+	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {
 		u, _ := url.Parse(ts.URL + "/" + filename)
 
 		contentType := mime.TypeByExtension(path.Ext(filename))
@@ -135,5 +133,4 @@ func TestDummyApplication(t *testing.T) {
 			}
 		}
 	}
-
 }

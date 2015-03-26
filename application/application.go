@@ -217,7 +217,9 @@ func (a *Application) ShardFilename(filename string) string {
 func (a *Application) ImageHandler(res muxer.Response, req *Request) {
 	file, err := a.ImageFileFromRequest(req, true, true)
 
-	util.PanicIf(err)
+	if err != nil {
+		panic(err)
+	}
 
 	res.SetHeaders(file.Headers, true)
 	res.ResponseWriter.Write(file.Content())

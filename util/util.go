@@ -34,9 +34,3 @@ func SortMapString(obj map[string]string) map[string]string {
 
 	return results
 }
-
-func PanicIf(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
