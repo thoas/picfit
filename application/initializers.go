@@ -61,9 +61,10 @@ var SentryInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) 
 }
 
 var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
-	f, _ := jq.String("format")
-
 	var format string
+	var quality int
+
+	f, _ := jq.String("format")
 
 	if f != "" {
 		format = f
@@ -71,8 +72,16 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 		format = DefaultFormat
 	}
 
+	q, err := jq.Int("quality")
+
+	if err != nil {
+		quality = q
+	} else {
+		quality = DefaultQuality
+	}
+
 	app.SecretKey, _ = jq.String("secret_key")
-	app.Engine = engines.NewGoImageEngine(format)
+	app.Engine = engines.NewGoImageEngine(format, quality)
 
 	return nil
 }

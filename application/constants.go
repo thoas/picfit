@@ -8,3 +8,4 @@ const DefaultContentType = "image/png"
 const DefaultShardWidth = 0
 const DefaultShardDepth = 0
 const DefaultPort = 3001
+const DefaultQuality = 95

@@ -1,7 +1,7 @@
 package engines
 
 import (
-	"github.com/thoas/imaging"
+	"github.com/disintegration/imaging"
 )
 
 var ContentTypes = map[string]string{
