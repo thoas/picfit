@@ -105,6 +105,10 @@
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",
 			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify",
+			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 		}
 	]
 }
