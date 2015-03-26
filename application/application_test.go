@@ -61,45 +61,56 @@ func TestDummyApplication(t *testing.T) {
 
 	app := newDummyApplication()
 
-	u, _ := url.Parse(ts.URL + "/avatar.png")
+	filenames := []string{"avatar.png", "schwarzy.jpg"}
 
-	tests := []*TestRequest{
-		&TestRequest{
-			URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=resize", u.String()),
-			Dimensions: &Dimension{
-				Width:  50,
-				Height: 50,
+	for _, filename := range filenames {
+		u, _ := url.Parse(ts.URL + "/" + filename)
+
+		tests := []*TestRequest{
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=resize", u.String()),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
 			},
-		},
-		&TestRequest{
-			URL: fmt.Sprintf("http://example.com/display?url=%s&w=100&h=0&op=resize", u.String()),
-			Dimensions: &Dimension{
-				Width:  100,
-				Height: 100,
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=100&h=30&op=resize", u.String()),
+				Dimensions: &Dimension{
+					Width:  100,
+					Height: 30,
+				},
 			},
-		},
-		&TestRequest{
-			URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=thumbnail", u.String()),
-			Dimensions: &Dimension{
-				Width:  50,
-				Height: 50,
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=thumbnail", u.String()),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
 			},
-		},
+		}
+
+		for _, test := range tests {
+			request, _ := http.NewRequest("GET", test.URL, nil)
+
+			res := httptest.NewRecorder()
+
+			handler := app.ServeHTTP(ImageHandler)
+
+			handler.ServeHTTP(res, request)
+
+			img, err := imaging.Decode(res.Body)
+
+			assert.Nil(t, err)
+
+			if img.Bounds().Max.X != test.Dimensions.Width {
+				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.X, test.Dimensions.Width)
+			}
+
+			if img.Bounds().Max.Y != test.Dimensions.Height {
+				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.Y, test.Dimensions.Height)
+			}
+		}
 	}
 
-	for _, test := range tests {
-		request, _ := http.NewRequest("GET", test.URL, nil)
-
-		res := httptest.NewRecorder()
-
-		handler := app.ServeHTTP(ImageHandler)
-
-		handler.ServeHTTP(res, request)
-
-		img, err := imaging.Decode(res.Body)
-
-		assert.Nil(t, err)
-		assert.Equal(t, img.Bounds().Max.X, test.Dimensions.Width)
-		assert.Equal(t, img.Bounds().Max.Y, test.Dimensions.Height)
-	}
 }
