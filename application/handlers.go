@@ -6,7 +6,6 @@ import (
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/extractors"
-	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/util"
 	"net/http"
 	"net/url"
@@ -33,79 +32,10 @@ type Request struct {
 	Filepath   string
 }
 
-type Handler func(muxer.Response, *Request)
+type Handler func(muxer.Response, *Request, *Application)
 
-func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	con := App.KVStore.Connection()
-	defer con.Close()
-
-	request := muxer.NewRequest(req)
-
-	for k, v := range request.Params {
-		request.QueryString[k] = v
-	}
-
-	res := muxer.NewResponse(w)
-
-	extracted := map[string]interface{}{}
-
-	for key, extractor := range Extractors {
-		result, err := extractor(key, request)
-
-		if err != nil {
-			App.Logger.Info(err)
-
-			res.BadRequest()
-			return
-		}
-
-		extracted[key] = result
-	}
-
-	sorted := util.SortMapString(request.QueryString)
-
-	valid := App.IsValidSign(sorted)
-
-	delete(sorted, "sig")
-
-	serialized := hash.Serialize(sorted)
-
-	key := hash.Tokey(serialized)
-
-	App.Logger.Infof("Generating key %s from request: %s", key, serialized)
-
-	var u *url.URL
-	var path string
-
-	value, ok := extracted["url"]
-
-	if ok && value != nil {
-		u = value.(*url.URL)
-	}
-
-	value, ok = extracted["path"]
-
-	if ok && value != nil {
-		path = value.(string)
-	}
-
-	if !valid || (u == nil && path == "") {
-		res.BadRequest()
-		return
-	}
-
-	h(res, &Request{
-		request,
-		extracted["op"].(*engines.Operation),
-		con,
-		key,
-		u,
-		path,
-	})
-}
-
-var ImageHandler Handler = func(res muxer.Response, req *Request) {
-	file, err := App.ImageFileFromRequest(req, true, true)
+var ImageHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+	file, err := app.ImageFileFromRequest(req, true, true)
 
 	util.PanicIf(err)
 
@@ -113,8 +43,8 @@ var ImageHandler Handler = func(res muxer.Response, req *Request) {
 	res.ResponseWriter.Write(file.Content())
 }
 
-var GetHandler Handler = func(res muxer.Response, req *Request) {
-	file, err := App.ImageFileFromRequest(req, false, false)
+var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+	file, err := app.ImageFileFromRequest(req, false, false)
 
 	util.PanicIf(err)
 
@@ -130,8 +60,8 @@ var GetHandler Handler = func(res muxer.Response, req *Request) {
 	res.ResponseWriter.Write(content)
 }
 
-var RedirectHandler Handler = func(res muxer.Response, req *Request) {
-	file, err := App.ImageFileFromRequest(req, false, false)
+var RedirectHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+	file, err := app.ImageFileFromRequest(req, false, false)
 
 	util.PanicIf(err)
 

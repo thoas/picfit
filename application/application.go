@@ -1,16 +1,26 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/codegangsta/negroni"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/jsonq"
+	"github.com/meatballhat/negroni-logrus"
+	"github.com/rs/cors"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/gostorages"
+	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/middleware"
 	"github.com/thoas/picfit/signature"
+	"github.com/thoas/picfit/util"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -31,6 +41,7 @@ type Application struct {
 	Raven         *raven.Client
 	Logger        *logrus.Logger
 	Engine        engines.Engine
+	Jq            *jsonq.JsonQuery
 }
 
 func NewApplication() *Application {
@@ -39,14 +50,181 @@ func NewApplication() *Application {
 	}
 }
 
+func NewFromConfig(path string) (*Application, error) {
+	content, err := ioutil.ReadFile(path)
+
+	if err != nil {
+		return nil, fmt.Errorf("Your config file %s cannot be loaded: %s", path, err)
+	}
+
+	data := map[string]interface{}{}
+	dec := json.NewDecoder(strings.NewReader(string(content)))
+	err = dec.Decode(&data)
+
+	if err != nil {
+		return nil, fmt.Errorf("Your config file %s cannot be parsed: %s", path, err)
+	}
+
+	app := NewApplication()
+	app.Jq = jsonq.NewQuery(data)
+
+	for _, initializer := range Initializers {
+		err = initializer(app.Jq, app)
+
+		if err != nil {
+			return nil, fmt.Errorf("An error occured during init: %s", err)
+		}
+	}
+
+	return app, nil
+}
+
+func (app *Application) ServeHTTP(h Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		con := app.KVStore.Connection()
+		defer con.Close()
+
+		request := muxer.NewRequest(req)
+
+		for k, v := range request.Params {
+			request.QueryString[k] = v
+		}
+
+		res := muxer.NewResponse(w)
+
+		extracted := map[string]interface{}{}
+
+		for key, extractor := range Extractors {
+			result, err := extractor(key, request)
+
+			if err != nil {
+				app.Logger.Info(err)
+
+				res.BadRequest()
+				return
+			}
+
+			extracted[key] = result
+		}
+
+		sorted := util.SortMapString(request.QueryString)
+
+		valid := app.IsValidSign(sorted)
+
+		delete(sorted, "sig")
+
+		serialized := hash.Serialize(sorted)
+
+		key := hash.Tokey(serialized)
+
+		app.Logger.Infof("Generating key %s from request: %s", key, serialized)
+
+		var u *url.URL
+		var path string
+
+		value, ok := extracted["url"]
+
+		if ok && value != nil {
+			u = value.(*url.URL)
+		}
+
+		value, ok = extracted["path"]
+
+		if ok && value != nil {
+			path = value.(string)
+		}
+
+		if !valid || (u == nil && path == "") {
+			res.BadRequest()
+			return
+		}
+
+		h(res, &Request{
+			request,
+			extracted["op"].(*engines.Operation),
+			con,
+			key,
+			u,
+			path,
+		}, app)
+	})
+}
+
+func (a *Application) InitRouter() *negroni.Negroni {
+	a.Router = mux.NewRouter()
+	a.Router.NotFoundHandler = NotFoundHandler()
+
+	methods := map[string]Handler{
+		"redirect": RedirectHandler,
+		"display":  ImageHandler,
+		"get":      GetHandler,
+	}
+
+	for name, handler := range methods {
+		handlerFunc := a.ServeHTTP(handler)
+
+		a.Router.Handle(fmt.Sprintf("/%s", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
+		a.Router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+	}
+
+	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
+	allowedMethods, err := a.Jq.ArrayOfStrings("allowed_methods")
+
+	debug, err := a.Jq.Bool("debug")
+
+	if err != nil {
+		debug = false
+	}
+
+	n := negroni.New(&middleware.Recovery{
+		Raven:      a.Raven,
+		Logger:     a.Logger,
+		PrintStack: debug,
+		StackAll:   false,
+		StackSize:  1024 * 8,
+	}, &middleware.Logger{a.Logger})
+	n.Use(cors.New(cors.Options{
+		AllowedOrigins: allowedOrigins,
+		AllowedMethods: allowedMethods,
+	}))
+	n.Use(negronilogrus.NewMiddleware())
+	n.UseHandler(a.Router)
+
+	return n
+}
+
+func (a *Application) Port() int {
+	port, err := a.Jq.Int("port")
+
+	if err != nil {
+		port = DefaultPort
+	}
+
+	return port
+}
+
 func (a *Application) ShardFilename(filename string) string {
 	results := hash.Shard(filename, a.Shard.Width, a.Shard.Depth, true)
 
 	return strings.Join(results, "/")
 }
 
+func (a *Application) ImageHandler(res muxer.Response, req *Request) {
+	file, err := a.ImageFileFromRequest(req, true, true)
+
+	util.PanicIf(err)
+
+	res.SetHeaders(file.Headers, true)
+	res.ResponseWriter.Write(file.Content())
+}
+
 func (a *Application) Store(i *image.ImageFile) error {
-	con := App.KVStore.Connection()
+	con := a.KVStore.Connection()
 	defer con.Close()
 
 	err := i.Save()

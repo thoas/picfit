@@ -10,7 +10,7 @@ import (
 	"github.com/thoas/picfit/util"
 )
 
-type Initializer func(jq *jsonq.JsonQuery) error
+type Initializer func(jq *jsonq.JsonQuery, app *Application) error
 
 var Initializers = []Initializer{
 	KVStoreInitializer,
@@ -20,7 +20,7 @@ var Initializers = []Initializer{
 	SentryInitializer,
 }
 
-var SentryInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var SentryInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	dsn, err := jq.String("sentry", "dsn")
 
 	if err != nil {
@@ -43,12 +43,12 @@ var SentryInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		return err
 	}
 
-	App.Raven = client
+	app.Raven = client
 
 	return nil
 }
 
-var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	f, _ := jq.String("format")
 
 	var format string
@@ -59,13 +59,13 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		format = DefaultFormat
 	}
 
-	App.SecretKey, _ = jq.String("secret_key")
-	App.Engine = engines.NewGoImageEngine(format)
+	app.SecretKey, _ = jq.String("secret_key")
+	app.Engine = engines.NewGoImageEngine(format)
 
 	return nil
 }
 
-var ShardInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var ShardInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	width, err := jq.Int("shard", "width")
 
 	if err != nil {
@@ -78,16 +78,16 @@ var ShardInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		depth = DefaultShardDepth
 	}
 
-	App.Shard = Shard{Width: width, Depth: depth}
+	app.Shard = Shard{Width: width, Depth: depth}
 
 	return nil
 }
 
-var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	_, err := jq.Object("kvstore")
 
 	if err != nil {
-		App.KVStore = &dummy.DummyKVStore{}
+		app.KVStore = &dummy.DummyKVStore{}
 
 		return nil
 	}
@@ -117,8 +117,8 @@ var KVStoreInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		return err
 	}
 
-	App.Prefix = params["prefix"]
-	App.KVStore = store
+	app.Prefix = params["prefix"]
+	app.KVStore = store
 
 	return nil
 }
@@ -147,12 +147,12 @@ func getStorageFromConfig(key string, jq *jsonq.JsonQuery) (gostorages.Storage, 
 	return storage, err
 }
 
-var StorageInitializer Initializer = func(jq *jsonq.JsonQuery) error {
+var StorageInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) error {
 	_, err := jq.Object("storage")
 
 	if err != nil {
-		App.SourceStorage = &dummy.DummyStorage{}
-		App.DestStorage = &dummy.DummyStorage{}
+		app.SourceStorage = &dummy.DummyStorage{}
+		app.DestStorage = &dummy.DummyStorage{}
 
 		return nil
 	}
@@ -163,14 +163,14 @@ var StorageInitializer Initializer = func(jq *jsonq.JsonQuery) error {
 		return err
 	}
 
-	App.SourceStorage = sourceStorage
+	app.SourceStorage = sourceStorage
 
 	destStorage, err := getStorageFromConfig("dst", jq)
 
 	if err != nil {
-		App.DestStorage = sourceStorage
+		app.DestStorage = sourceStorage
 	} else {
-		App.DestStorage = destStorage
+		app.DestStorage = destStorage
 	}
 
 	return nil
