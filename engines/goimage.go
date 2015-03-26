@@ -12,6 +12,7 @@ import (
 	"image/jpeg"
 	"math"
 	"strconv"
+	"time"
 )
 
 type GoImageEngine struct {
@@ -75,13 +76,16 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 	}
 
 	for {
-		result := <-done
+		select {
+		case result := <-done:
+			draw.Draw(result.Paletted, image.Rect(0, 0, width, height), result.Image, image.Pt(0, 0), draw.Src)
 
-		draw.Draw(result.Paletted, image.Rect(0, 0, width, height), result.Image, image.Pt(0, 0), draw.Src)
+			images[result.Position] = result.Paletted
 
-		images[result.Position] = result.Paletted
-
-		processed++
+			processed++
+		case <-time.After(time.Second * 5):
+			break
+		}
 
 		if processed == length {
 			break
