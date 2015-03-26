@@ -6,7 +6,6 @@ import (
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/extractors"
-	"github.com/thoas/picfit/util"
 	"net/http"
 	"net/url"
 )
@@ -37,7 +36,9 @@ type Handler func(muxer.Response, *Request, *Application)
 var ImageHandler Handler = func(res muxer.Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, true, true)
 
-	util.PanicIf(err)
+	if err != nil {
+		panic(err)
+	}
 
 	res.SetHeaders(file.Headers, true)
 	res.ResponseWriter.Write(file.Content())
@@ -46,7 +47,9 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, false, false)
 
-	util.PanicIf(err)
+	if err != nil {
+		panic(err)
+	}
 
 	content, err := json.Marshal(map[string]string{
 		"filename": file.Filename(),
@@ -54,7 +57,9 @@ var GetHandler Handler = func(res muxer.Response, req *Request, app *Application
 		"url":      file.URL(),
 	})
 
-	util.PanicIf(err)
+	if err != nil {
+		panic(err)
+	}
 
 	res.ContentType("application/json")
 	res.ResponseWriter.Write(content)
@@ -63,7 +68,9 @@ var GetHandler Handler = func(res muxer.Response, req *Request, app *Application
 var RedirectHandler Handler = func(res muxer.Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, false, false)
 
-	util.PanicIf(err)
+	if err != nil {
+		panic(err)
+	}
 
 	res.PermanentRedirect(file.URL())
 }
