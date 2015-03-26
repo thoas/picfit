@@ -61,7 +61,7 @@ func TestDummyApplication(t *testing.T) {
 
 	app := newDummyApplication()
 
-	filenames := []string{"avatar.png", "schwarzy.jpg"}
+	filenames := []string{"avatar.png", "schwarzy.jpg", "giphy.gif"}
 
 	for _, filename := range filenames {
 		u, _ := url.Parse(ts.URL + "/" + filename)
