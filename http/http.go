@@ -57,7 +57,7 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 
 	content, err := goreq.Request{
 		Uri:    u.String(),
-		Method: "HEAD",
+		Method: "GET",
 	}.Do()
 
 	if err != nil {

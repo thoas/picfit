@@ -52,9 +52,10 @@ func newHTTPServer() *httptest.Server {
 
 				contentType := mime.TypeByExtension(path.Ext(r.URL.Path))
 
-				w.Header().Add("Content-Type", contentType)
-				w.Write(bytes)
 				w.WriteHeader(200)
+
+				w.Header().Set("Content-Type", contentType)
+				w.Write(bytes)
 			}
 		}
 	}))
@@ -68,6 +69,8 @@ func TestDummyApplication(t *testing.T) {
 
 	for _, filename := range filenames {
 		u, _ := url.Parse(ts.URL + "/" + filename)
+
+		contentType := mime.TypeByExtension(path.Ext(filename))
 
 		tests := []*TestRequest{
 			&TestRequest{
@@ -105,6 +108,10 @@ func TestDummyApplication(t *testing.T) {
 			img, err := imaging.Decode(res.Body)
 
 			assert.Nil(t, err)
+
+			assert.Equal(t, res.Header().Get("Content-Type"), contentType)
+
+			assert.Equal(t, res.Code, 200)
 
 			if img.Bounds().Max.X != test.Dimensions.Width {
 				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.X, test.Dimensions.Width)
