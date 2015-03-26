@@ -7,6 +7,7 @@ import (
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/engines"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -24,6 +25,8 @@ type TestRequest struct {
 	URL        string
 	Dimensions *Dimension
 }
+
+var filenames = []string{"avatar.png", "schwarzy.jpg", "giphy.gif"}
 
 func newDummyApplication() *Application {
 	app := NewApplication()
@@ -47,7 +50,9 @@ func newHTTPServer() *httptest.Server {
 			} else {
 				bytes, _ := ioutil.ReadAll(f)
 
-				w.Header().Set("Content-Length", fmt.Sprintf("%d\n\n%v", len(bytes), bytes))
+				contentType := mime.TypeByExtension(path.Ext(r.URL.Path))
+
+				w.Header().Add("Content-Type", contentType)
 				w.Write(bytes)
 				w.WriteHeader(200)
 			}
@@ -60,8 +65,6 @@ func TestDummyApplication(t *testing.T) {
 	defer ts.Close()
 
 	app := newDummyApplication()
-
-	filenames := []string{"avatar.png", "schwarzy.jpg", "giphy.gif"}
 
 	for _, filename := range filenames {
 		u, _ := url.Parse(ts.URL + "/" + filename)
