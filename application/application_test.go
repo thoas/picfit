@@ -22,8 +22,9 @@ type Dimension struct {
 }
 
 type TestRequest struct {
-	URL        string
-	Dimensions *Dimension
+	URL         string
+	Dimensions  *Dimension
+	ContentType string
 }
 
 var filenames = []string{"avatar.png", "schwarzy.jpg"}
@@ -94,6 +95,14 @@ func TestDummyApplication(t *testing.T) {
 					Height: 50,
 				},
 			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=thumbnail&fmt=jpg", u.String()),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+				ContentType: "image/jpeg",
+			},
 		}
 
 		for _, test := range tests {
@@ -109,7 +118,11 @@ func TestDummyApplication(t *testing.T) {
 
 			assert.Nil(t, err)
 
-			assert.Equal(t, res.Header().Get("Content-Type"), contentType)
+			if test.ContentType != "" {
+				assert.Equal(t, res.Header().Get("Content-Type"), test.ContentType)
+			} else {
+				assert.Equal(t, res.Header().Get("Content-Type"), contentType)
+			}
 
 			assert.Equal(t, res.Code, 200)
 

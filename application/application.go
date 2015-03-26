@@ -306,6 +306,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	file.Key = req.Key
 	file.Storage = a.DestStorage
+	file.Headers["Content-Type"] = file.ContentType()
 
 	if stored == "" {
 		if async == true {

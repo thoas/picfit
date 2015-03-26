@@ -206,11 +206,13 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	}
 
 	format, ok = qs["fmt"]
+	filepath := img.Filepath
 
 	if ok {
 		if _, ok := ContentTypes[format]; !ok {
 			return nil, fmt.Errorf("Unknown format %s", format)
 		}
+
 	} else {
 		format = img.Format()
 	}
@@ -219,11 +221,17 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		format = e.DefaultFormat
 	}
 
+	if format != img.Format() {
+		index := len(filepath) - len(img.Format())
+
+		filepath = filepath[:index] + format
+	}
+
 	file := &imagefile.ImageFile{
 		Source:   img.Source,
 		Key:      img.Key,
 		Headers:  img.Headers,
-		Filepath: img.Filepath,
+		Filepath: filepath,
 	}
 
 	options := &Options{
