@@ -163,7 +163,20 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, "http://img.example.com/"+filepath, dat["url"].(string))
+	expected := "http://img.example.com/" + filepath
+
+	assert.Equal(t, expected, dat["url"].(string))
+
+	location = "http://example.com/redirect/resize/100x100/avatar.png"
+
+	request, _ = http.NewRequest("GET", location, nil)
+
+	res = httptest.NewRecorder()
+
+	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, expected, res.Header().Get("Location"))
+	assert.Equal(t, 301, res.Code)
 }
 
 func TestStorageApplicationWithURL(t *testing.T) {
