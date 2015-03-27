@@ -77,6 +77,8 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	body, err := ioutil.ReadAll(f)
 	assert.Nil(t, err)
 
+	// We store the image at the tmp location to access it
+	// with the SourceStorage
 	ioutil.WriteFile(path.Join(tmp, "avatar.png"), body, 0755)
 
 	content := `{
@@ -131,6 +133,16 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	key := app.WithPrefix(etag)
 
 	assert.True(t, connection.Exists(key))
+
+	filepath, _ := gokvstores.String(connection.Get(key))
+
+	parts := strings.Split(filepath, "/")
+
+	assert.Equal(t, len(parts), 3)
+	assert.Equal(t, len(parts[0]), 1)
+	assert.Equal(t, len(parts[1]), 1)
+
+	assert.True(t, app.SourceStorage.Exists(filepath))
 }
 
 func TestStorageApplicationWithURL(t *testing.T) {
@@ -156,10 +168,6 @@ func TestStorageApplicationWithURL(t *testing.T) {
 		  "type": "fs",
 		  "location": "%s"
 		}
-	  },
-	  "shard": {
-		"width": 1,
-		"depth": 2
 	  }
 	}`
 
@@ -204,9 +212,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	parts := strings.Split(filepath, "/")
 
-	assert.Equal(t, len(parts), 3)
-	assert.Equal(t, len(parts[0]), 1)
-	assert.Equal(t, len(parts[1]), 1)
+	assert.Equal(t, len(parts), 1)
 
 	assert.True(t, app.SourceStorage.Exists(filepath))
 }
