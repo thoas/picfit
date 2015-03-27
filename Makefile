@@ -6,7 +6,7 @@ BIN_DIR = $(ROOT_DIR)/bin
 test: unit
 
 unit:
-	@(go list ./... | xargs -n1 go test -v)
+	@(go list ./... | xargs -n1 go test -v -cover)
 
 deps:
 	godep save ./...

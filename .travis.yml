@@ -1,5 +1,6 @@
 language: go
 before_install:
+  - go get golang.org/x/tools/cmd/cover
   - go get github.com/tools/godep
   - godep restore
 services:
