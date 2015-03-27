@@ -102,6 +102,7 @@ func TestStorageApplication(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, app.SourceStorage)
+	assert.Equal(t, app.SourceStorage, app.DestStorage)
 
 	filename := "avatar.png"
 
