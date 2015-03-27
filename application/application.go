@@ -43,7 +43,6 @@ type Application struct {
 	KVStore       gokvstores.KVStore
 	SourceStorage gostorages.Storage
 	DestStorage   gostorages.Storage
-	Router        *mux.Router
 	Shard         Shard
 	Raven         *raven.Client
 	Logger        *logrus.Logger
@@ -168,8 +167,8 @@ func (app *Application) ServeHTTP(h Handler) http.Handler {
 }
 
 func (a *Application) InitRouter() *negroni.Negroni {
-	a.Router = mux.NewRouter()
-	a.Router.NotFoundHandler = NotFoundHandler()
+	router := mux.NewRouter()
+	router.NotFoundHandler = NotFoundHandler()
 
 	methods := map[string]Handler{
 		"redirect": RedirectHandler,
@@ -180,13 +179,13 @@ func (a *Application) InitRouter() *negroni.Negroni {
 	for name, handler := range methods {
 		handlerFunc := a.ServeHTTP(handler)
 
-		a.Router.Handle(fmt.Sprintf("/%s", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
-		a.Router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{sig}/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{sig}/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{op}/x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x/{path:[\\w\\-/.]+}", name), handlerFunc)
+		router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
 	}
 
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
@@ -210,7 +209,7 @@ func (a *Application) InitRouter() *negroni.Negroni {
 		AllowedMethods: allowedMethods,
 	}))
 	n.Use(negronilogrus.NewMiddleware())
-	n.UseHandler(a.Router)
+	n.UseHandler(router)
 
 	return n
 }

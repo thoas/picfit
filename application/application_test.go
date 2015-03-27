@@ -63,7 +63,77 @@ func newHTTPServer() *httptest.Server {
 	}))
 }
 
-func TestStorageApplication(t *testing.T) {
+func TestStorageApplicationWithPath(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	tmp := os.TempDir()
+
+	f, err := os.Open("testdata/avatar.png")
+	assert.Nil(t, err)
+	defer f.Close()
+
+	body, err := ioutil.ReadAll(f)
+	assert.Nil(t, err)
+
+	ioutil.WriteFile(path.Join(tmp, "avatar.png"), body, 0755)
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "kvstore": {
+		"prefix": "picfit:",
+		"type": "redis",
+		"host": "127.0.0.1",
+		"db": 0,
+		"password": "",
+		"port": 6379
+	  },
+	  "storage": {
+		"src": {
+		  "type": "fs",
+		  "location": "%s"
+		}
+	  },
+	  "shard": {
+		"width": 1,
+		"depth": 2
+	  }
+	}`
+
+	content = fmt.Sprintf(content, tmp)
+
+	app, err := NewFromConfig(content)
+	assert.Nil(t, err)
+
+	negroni := app.InitRouter()
+
+	connection := app.KVStore.Connection()
+	defer connection.Close()
+
+	location := "http://example.com/display/resize/100x100/avatar.png"
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	res := httptest.NewRecorder()
+
+	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, 200, res.Code)
+
+	// We wait until the goroutine to save the file on disk is finished
+	timer1 := time.NewTimer(time.Second * 2)
+	<-timer1.C
+
+	etag := res.Header().Get("ETag")
+
+	key := app.WithPrefix(etag)
+
+	assert.True(t, connection.Exists(key))
+}
+
+func TestStorageApplicationWithURL(t *testing.T) {
 	ts := newHTTPServer()
 	defer ts.Close()
 	defer ts.CloseClientConnections()
@@ -96,11 +166,11 @@ func TestStorageApplication(t *testing.T) {
 	content = fmt.Sprintf(content, tmp)
 
 	app, err := NewFromConfig(content)
+	assert.Nil(t, err)
 
 	connection := app.KVStore.Connection()
 	defer connection.Close()
 
-	assert.Nil(t, err)
 	assert.NotNil(t, app.SourceStorage)
 	assert.Equal(t, app.SourceStorage, app.DestStorage)
 
