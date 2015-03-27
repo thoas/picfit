@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
@@ -95,7 +96,8 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	  "storage": {
 		"src": {
 		  "type": "fs",
-		  "location": "%s"
+		  "location": "%s",
+		  "base_url": "http://img.example.com"
 		}
 	  },
 	  "shard": {
@@ -143,6 +145,25 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	assert.Equal(t, len(parts[1]), 1)
 
 	assert.True(t, app.SourceStorage.Exists(filepath))
+
+	location = "http://example.com/get/resize/100x100/avatar.png"
+
+	request, _ = http.NewRequest("GET", location, nil)
+
+	res = httptest.NewRecorder()
+
+	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, 200, res.Code)
+	assert.Equal(t, "application/json", res.Header().Get("Content-Type"))
+
+	var dat map[string]interface{}
+
+	err = json.Unmarshal(res.Body.Bytes(), &dat)
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, "http://img.example.com/"+filepath, dat["url"].(string))
 }
 
 func TestStorageApplicationWithURL(t *testing.T) {

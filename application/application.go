@@ -277,6 +277,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	var file *image.ImageFile = &image.ImageFile{
 		Key:     req.Key,
 		Storage: a.DestStorage,
+		Headers: map[string]string{},
 	}
 	var err error
 
@@ -324,6 +325,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	file.Key = req.Key
 	file.Storage = a.DestStorage
+
 	file.Headers["Content-Type"] = file.ContentType()
 	file.Headers["ETag"] = req.Key
 
