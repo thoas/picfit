@@ -251,6 +251,21 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	assert.True(t, app.SourceStorage.Exists(filepath))
 }
 
+func TestDummyApplicationErrors(t *testing.T) {
+	app := newDummyApplication()
+
+	location := "http://example.com/display/resize/100x100/avatar.png"
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	res := httptest.NewRecorder()
+
+	handler := app.ServeHTTP(ImageHandler)
+
+	handler.ServeHTTP(res, request)
+	assert.Equal(t, 400, res.Code)
+}
+
 func TestDummyApplication(t *testing.T) {
 	ts := newHTTPServer()
 	defer ts.Close()
