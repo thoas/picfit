@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
 )
@@ -129,6 +130,12 @@ func TestStorageApplication(t *testing.T) {
 	assert.True(t, connection.Exists(key))
 
 	filepath, _ := gokvstores.String(connection.Get(key))
+
+	parts := strings.Split(filepath, "/")
+
+	assert.Equal(t, len(parts), 3)
+	assert.Equal(t, len(parts[0]), 1)
+	assert.Equal(t, len(parts[1]), 1)
 
 	assert.True(t, app.SourceStorage.Exists(filepath))
 }
