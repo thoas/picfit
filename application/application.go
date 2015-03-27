@@ -64,16 +64,16 @@ func NewFromConfigPath(path string) (*Application, error) {
 		return nil, fmt.Errorf("Your config file %s cannot be loaded: %s", path, err)
 	}
 
-	return NewFromConfig(content)
+	return NewFromConfig(string(content))
 }
 
-func NewFromConfig(content []byte) (*Application, error) {
+func NewFromConfig(content string) (*Application, error) {
 	data := map[string]interface{}{}
-	dec := json.NewDecoder(strings.NewReader(string(content)))
+	dec := json.NewDecoder(strings.NewReader(content))
 	err := dec.Decode(&data)
 
 	if err != nil {
-		return nil, fmt.Errorf("Your config file %s cannot be parsed: %s", string(content), err)
+		return nil, fmt.Errorf("Your config file %s cannot be parsed: %s", content, err)
 	}
 
 	jq := jsonq.NewQuery(data)
