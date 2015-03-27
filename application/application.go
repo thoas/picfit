@@ -57,26 +57,36 @@ func NewApplication() *Application {
 	}
 }
 
-func NewFromConfig(path string) (*Application, error) {
+func NewFromConfigPath(path string) (*Application, error) {
 	content, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		return nil, fmt.Errorf("Your config file %s cannot be loaded: %s", path, err)
 	}
 
+	return NewFromConfig(content)
+}
+
+func NewFromConfig(content []byte) (*Application, error) {
 	data := map[string]interface{}{}
 	dec := json.NewDecoder(strings.NewReader(string(content)))
-	err = dec.Decode(&data)
+	err := dec.Decode(&data)
 
 	if err != nil {
-		return nil, fmt.Errorf("Your config file %s cannot be parsed: %s", path, err)
+		return nil, fmt.Errorf("Your config file %s cannot be parsed: %s", string(content), err)
 	}
 
+	jq := jsonq.NewQuery(data)
+
+	return NewFromJsonQuery(jq)
+}
+
+func NewFromJsonQuery(jq *jsonq.JsonQuery) (*Application, error) {
 	app := NewApplication()
-	app.Jq = jsonq.NewQuery(data)
+	app.Jq = jq
 
 	for _, initializer := range Initializers {
-		err = initializer(app.Jq, app)
+		err := initializer(app.Jq, app)
 
 		if err != nil {
 			return nil, fmt.Errorf("An error occured during init: %s", err)

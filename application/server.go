@@ -11,7 +11,7 @@ import (
 func Run(path string) error {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	app, err := NewFromConfig(path)
+	app, err := NewFromConfigPath(path)
 
 	if err != nil {
 		return err
