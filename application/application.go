@@ -86,7 +86,7 @@ func NewFromJsonQuery(jq *jsonq.JsonQuery) (*Application, error) {
 	app.Jq = jq
 
 	for _, initializer := range Initializers {
-		err := initializer(app.Jq, app)
+		err := initializer(jq, app)
 
 		if err != nil {
 			return nil, fmt.Errorf("An error occured during init: %s", err)
@@ -326,6 +326,7 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	file.Key = req.Key
 	file.Storage = a.DestStorage
 	file.Headers["Content-Type"] = file.ContentType()
+	file.Headers["ETag"] = req.Key
 
 	if stored == "" {
 		if async == true {

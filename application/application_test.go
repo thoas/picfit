@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
+	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/engines"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 )
 
 type Dimension struct {
@@ -58,6 +60,77 @@ func newHTTPServer() *httptest.Server {
 			}
 		}
 	}))
+}
+
+func TestStorageApplication(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	tmp := os.TempDir()
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "kvstore": {
+		"prefix": "picfit:",
+		"type": "redis",
+		"host": "127.0.0.1",
+		"db": 0,
+		"password": "",
+		"port": 6379
+	  },
+	  "storage": {
+		"src": {
+		  "type": "fs",
+		  "location": "%s"
+		}
+	  },
+	  "shard": {
+		"width": 1,
+		"depth": 2
+	  }
+	}`
+
+	content = fmt.Sprintf(content, tmp)
+
+	app, err := NewFromConfig(content)
+
+	connection := app.KVStore.Connection()
+	defer connection.Close()
+
+	assert.Nil(t, err)
+	assert.NotNil(t, app.SourceStorage)
+
+	filename := "avatar.png"
+
+	u, _ := url.Parse(ts.URL + "/" + filename)
+
+	location := fmt.Sprintf("http://example.com/display?url=%s&w=100&h=100&op=resize", u.String())
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	res := httptest.NewRecorder()
+
+	handler := app.ServeHTTP(ImageHandler)
+
+	handler.ServeHTTP(res, request)
+
+	assert.Equal(t, res.Code, 200)
+
+	// We wait until the goroutine to save the file on disk is finished
+	timer1 := time.NewTimer(time.Second * 2)
+	<-timer1.C
+
+	etag := res.Header().Get("ETag")
+
+	key := app.WithPrefix(etag)
+
+	assert.True(t, connection.Exists(key))
+
+	filepath, _ := gokvstores.String(connection.Get(key))
+
+	assert.True(t, app.SourceStorage.Exists(filepath))
 }
 
 func TestDummyApplication(t *testing.T) {
