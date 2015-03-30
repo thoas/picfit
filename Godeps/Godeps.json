@@ -100,7 +100,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/gostorages",
-			"Rev": "e7e7037a58b15340c916412357583750a5d25ea6"
+			"Rev": "a193818eb9acc5104bf1d73319da30b3c21e9a04"
 		},
 		{
 			"ImportPath": "github.com/vaughan0/go-ini",
