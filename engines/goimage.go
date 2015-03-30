@@ -72,13 +72,13 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 	processed := 0
 
 	for i := range g.Image {
-		go func(paletted *image.Paletted, width int, height int, position int, options *Options) {
+		go func(paletted *image.Paletted, width int, height int, position int, trans Transformation, options *Options) {
 			done <- &Result{
-				Image:    e.Scale(paletted, width, height, options.Upscale, imaging.Resize),
+				Image:    e.Scale(paletted, width, height, options.Upscale, trans),
 				Position: position,
 				Paletted: image.NewPaletted(image.Rect(0, 0, width, height), paletted.Palette),
 			}
-		}(g.Image[i], width, height, i, options)
+		}(g.Image[i], width, height, i, trans, options)
 	}
 
 	for {
