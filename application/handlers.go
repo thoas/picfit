@@ -2,26 +2,14 @@ package application
 
 import (
 	"encoding/json"
-	"github.com/thoas/gokvstores"
 	"github.com/thoas/muxer"
-	"github.com/thoas/picfit/engines"
 	"net/http"
-	"net/url"
 )
 
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found", http.StatusNotFound)
 	})
-}
-
-type Request struct {
-	*muxer.Request
-	Operation  *engines.Operation
-	Connection gokvstores.KVStoreConnection
-	Key        string
-	URL        *url.URL
-	Filepath   string
 }
 
 type Handler func(muxer.Response, *Request, *Application)

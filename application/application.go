@@ -18,11 +18,8 @@ import (
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/middleware"
-	"github.com/thoas/picfit/signature"
-	"github.com/thoas/picfit/util"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -100,69 +97,25 @@ func (app *Application) ServeHTTP(h Handler) http.Handler {
 		con := app.KVStore.Connection()
 		defer con.Close()
 
-		request := muxer.NewRequest(req)
-
-		for k, v := range request.Params {
-			request.QueryString[k] = v
-		}
-
 		res := muxer.NewResponse(w)
 
-		extracted := map[string]interface{}{}
+		request, err := NewRequest(req, con)
 
-		for key, extractor := range Extractors {
-			result, err := extractor(key, request)
+		if err != nil {
+			app.Logger.Error(err)
 
-			if err != nil {
-				app.Logger.Info(err)
-
-				res.BadRequest()
-				return
-			}
-
-			extracted[key] = result
-		}
-
-		sorted := util.SortMapString(request.QueryString)
-
-		valid := app.IsValidSign(sorted)
-
-		delete(sorted, "sig")
-
-		serialized := hash.Serialize(sorted)
-
-		key := hash.Tokey(serialized)
-
-		app.Logger.Infof("Generating key %s from request: %s", key, serialized)
-
-		var u *url.URL
-		var path string
-
-		value, ok := extracted["url"]
-
-		if ok && value != nil {
-			u = value.(*url.URL)
-		}
-
-		value, ok = extracted["path"]
-
-		if ok && value != nil {
-			path = value.(string)
-		}
-
-		if !valid || (u == nil && path == "") {
 			res.BadRequest()
+
 			return
 		}
 
-		h(res, &Request{
-			request,
-			extracted["op"].(*engines.Operation),
-			con,
-			key,
-			u,
-			path,
-		}, app)
+		if app.SecretKey != "" && !request.IsAuthorized(app.SecretKey) {
+			res.Unauthorized()
+
+			return
+		}
+
+		h(res, request, app)
 	})
 }
 
@@ -338,17 +291,4 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 	}
 
 	return file, err
-}
-
-func (a *Application) IsValidSign(qs map[string]string) bool {
-	if a.SecretKey == "" {
-		return true
-	}
-
-	params := url.Values{}
-	for k, v := range qs {
-		params.Set(k, v)
-	}
-
-	return signature.VerifySign(a.SecretKey, params.Encode())
 }
