@@ -8,6 +8,7 @@ import (
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/dummy"
 	"github.com/thoas/picfit/engines"
+	"github.com/thoas/picfit/signature"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -62,6 +63,80 @@ func newHTTPServer() *httptest.Server {
 			}
 		}
 	}))
+}
+
+func TestSignatureApplicationNotAuthorized(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "secret_key": "dummy"
+	}`
+
+	app, err := NewFromConfig(content)
+
+	assert.Nil(t, err)
+
+	filename := "avatar.png"
+
+	u, _ := url.Parse(ts.URL + "/" + filename)
+
+	params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
+
+	location := fmt.Sprintf("http://example.com/display?%s", params)
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	negroni := app.InitRouter()
+
+	res := httptest.NewRecorder()
+
+	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, 401, res.Code)
+}
+
+func TestSignatureApplicationAuthorized(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "secret_key": "dummy"
+	}`
+
+	app, err := NewFromConfig(content)
+
+	assert.Nil(t, err)
+
+	filename := "avatar.png"
+
+	u, _ := url.Parse(ts.URL + "/" + filename)
+
+	params := fmt.Sprintf("h=100&op=resize&url=%s&w=100", u.String())
+
+	values, err := url.ParseQuery(params)
+
+	assert.Nil(t, err)
+
+	sig := signature.Sign("dummy", values.Encode())
+
+	location := fmt.Sprintf("http://example.com/display?%s&sig=%s", params, sig)
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	negroni := app.InitRouter()
+
+	res := httptest.NewRecorder()
+
+	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, 200, res.Code)
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
