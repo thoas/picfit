@@ -80,9 +80,7 @@ func TestSignatureApplicationNotAuthorized(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	filename := "avatar.png"
-
-	u, _ := url.Parse(ts.URL + "/" + filename)
+	u, _ := url.Parse(ts.URL + "/avatar.png")
 
 	params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
 
@@ -114,9 +112,7 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	filename := "avatar.png"
-
-	u, _ := url.Parse(ts.URL + "/" + filename)
+	u, _ := url.Parse(ts.URL + "/avatar.png")
 
 	params := fmt.Sprintf("h=100&op=resize&url=%s&w=100", u.String())
 
