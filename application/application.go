@@ -183,17 +183,6 @@ func (a *Application) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (a *Application) ImageHandler(res muxer.Response, req *Request) {
-	file, err := a.ImageFileFromRequest(req, true, true)
-
-	if err != nil {
-		panic(err)
-	}
-
-	res.SetHeaders(file.Headers, true)
-	res.ResponseWriter.Write(file.Content())
-}
-
 func (a *Application) Store(i *image.ImageFile) error {
 	con := a.KVStore.Connection()
 	defer con.Close()
