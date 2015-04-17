@@ -404,8 +404,7 @@ Flip
 Flip flips the image vertically (from top to bottom) or
 horizontally (from left to right) and returns the transformed image.
 
--  **pos** - The desired position to flip the image, ``h`` will flip
-  the image horizontally, ``v`` will flip the image vertically
+-  **pos** - The desired position to flip the image, ``h`` will flip the image horizontally, ``v`` will flip the image vertically
 
 You have to pass the ``flip`` value to the ``op`` parameter
 to use this operation.
