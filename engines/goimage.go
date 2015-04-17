@@ -310,8 +310,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		file.Processed = content
 
 		return file, err
-	case Resize:
-	case Thumbnail:
+	case Thumbnail, Resize:
 		var upscale bool
 		var w int
 		var h int
