@@ -316,7 +316,7 @@ Parameters to call the picfit service are:
 
 ::
 
-    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}&q={quality}"
+    <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}&q={quality}&deg={degree}&pos={position}"
 
 - **path** - The filepath to load the image using your source storage
 - **operation** - The operation to perform, see Operations_
@@ -328,6 +328,8 @@ Parameters to call the picfit service are:
 - **upscale** - If your image is smaller than your desired dimensions, the service will upscale it by default to fit your dimensions, you can disable this behavior by providing ``0``
 - **format** - The output format to save the image, by default the format will be the source format (a ``GIF`` image source will be saved as ``GIF``),  see Formats_
 - **quality** - The quality to save the image, by default the quality will be the highest possible, it will be only applied on ``JPEG`` format
+- **degree** - The degree (``90``, ``180``, ``270``) to rotate the image
+- **position** - The position to flip the image
 
 To use this service, include the service url as replacement
 for your images, for example:
@@ -394,6 +396,28 @@ crops it to the specified width and height and returns the transformed image.
 -  **h** - The desired height of the image
 
 You have to pass the ``thumbnail`` value to the ``op`` parameter
+to use this operation.
+
+Flip
+----
+
+Flip flips the image vertically (from top to bottom) or
+horizontally (from left to right) and returns the transformed image.
+
+-  **pos** - The desired position to flip the image, ``h`` will flip
+  the image horizontally, ``v`` will flip the image vertically
+
+You have to pass the ``flip`` value to the ``op`` parameter
+to use this operation.
+
+Rotate
+------
+
+Rotate rotates the image to the desired degree and returns the transformed image.
+
+-  **deg** - The desired degree to rotate the image
+
+You have to pass the ``rotate`` value to the ``op`` parameter
 to use this operation.
 
 Methods

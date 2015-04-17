@@ -24,6 +24,19 @@ type GoImageEngine struct {
 	DefaultQuality int
 }
 
+type ImageTransformation func(img image.Image) *image.NRGBA
+
+var FlipTransformations = map[string]ImageTransformation{
+	"h": imaging.FlipH,
+	"v": imaging.FlipV,
+}
+
+var RotateTransformations = map[int]ImageTransformation{
+	90:  imaging.Rotate90,
+	270: imaging.Rotate270,
+	180: imaging.Rotate180,
+}
+
 type Result struct {
 	Paletted *image.Paletted
 	Image    *image.NRGBA
@@ -141,6 +154,38 @@ func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
 	return imaging.Decode(bytes.NewReader(img.Source))
 }
 
+func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, deg int, options *Options) ([]byte, error) {
+	image, err := e.Source(img)
+
+	if err != nil {
+		return nil, err
+	}
+
+	transform, ok := RotateTransformations[deg]
+
+	if !ok {
+		return nil, fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
+	}
+
+	return e.ToBytes(transform(image), options.Format, options.Quality)
+}
+
+func (e *GoImageEngine) Flip(img *imagefile.ImageFile, pos string, options *Options) ([]byte, error) {
+	image, err := e.Source(img)
+
+	if err != nil {
+		return nil, err
+	}
+
+	transform, ok := FlipTransformations[pos]
+
+	if !ok {
+		return nil, fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
+	}
+
+	return e.ToBytes(transform(image), options.Format, options.Quality)
+}
+
 func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, width, height, options, imaging.Thumbnail)
@@ -170,6 +215,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		"upscale": "1",
 		"h":       "0",
 		"w":       "0",
+		"deg":     "90",
 	}
 
 	err := mergo.Merge(&qs, params)
@@ -178,26 +224,10 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		return nil, err
 	}
 
-	var upscale bool
-	var w int
-	var h int
-
-	if upscale, err = strconv.ParseBool(qs["upscale"]); err != nil {
-		return nil, err
-	}
-
-	if w, err = strconv.Atoi(qs["w"]); err != nil {
-		return nil, err
-	}
-
-	if h, err = strconv.Atoi(qs["h"]); err != nil {
-		return nil, err
-	}
-
-	q, ok := qs["q"]
-
 	var quality int
 	var format string
+
+	q, ok := qs["q"]
 
 	if ok {
 		quality, err := strconv.Atoi(q)
@@ -245,30 +275,83 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	options := &Options{
 		Quality: quality,
 		Format:  Formats[format],
-		Upscale: upscale,
 	}
 
 	switch operation {
+	case Flip:
+		pos, ok := qs["pos"]
+
+		if !ok {
+			return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
+		}
+
+		content, err := e.Flip(img, pos, options)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file.Processed = content
+
+		return file, err
+	case Rotate:
+		deg, err := strconv.Atoi(qs["deg"])
+
+		if err != nil {
+			return nil, err
+		}
+
+		content, err := e.Rotate(img, deg, options)
+
+		if err != nil {
+			return nil, err
+		}
+
+		file.Processed = content
+
+		return file, err
 	case Resize:
-		content, err := e.Resize(img, w, h, options)
-
-		if err != nil {
-			return nil, err
-		}
-
-		file.Processed = content
-
-		return file, err
 	case Thumbnail:
-		content, err := e.Thumbnail(img, w, h, options)
+		var upscale bool
+		var w int
+		var h int
 
-		if err != nil {
+		if upscale, err = strconv.ParseBool(qs["upscale"]); err != nil {
 			return nil, err
 		}
 
-		file.Processed = content
+		if w, err = strconv.Atoi(qs["w"]); err != nil {
+			return nil, err
+		}
 
-		return file, err
+		if h, err = strconv.Atoi(qs["h"]); err != nil {
+			return nil, err
+		}
+
+		options.Upscale = upscale
+
+		switch operation {
+		case Resize:
+			content, err := e.Resize(img, w, h, options)
+
+			if err != nil {
+				return nil, err
+			}
+
+			file.Processed = content
+
+			return file, err
+		case Thumbnail:
+			content, err := e.Thumbnail(img, w, h, options)
+
+			if err != nil {
+				return nil, err
+			}
+
+			file.Processed = content
+
+			return file, err
+		}
 	}
 
 	return nil, fmt.Errorf("Operation not found for %s", operation)
