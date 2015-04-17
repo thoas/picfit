@@ -109,6 +109,10 @@
 		{
 			"ImportPath": "github.com/stretchr/testify",
 			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+		},
+		{
+			"ImportPath": "github.com/thoas/stats",
+			"Rev": "6e037cd1c2e122afc99d4f9cb47c2c8d158ccdbd"
 		}
 	]
 }

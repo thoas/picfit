@@ -18,6 +18,7 @@ import (
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/middleware"
+	"github.com/thoas/stats"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -143,6 +144,18 @@ func (a *Application) InitRouter() *negroni.Negroni {
 
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := a.Jq.ArrayOfStrings("allowed_methods")
+
+	s := stats.New()
+
+	router.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		stats := s.Data()
+
+		b, _ := json.Marshal(stats)
+
+		w.Write(b)
+	})
 
 	debug, err := a.Jq.Bool("debug")
 
