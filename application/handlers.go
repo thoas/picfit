@@ -57,26 +57,36 @@ var UploadHandler = func(res muxer.Response, req *http.Request, app *Application
 	}
 
 	var fh io.ReadCloser
-	if fh, err = multipartForm.Data.Open(); err != nil {
-		res.Abort(500, fmt.Sprint("Error opening Mime::Data %+v", err))
-		return
+
+	fh, err = multipartForm.Data.Open()
+
+	if err != nil {
+		app.Logger.Error(fmt.Sprint("Error opening Mime::Data %+v", err))
+
+		panic(err)
 	}
+
 	defer fh.Close()
 
 	dataBytes := bytes.Buffer{}
 	var size int64
-	if size, err = dataBytes.ReadFrom(fh); err != nil {
-		res.Abort(500, fmt.Sprint("Error reading Mime::Data %+v", err))
-		return
+
+	size, err = dataBytes.ReadFrom(fh)
+
+	if err != nil {
+		app.Logger.Error(fmt.Sprint("Error reading Mime::Data %+v", err))
+
+		panic(err)
 	}
 
-	app.Logger.Printf("Read %v bytes with filename %s", size, multipartForm.Data.Filename)
+	app.Logger.Infof("Read %v bytes with filename %s", size, multipartForm.Data.Filename)
 
 	err = app.SourceStorage.Save(multipartForm.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
 
 	if err != nil {
-		res.Abort(500, fmt.Sprint("Error uploading file %s to source storage %+v", multipartForm.Data.Filename, err))
-		return
+		app.Logger.Error(fmt.Sprint("Error uploading file %s to source storage %+v", multipartForm.Data.Filename, err))
+
+		panic(err)
 	}
 
 	app.Logger.Infof("File %s successfully uploaded", multipartForm.Data.Filename)
