@@ -443,7 +443,7 @@ Your file will be generated synchronously then the redirection
 will be performed.
 
 The first query will be slower but next ones will be faster because the name
-of the generated file will be stored on your key/value store.
+of the generated file will be stored in your key/value store.
 
 Get
 ---
@@ -457,7 +457,7 @@ Your file will be generated synchronously then you will get the following inform
 * **url** - Absolute url of your generated file (only if ``base_url`` is available on your destination storage)
 
 The first query will be slower but next ones will be faster because the name
-of the generated file will be stored on your key/value store.
+of the generated file will be stored in your key/value store.
 
 Expect the following result:
 
