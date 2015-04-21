@@ -9,19 +9,8 @@ import (
 	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/image"
 	"io"
-	"mime/multipart"
 	"net/http"
 )
-
-type MultipartForm struct {
-	Data *multipart.FileHeader `json:"data"`
-}
-
-func (f *MultipartForm) FieldMap() binding.FieldMap {
-	return binding.FieldMap{
-		&f.Data: "data",
-	}
-}
 
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
