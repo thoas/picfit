@@ -469,6 +469,37 @@ Expect the following result:
         "url":"https://ds9xhxfkunhky.cloudfront.net/cache/6/7/a661f8d197a42d21d0190d33e629e4.png"
     }
 
+Upload
+------
+
+Upload is disabled by default.
+
+You can enable it by enabling the option and adding a source
+storage in your configuration file.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "storage": {
+        "src": {
+          "type": "[STORAGE]"
+        }
+      },
+      "options": {
+        "enable_upload": true
+      }
+    }
+
+You can test it by using the excellent httpie_ for example:
+
+::
+
+    http -f POST localhost:3000/upload data@myupload
+
+You will retrieve the image information in ``JSON`` format.
+
 Security
 ========
 
@@ -686,3 +717,4 @@ Thanks to these beautiful projects.
 .. _Ulule: http://www.ulule.com
 .. _sentry: https://github.com/getsentry/sentry
 .. _raven: https://github.com/getsentry/raven-go
+.. _httpie: https://github.com/jakubroztocil/httpie
