@@ -41,14 +41,14 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 	res.ResponseWriter.Write(file.Content())
 }
 
-var UploadHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+var UploadHandler = func(res muxer.Response, req *muxer.Request, app *Application) {
 	if app.SourceStorage == nil {
 		res.Abort(500, "Your application doesn't have a source storage")
 		return
 	}
 
 	multipartForm := new(MultipartForm)
-	errs := binding.Bind(req.Request.Request, multipartForm)
+	errs := binding.Bind(req.Request, multipartForm)
 	if errs.Handle(res) {
 		return
 	}

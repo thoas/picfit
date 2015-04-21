@@ -1,6 +1,7 @@
 package application
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/disintegration/imaging"
@@ -11,6 +12,7 @@ import (
 	"github.com/thoas/picfit/signature"
 	"io/ioutil"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -131,6 +133,61 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 	res := httptest.NewRecorder()
 
 	negroni.ServeHTTP(res, request)
+
+	assert.Equal(t, 200, res.Code)
+}
+
+func TestUploadHandler(t *testing.T) {
+	tmp := os.TempDir()
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "storage": {
+		"src": {
+		  "type": "fs",
+		  "location": "%s",
+		  "base_url": "http://img.example.com"
+		}
+	  }
+	}`
+
+	content = fmt.Sprintf(content, tmp)
+
+	app, err := NewFromConfig(content)
+	assert.Nil(t, err)
+
+	f, err := os.Open("testdata/avatar.png")
+	assert.Nil(t, err)
+	defer f.Close()
+
+	body := new(bytes.Buffer)
+	w := multipart.NewWriter(body)
+
+	writer, err := w.CreateFormFile("data", "avatar.png")
+
+	assert.Nil(t, err)
+
+	fileContent, err := ioutil.ReadAll(f)
+
+	assert.Nil(t, err)
+
+	writer.Write(fileContent)
+
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", "http://www.example.com/upload", body)
+
+	assert.Nil(t, err)
+
+	req.Header.Add("Content-Type", "multipart/form-data")
+
+	res := httptest.NewRecorder()
+
+	negroni := app.InitRouter()
+	negroni.ServeHTTP(res, req)
 
 	assert.Equal(t, 200, res.Code)
 }
