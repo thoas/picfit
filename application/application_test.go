@@ -202,8 +202,8 @@ func TestUploadHandler(t *testing.T) {
 	file, err := app.SourceStorage.Open("avatar.png")
 
 	assert.Nil(t, err)
-
 	assert.Equal(t, file.Size(), stats.Size())
+	assert.Equal(t, "application/json", res.Header().Get("Content-Type"))
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {

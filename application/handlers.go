@@ -7,6 +7,7 @@ import (
 	"github.com/mholt/binding"
 	"github.com/thoas/gostorages"
 	"github.com/thoas/muxer"
+	"github.com/thoas/picfit/image"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -78,7 +79,25 @@ var UploadHandler = func(res muxer.Response, req *http.Request, app *Application
 		return
 	}
 
-	res.Ok(fmt.Sprintf("File %s successfully uploaded", multipartForm.Data.Filename))
+	app.Logger.Infof("File %s successfully uploaded", multipartForm.Data.Filename)
+
+	file := &image.ImageFile{
+		Filepath: multipartForm.Data.Filename,
+		Storage:  app.SourceStorage,
+	}
+
+	content, err := json.Marshal(map[string]string{
+		"filename": file.Filename(),
+		"path":     file.Path(),
+		"url":      file.URL(),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	res.ContentType("application/json")
+	res.ResponseWriter.Write(content)
 }
 
 var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {
