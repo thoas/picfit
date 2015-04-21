@@ -142,6 +142,8 @@ func (a *Application) InitRouter() *negroni.Negroni {
 		router.Handle(fmt.Sprintf("/%s/{op}/{w:[\\d]+}x{h:[\\d]+}/{path:[\\w\\-/.]+}", name), handlerFunc)
 	}
 
+	router.Handle("/upload", a.ServeHTTP(UploadHandler))
+
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := a.Jq.ArrayOfStrings("allowed_methods")
 

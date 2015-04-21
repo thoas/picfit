@@ -1,10 +1,26 @@
 package application
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/mholt/binding"
+	"github.com/thoas/gostorages"
 	"github.com/thoas/muxer"
+	"io"
+	"mime/multipart"
 	"net/http"
 )
+
+type MultipartForm struct {
+	Data *multipart.FileHeader `json:"data"`
+}
+
+func (f *MultipartForm) FieldMap() binding.FieldMap {
+	return binding.FieldMap{
+		&f.Data: "data",
+	}
+}
 
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +39,42 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 
 	res.SetHeaders(file.Headers, true)
 	res.ResponseWriter.Write(file.Content())
+}
+
+var UploadHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+	if app.SourceStorage == nil {
+		res.Abort(500, "Your application doesn't have a source storage")
+		return
+	}
+
+	multipartForm := new(MultipartForm)
+	errs := binding.Bind(req.Request.Request, multipartForm)
+	if errs.Handle(res) {
+		return
+	}
+
+	var fh io.ReadCloser
+	var err error
+	if fh, err = multipartForm.Data.Open(); err != nil {
+		res.Abort(500, fmt.Sprint("Error opening Mime::Data %+v", err))
+		return
+	}
+	defer fh.Close()
+	dataBytes := bytes.Buffer{}
+	var size int64
+	if size, err = dataBytes.ReadFrom(fh); err != nil {
+		res.Abort(500, fmt.Sprint("Error reading Mime::Data %+v", err))
+		return
+	}
+
+	app.Logger.Printf("Read %v bytes with filename %s", size, multipartForm.Data.Filename)
+
+	err = app.SourceStorage.Save(multipartForm.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
+
+	if err != nil {
+		res.Abort(500, fmt.Sprint("Error uploading file %s to source storage %+v", multipartForm.Data.Filename, err))
+		return
+	}
 }
 
 var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {
