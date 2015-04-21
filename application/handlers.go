@@ -41,25 +41,27 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 	res.ResponseWriter.Write(file.Content())
 }
 
-var UploadHandler = func(res muxer.Response, req *muxer.Request, app *Application) {
+var UploadHandler = func(res muxer.Response, req *http.Request, app *Application) {
 	if app.SourceStorage == nil {
 		res.Abort(500, "Your application doesn't have a source storage")
 		return
 	}
 
+	var err error
+
 	multipartForm := new(MultipartForm)
-	errs := binding.Bind(req.Request, multipartForm)
+	errs := binding.Bind(req, multipartForm)
 	if errs.Handle(res) {
 		return
 	}
 
 	var fh io.ReadCloser
-	var err error
 	if fh, err = multipartForm.Data.Open(); err != nil {
 		res.Abort(500, fmt.Sprint("Error opening Mime::Data %+v", err))
 		return
 	}
 	defer fh.Close()
+
 	dataBytes := bytes.Buffer{}
 	var size int64
 	if size, err = dataBytes.ReadFrom(fh); err != nil {
@@ -75,6 +77,8 @@ var UploadHandler = func(res muxer.Response, req *muxer.Request, app *Applicatio
 		res.Abort(500, fmt.Sprint("Error uploading file %s to source storage %+v", multipartForm.Data.Filename, err))
 		return
 	}
+
+	res.Ok(fmt.Sprintf("File %s successfully uploaded", multipartForm.Data.Filename))
 }
 
 var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {

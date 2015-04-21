@@ -145,9 +145,7 @@ func (a *Application) InitRouter() *negroni.Negroni {
 	router.Handle("/upload", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		res := muxer.NewResponse(w)
 
-		request := muxer.NewRequest(req)
-
-		UploadHandler(res, request, a)
+		UploadHandler(res, req, a)
 	}))
 
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")

@@ -164,11 +164,13 @@ func TestUploadHandler(t *testing.T) {
 	body := new(bytes.Buffer)
 	w := multipart.NewWriter(body)
 
-	writer, err := w.CreateFormFile("data", "avatar.png")
-
 	assert.Nil(t, err)
 
 	fileContent, err := ioutil.ReadAll(f)
+
+	assert.Nil(t, err)
+
+	writer, err := w.CreateFormFile("data", "avatar.png")
 
 	assert.Nil(t, err)
 
@@ -182,14 +184,14 @@ func TestUploadHandler(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	req.Header.Add("Content-Type", "multipart/form-data")
+	req.Header.Add("Content-Type", w.FormDataContentType())
 
 	res := httptest.NewRecorder()
 
 	negroni := app.InitRouter()
 	negroni.ServeHTTP(res, req)
 
-	assert.Equal(t, 200, res.Code)
+	assert.Equal(t, res.Code, 200)
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
