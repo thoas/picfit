@@ -251,12 +251,14 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, fmt.Errorf("Unknown format %s", format)
 		}
 
-	} else {
-		format = img.Format()
+	}
+
+	if format == "" && e.DefaultFormat != "" {
+		format = e.DefaultFormat
 	}
 
 	if format == "" {
-		format = e.DefaultFormat
+		format = img.Format()
 	}
 
 	if format != img.Format() {

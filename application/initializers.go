@@ -64,15 +64,13 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 	var format string
 	var quality int
 
-	f, _ := jq.String("format")
+	f, _ := jq.String("options", "format")
 
 	if f != "" {
 		format = f
-	} else {
-		format = DefaultFormat
 	}
 
-	q, err := jq.Int("quality")
+	q, err := jq.Int("options", "quality")
 
 	if err != nil {
 		quality = q
@@ -82,6 +80,12 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 
 	app.SecretKey, _ = jq.String("secret_key")
 	app.Engine = engines.NewGoImageEngine(format, quality)
+
+	enableUpload, err := jq.Bool("options", "enable_upload")
+
+	if err == nil {
+		app.EnableUpload = enableUpload
+	}
 
 	return nil
 }

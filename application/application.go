@@ -36,6 +36,7 @@ type Shard struct {
 }
 
 type Application struct {
+	EnableUpload  bool
 	Prefix        string
 	SecretKey     string
 	KVStore       gokvstores.KVStore
@@ -50,7 +51,8 @@ type Application struct {
 
 func NewApplication() *Application {
 	return &Application{
-		Logger: logrus.New(),
+		Logger:       logrus.New(),
+		EnableUpload: false,
 	}
 }
 
