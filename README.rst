@@ -473,15 +473,14 @@ Upload
 ------
 
 Upload is disabled by default for security reason.
-
 Before enabling it, you must understand you have to secure yourself
 this endpoint like only allowing the /upload route in your nginx
 or apache webserver for the local network.
 
 Exposing the **/upload** endpoint without a security mechanism is not **SAFE**.
 
-You can enable it by adding the option and adding a source
-storage in your configuration file.
+You can enable it by adding the option and a source
+storage to your configuration file.
 
 ``config.json``
 
@@ -498,13 +497,13 @@ storage in your configuration file.
       }
     }
 
-You can test this with the excellent httpie_ for example:
+Test it with the excellent httpie_:
 
 ::
 
     http -f POST localhost:3000/upload data@myupload
 
-You will retrieve the image information in ``JSON`` format.
+You will retrieve the uploaded image information in ``JSON`` format.
 
 Security
 ========
