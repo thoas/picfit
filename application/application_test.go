@@ -143,6 +143,9 @@ func TestUploadHandler(t *testing.T) {
 	content := `{
 	  "debug": true,
 	  "port": 3001,
+	  "options": {
+		  "enable_upload": true
+	  },
 	  "storage": {
 		"src": {
 		  "type": "fs",

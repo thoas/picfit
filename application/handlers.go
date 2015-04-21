@@ -28,6 +28,11 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 }
 
 var UploadHandler = func(res muxer.Response, req *http.Request, app *Application) {
+	if !app.EnableUpload {
+		res.Forbidden()
+		return
+	}
+
 	if app.SourceStorage == nil {
 		res.Abort(500, "Your application doesn't have a source storage")
 		return
