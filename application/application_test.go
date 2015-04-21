@@ -166,6 +166,10 @@ func TestUploadHandler(t *testing.T) {
 
 	assert.Nil(t, err)
 
+	stats, err := f.Stat()
+
+	assert.Nil(t, err)
+
 	fileContent, err := ioutil.ReadAll(f)
 
 	assert.Nil(t, err)
@@ -192,6 +196,14 @@ func TestUploadHandler(t *testing.T) {
 	negroni.ServeHTTP(res, req)
 
 	assert.Equal(t, res.Code, 200)
+
+	assert.True(t, app.SourceStorage.Exists("avatar.png"))
+
+	file, err := app.SourceStorage.Open("avatar.png")
+
+	assert.Nil(t, err)
+
+	assert.Equal(t, file.Size(), stats.Size())
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
