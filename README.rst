@@ -570,6 +570,68 @@ for example:
       "allowed_methods": ["GET", "HEAD"]
     }
 
+Options
+=======
+
+Quality
+-------
+
+The quality rendering of the image engine can be controlled
+globally without adding it at each request:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "quality": 70
+      }
+    }
+
+With this option, each image will be saved in ``70`` quality.
+
+By default the quality is the highest possible: ``95``
+
+Format
+------
+
+The format can be forced globally without adding it at each request:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "format": "png"
+      }
+    }
+
+With this option, each image will be forced to be saved in ``.png``.
+
+By default the format will be chosen in this order:
+
+* The ``fmt`` parameter if exists in query string
+* The original image format
+* The default format provided in the `application <https://github.com/thoas/picfit/blob/master/application/constants.go#L6>`_
+
+Upload
+------
+
+The upload handler is disabled by default for security reason, you can enable
+it in your config:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_upload": true
+      }
+    }
+
 Deployment
 ==========
 
