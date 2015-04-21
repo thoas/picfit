@@ -21,6 +21,7 @@ import (
 
 type GoImageEngine struct {
 	DefaultFormat  string
+	Format         string
 	DefaultQuality int
 }
 
@@ -41,13 +42,6 @@ type Result struct {
 	Paletted *image.Paletted
 	Image    *image.NRGBA
 	Position int
-}
-
-func NewGoImageEngine(DefaultFormat string, DefaultQuality int) Engine {
-	return &GoImageEngine{
-		DefaultFormat:  DefaultFormat,
-		DefaultQuality: DefaultQuality,
-	}
 }
 
 type Transformation func(img image.Image, width int, height int, filter imaging.ResampleFilter) *image.NRGBA
@@ -253,12 +247,16 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 	}
 
-	if format == "" && e.DefaultFormat != "" {
-		format = e.DefaultFormat
+	if format == "" && e.Format != "" {
+		format = e.Format
 	}
 
 	if format == "" {
 		format = img.Format()
+	}
+
+	if format == "" {
+		format = e.DefaultFormat
 	}
 
 	if format != img.Format() {

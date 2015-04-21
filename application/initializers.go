@@ -79,7 +79,11 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 	}
 
 	app.SecretKey, _ = jq.String("secret_key")
-	app.Engine = engines.NewGoImageEngine(format, quality)
+	app.Engine = &engines.GoImageEngine{
+		DefaultFormat:  DefaultFormat,
+		Format:         format,
+		DefaultQuality: quality,
+	}
 
 	enableUpload, err := jq.Bool("options", "enable_upload")
 
