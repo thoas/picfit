@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/mholt/binding"
 	"github.com/thoas/muxer"
-	"github.com/thoas/picfit/image"
 	"net/http"
 )
 
@@ -46,15 +45,10 @@ var UploadHandler = func(res muxer.Response, req *http.Request, app *Application
 		return
 	}
 
-	err = multipartForm.Upload(app.SourceStorage)
+	file, err := multipartForm.Upload(app.SourceStorage)
 
 	if err != nil {
 		panic(err)
-	}
-
-	file := &image.ImageFile{
-		Filepath: multipartForm.Data.Filename,
-		Storage:  app.SourceStorage,
 	}
 
 	content, err := json.Marshal(map[string]string{

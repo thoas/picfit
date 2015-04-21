@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/mholt/binding"
 	"github.com/thoas/gostorages"
+	"github.com/thoas/picfit/image"
 	"io"
 	"mime/multipart"
 )
@@ -18,13 +19,13 @@ func (f *MultipartForm) FieldMap() binding.FieldMap {
 	}
 }
 
-func (f *MultipartForm) Upload(storage gostorages.Storage) error {
+func (f *MultipartForm) Upload(storage gostorages.Storage) (*image.ImageFile, error) {
 	var fh io.ReadCloser
 
 	fh, err := f.Data.Open()
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer fh.Close()
@@ -34,8 +35,17 @@ func (f *MultipartForm) Upload(storage gostorages.Storage) error {
 	_, err = dataBytes.ReadFrom(fh)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return storage.Save(f.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
+	err = storage.Save(f.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &image.ImageFile{
+		Filepath: f.Data.Filename,
+		Storage:  storage,
+	}, nil
 }
