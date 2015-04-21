@@ -113,6 +113,10 @@
 		{
 			"ImportPath": "github.com/thoas/stats",
 			"Rev": "6e037cd1c2e122afc99d4f9cb47c2c8d158ccdbd"
+		},
+		{
+			"ImportPath": "github.com/mholt/binding",
+			"Rev": "6c082304f300fc70793cb0be18af0fdd4acd2b75"
 		}
 	]
 }
