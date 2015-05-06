@@ -76,7 +76,9 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 
 	if err != nil {
 		quality = q
-	} else {
+	}
+
+	if quality == 0 {
 		quality = DefaultQuality
 	}
 
