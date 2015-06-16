@@ -3,11 +3,6 @@ package engines
 import (
 	"bytes"
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/imdario/mergo"
-	imagefile "github.com/thoas/picfit/image"
-	"golang.org/x/image/bmp"
-	"golang.org/x/image/tiff"
 	"image"
 	"image/draw"
 	"image/gif"
@@ -17,6 +12,12 @@ import (
 	"math"
 	"strconv"
 	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/imdario/mergo"
+	imagefile "github.com/thoas/picfit/image"
+	"golang.org/x/image/bmp"
+	"golang.org/x/image/tiff"
 )
 
 type GoImageEngine struct {
@@ -204,6 +205,30 @@ func (e *GoImageEngine) thumbnail(img image.Image, width int, height int, option
 	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Thumbnail), options.Format, options.Quality)
 }
 
+func (e *GoImageEngine) Fit(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, width, height, options, imaging.Thumbnail)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
+	image, err := e.Source(img)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return e.fit(image, width, height, options)
+}
+
+func (e *GoImageEngine) fit(img image.Image, width int, height int, options *Options) ([]byte, error) {
+	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Fit), options.Format, options.Quality)
+}
+
 func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation, qs map[string]string) (*imagefile.ImageFile, error) {
 	params := map[string]string{
 		"upscale": "1",
@@ -310,7 +335,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		file.Processed = content
 
 		return file, err
-	case Thumbnail, Resize:
+	case Thumbnail, Resize, Fit:
 		var upscale bool
 		var w int
 		var h int
@@ -350,6 +375,17 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			file.Processed = content
 
 			return file, err
+		case Fit:
+			content, err := e.Fit(img, w, h, options)
+
+			if err != nil {
+				return nil, err
+			}
+
+			file.Processed = content
+
+			return file, err
+			}
 		}
 	}
 
