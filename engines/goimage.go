@@ -385,7 +385,6 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			file.Processed = content
 
 			return file, err
-			}
 		}
 	}
 
