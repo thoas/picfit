@@ -29,5 +29,5 @@ var Operations = map[string]*Operation{
 	Thumbnail.Name: Thumbnail,
 	Flip.Name:      Flip,
 	Rotate.Name:    Rotate,
-	Fit.Name:				Fit
+	Fit.Name:       Fit
 }
