@@ -96,10 +96,14 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 
 	for i := range g.Image {
 		go func(paletted *image.Paletted, width int, height int, position int, trans Transformation, options *Options) {
+			img := e.Scale(paletted, width, height, options.Upscale, trans)
+
+			bounds := img.Bounds()
+
 			done <- &Result{
-				Image:    e.Scale(paletted, width, height, options.Upscale, trans),
+				Image:    img,
 				Position: position,
-				Paletted: paletted,
+				Paletted: image.NewPaletted(image.Rect(0, 0, bounds.Max.X, bounds.Max.Y), paletted.Palette),
 			}
 		}(g.Image[i], width, height, i, trans, options)
 	}
@@ -109,11 +113,9 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 		case result := <-done:
 			bounds := result.Image.Bounds()
 
-			palette := image.NewPaletted(image.Rect(0, 0, bounds.Max.X, bounds.Max.Y), result.Paletted.Palette)
+			draw.Draw(result.Paletted, bounds, result.Image, bounds.Min, draw.Src)
 
-			draw.Draw(palette, bounds, result.Image, bounds.Min, draw.Src)
-
-			images[result.Position] = palette
+			images[result.Position] = result.Paletted
 
 			processed++
 		case <-time.After(time.Second * 5):
