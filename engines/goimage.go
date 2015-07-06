@@ -39,9 +39,9 @@ var RotateTransformations = map[int]ImageTransformation{
 }
 
 type Result struct {
-	Paletted *image.Paletted
-	Image    *image.NRGBA
+	Image    image.Image
 	Position int
+	Paletted *image.Paletted
 }
 
 type Transformation func(img image.Image, width int, height int, filter imaging.ResampleFilter) *image.NRGBA
@@ -50,23 +50,39 @@ func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) f
 	return math.Max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
 }
 
+func scalingFactorImage(img image.Image, dstWidth int, dstHeight int) float64 {
+	width, height := ImageSize(img)
+
+	return scalingFactor(width, height, dstWidth, dstHeight)
+}
+
 func ImageSize(e image.Image) (int, int) {
 	return e.Bounds().Max.X, e.Bounds().Max.Y
 }
 
-func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upscale bool, trans Transformation) *image.NRGBA {
-	width, height := ImageSize(img)
-
-	factor := scalingFactor(width, height, dstWidth, dstHeight)
+func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upscale bool, trans Transformation) image.Image {
+	factor := scalingFactorImage(img, dstWidth, dstHeight)
 
 	if factor < 1 || upscale {
 		return trans(img, dstWidth, dstHeight, imaging.Lanczos)
 	}
 
-	return imaging.Clone(img)
+	return img
 }
 
 func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height int, options *Options, trans Transformation) ([]byte, error) {
+	first, err := gif.Decode(bytes.NewReader(img.Source))
+
+	if err != nil {
+		return nil, err
+	}
+
+	factor := scalingFactorImage(first, width, height)
+
+	if factor > 1 && !options.Upscale {
+		return img.Source, nil
+	}
+
 	g, err := gif.DecodeAll(bytes.NewReader(img.Source))
 
 	if err != nil {
@@ -83,7 +99,7 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 			done <- &Result{
 				Image:    e.Scale(paletted, width, height, options.Upscale, trans),
 				Position: position,
-				Paletted: image.NewPaletted(image.Rect(0, 0, width, height), paletted.Palette),
+				Paletted: paletted,
 			}
 		}(g.Image[i], width, height, i, trans, options)
 	}
@@ -91,9 +107,13 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 	for {
 		select {
 		case result := <-done:
-			draw.Draw(result.Paletted, image.Rect(0, 0, width, height), result.Image, image.Pt(0, 0), draw.Src)
+			bounds := result.Image.Bounds()
 
-			images[result.Position] = result.Paletted
+			palette := image.NewPaletted(image.Rect(0, 0, bounds.Max.X, bounds.Max.Y), result.Paletted.Palette)
+
+			draw.Draw(palette, bounds, result.Image, bounds.Min, draw.Src)
+
+			images[result.Position] = palette
 
 			processed++
 		case <-time.After(time.Second * 5):
