@@ -151,6 +151,12 @@ func (a *Application) InitRouter() *negroni.Negroni {
 		UploadHandler(res, req, a)
 	}))
 
+	router.Handle("/delete/{path:[\\w\\-/.]+}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		res := muxer.NewResponse(w)
+		mreq := muxer.NewRequest(req)
+		DeleteHandler(res, mreq, a)
+	}))
+
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := a.Jq.ArrayOfStrings("allowed_methods")
 
@@ -205,7 +211,7 @@ func (a *Application) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (a *Application) Store(i *image.ImageFile) error {
+func (a *Application) Store(filepath string, i *image.ImageFile) error {
 	con := a.KVStore.Connection()
 	defer con.Close()
 
@@ -229,6 +235,18 @@ func (a *Application) Store(i *image.ImageFile) error {
 	}
 
 	a.Logger.Infof("Save key %s => %s to kvstore", key, i.Filepath)
+
+	// Write children info only when we actually want to be able to delete things.
+	if a.EnableDelete {
+		err = con.SetAdd(filepath + ":children", key)
+
+		if err != nil {
+			a.Logger.Fatal(err)
+			return err
+		}
+
+		a.Logger.Infof("Put key into set %s:children => %s in kvstore", filepath, key)
+	}
 
 	return nil
 }
@@ -295,11 +313,52 @@ func (a *Application) ImageFileFromRequest(req *Request, async bool, load bool) 
 
 	if stored == "" {
 		if async == true {
-			go a.Store(file)
+			go a.Store(req.Filepath, file)
 		} else {
-			err = a.Store(file)
+			err = a.Store(req.Filepath, file)
 		}
 	}
 
 	return file, err
+}
+
+func (a *Application) ImageCleanup(filepath string) {
+	con := a.KVStore.Connection()
+	defer con.Close()
+
+	childrenPath := filepath + ":children"
+
+	// Get the list of items to cleanup.
+	children := con.SetMembers(childrenPath)
+
+	// Delete them right away, we don't care about them anymore.
+	a.Logger.Infof("Deleting children set: %s", childrenPath)
+	_ = con.Delete(childrenPath)
+
+	// No children? Okay..
+	if children == nil {
+		return
+	}
+
+	for _, s := range children {
+		key, err := gokvstores.String(s)
+		if err != nil {
+			// Should really be a string here, but if it's not, keep going...
+			continue
+		}
+
+		// Now, every child is a hash which points to a key/value pair in
+		// KVStore which in turn points to a file in dst storage.
+
+		dstfile, err := gokvstores.String(con.Get(key))
+		if err != nil {
+			// Well, what can we do about it, let's just continue.
+			continue
+		}
+
+		// And try to delete it all. Ignore errors.
+		a.Logger.Infof("Deleting child %s and its KV store entry %s", dstfile, key)
+		_ = a.DestStorage.Delete(dstfile)
+		_ = con.Delete(key)
+	}
 }
