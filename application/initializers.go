@@ -93,6 +93,12 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 		app.EnableUpload = enableUpload
 	}
 
+	enableDelete, err := jq.Bool("options", "enable_delete")
+
+	if err == nil {
+		app.EnableDelete = enableDelete
+	}
+
 	return nil
 }
 

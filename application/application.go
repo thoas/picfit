@@ -37,6 +37,7 @@ type Shard struct {
 
 type Application struct {
 	EnableUpload  bool
+	EnableDelete  bool
 	Prefix        string
 	SecretKey     string
 	KVStore       gokvstores.KVStore
