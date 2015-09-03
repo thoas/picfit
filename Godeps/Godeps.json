@@ -92,7 +92,7 @@
 		},
 		{
 			"ImportPath": "github.com/thoas/gokvstores",
-			"Rev": "c9be15c374e706810be9f09770644507bb58a3fd"
+			"Rev": "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
 		},
 		{
 			"ImportPath": "github.com/thoas/muxer",
