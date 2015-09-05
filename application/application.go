@@ -151,11 +151,11 @@ func (a *Application) InitRouter() *negroni.Negroni {
 		UploadHandler(res, req, a)
 	}))
 
-	router.Handle("/delete/{path:[\\w\\-/.]+}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	router.Handle("/{path:[\\w\\-/.]+}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		res := muxer.NewResponse(w)
 		mreq := muxer.NewRequest(req)
 		DeleteHandler(res, mreq, a)
-	}))
+	})).Methods("DELETE")
 
 	allowedOrigins, err := a.Jq.ArrayOfStrings("allowed_origins")
 	allowedMethods, err := a.Jq.ArrayOfStrings("allowed_methods")
