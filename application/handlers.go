@@ -66,11 +66,6 @@ var UploadHandler = func(res muxer.Response, req *http.Request, app *Application
 }
 
 var DeleteHandler = func(res muxer.Response, req *muxer.Request, app *Application) {
-	if !app.EnableDelete {
-		res.Forbidden()
-		return
-	}
-
 	if app.SourceStorage == nil {
 		res.Abort(500, "Your application doesn't have a source storage")
 		return
