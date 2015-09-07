@@ -41,3 +41,15 @@ func (k *DummyKVStoreConnection) Exists(key string) bool {
 func (k *DummyKVStoreConnection) Set(key string, value interface{}) error {
 	return nil
 }
+
+func (k *DummyKVStoreConnection) Append(key string, value interface{}) error {
+	return nil
+}
+
+func (k *DummyKVStoreConnection) SetAdd(key string, value interface{}) error {
+	return nil
+}
+
+func (k *DummyKVStoreConnection) SetMembers(key string) []interface{} {
+	return nil
+}
