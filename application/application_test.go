@@ -263,7 +263,7 @@ func TestDeleteHandler(t *testing.T) {
 
 	negroni := app.InitRouter()
 
-	// generate 5 resized images and check if they were actually generated
+	// generate 5 resized image1.jpg
 	for i := 0; i < 5; i++ {
 		// use "get" instead of "display" here to force synchronized behaviour
 		url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image1.jpg", 100+i*10)
@@ -275,8 +275,20 @@ func TestDeleteHandler(t *testing.T) {
 		assert.Equal(t, res.Code, 200)
 	}
 
+	// generate 2 resized image2.jpg
+	for i := 0; i < 2; i++ {
+		// use "get" instead of "display" here to force synchronized behaviour
+		url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image2.jpg", 100+i*10)
+		req, err := http.NewRequest("GET", url, nil)
+		assert.Nil(t, err)
+
+		res := httptest.NewRecorder()
+		negroni.ServeHTTP(res, req)
+		assert.Equal(t, res.Code, 200)
+	}
+
 	checkDirCount(tmpSrcStorage, 5, "after resize requests")
-	checkDirCount(tmpDstStorage, 5, "after resize requests")
+	checkDirCount(tmpDstStorage, 7, "after resize requests")
 	assert.True(t, app.SourceStorage.Exists("image1.jpg"))
 
 	// Delete image1.jpg and all of the derived images
@@ -288,7 +300,7 @@ func TestDeleteHandler(t *testing.T) {
 	assert.Equal(t, res.Code, 200)
 
 	checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
-	checkDirCount(tmpDstStorage, 0, "after 1st delete request")
+	checkDirCount(tmpDstStorage, 2, "after 1st delete request")
 	assert.False(t, app.SourceStorage.Exists("image1.jpg"))
 
 	// Try to delete image1.jpg again
@@ -300,9 +312,23 @@ func TestDeleteHandler(t *testing.T) {
 	assert.Equal(t, res.Code, 200)
 
 	checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
-	checkDirCount(tmpDstStorage, 0, "after 2nd delete request")
+	checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
 
 	assert.False(t, app.SourceStorage.Exists("image1.jpg"))
+
+	assert.True(t, app.SourceStorage.Exists("image2.jpg"))
+
+	// Delete image2.jpg and all of the derived images
+	req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
+	assert.Nil(t, err)
+
+	res = httptest.NewRecorder()
+	negroni.ServeHTTP(res, req)
+	assert.Equal(t, res.Code, 200)
+
+	checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
+	checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
+	assert.False(t, app.SourceStorage.Exists("image2.jpg"))
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
