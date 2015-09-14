@@ -1,0 +1,13 @@
+FROM golang:1.5.1
+
+ENV GO15VENDOREXPERIMENT 1
+
+ADD . /go/src/github.com/thoas/picfit
+
+WORKDIR /go/src/github.com/thoas/picfit
+
+VOLUME ["/go/src/github.com/thoas/picfit/bin"]
+
+RUN go get -v github.com/tools/godep
+
+CMD make build-static
