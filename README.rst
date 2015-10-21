@@ -699,6 +699,14 @@ see `issues <https://github.com/thoas/picfit/issues>`_
 
 Don't hesitate to send patch or improvements.
 
+
+Clients
+=======
+
+Client libraries will help you generate picfit urls with your secret key.
+
+* `picfit-go <https://github.com/ulule/picfit-go>`_: a Go client library
+
 In production
 =============
 
