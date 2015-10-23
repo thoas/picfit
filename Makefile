@@ -33,3 +33,9 @@ build-static:
 	CGO_ENABLED=0 godep go build -a -installsuffix cgo -o $(BIN_DIR)/ulule-api
 
 .PNONY: all test format
+
+docker-build:
+	@(echo "-> Preparing builder...")
+	@(docker build -t picfit-builder -f Dockerfile.build .)
+	@(mkdir -p $(BIN_DIR))
+	@(docker run --rm -v $(BIN_DIR):/go/src/github.com/thoas/picfit/bin picfit-builder)
