@@ -79,6 +79,10 @@
 			"Rev": "d5e114d7a445f7a3652cf807d3f83d5dceb8de26"
 		},
 		{
+			"ImportPath": "github.com/mholt/binding",
+			"Rev": "6c082304f300fc70793cb0be18af0fdd4acd2b75"
+		},
+		{
 			"ImportPath": "github.com/mitchellh/goamz/aws",
 			"Rev": "e99a7300be9605de0c4b6366988e1df883fabfe3"
 		},
@@ -91,32 +95,44 @@
 			"Rev": "5e4ce6bc0ecd3472f6f943666d84876691be2ced"
 		},
 		{
-			"ImportPath": "github.com/thoas/gokvstores",
-			"Rev": "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
+			"ImportPath": "github.com/rwcarlsen/goexif/exif",
+			"Rev": "709fab3d192d7c62f86043caff1e7e3fb0f42bd8"
 		},
 		{
-			"ImportPath": "github.com/thoas/muxer",
-			"Rev": "1df676b0c6d030a113000a25709961a1ee262f87"
+			"ImportPath": "github.com/rwcarlsen/goexif/tiff",
+			"Rev": "709fab3d192d7c62f86043caff1e7e3fb0f42bd8"
+		},
+		{
+			"ImportPath": "github.com/thoas/gokvstores",
+			"Rev": "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
 		},
 		{
 			"ImportPath": "github.com/thoas/gostorages",
 			"Rev": "a193818eb9acc5104bf1d73319da30b3c21e9a04"
 		},
 		{
-			"ImportPath": "github.com/vaughan0/go-ini",
-			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify",
-			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+			"ImportPath": "github.com/thoas/muxer",
+			"Rev": "1df676b0c6d030a113000a25709961a1ee262f87"
 		},
 		{
 			"ImportPath": "github.com/thoas/stats",
 			"Rev": "6e037cd1c2e122afc99d4f9cb47c2c8d158ccdbd"
 		},
 		{
-			"ImportPath": "github.com/mholt/binding",
-			"Rev": "6c082304f300fc70793cb0be18af0fdd4acd2b75"
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "golang.org/x/image/bmp",
+			"Rev": "baddd3465a05d84a6d8d3507547a91cb188c81ea"
+		},
+		{
+			"ImportPath": "golang.org/x/image/tiff",
+			"Rev": "baddd3465a05d84a6d8d3507547a91cb188c81ea"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify",
+			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 		}
 	]
 }

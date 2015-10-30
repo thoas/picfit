@@ -15,6 +15,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
+	"github.com/rwcarlsen/goexif/exif"
 	imagefile "github.com/thoas/picfit/image"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
@@ -322,6 +323,50 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	options := &Options{
 		Quality: quality,
 		Format:  Formats[format],
+	}
+
+	if qs["fo"] == "1" {
+		r := bytes.NewReader(img.Source)
+		xf, err := exif.Decode(r)
+		if err == nil {
+			if or, err := xf.Get("Orientation"); err == nil {
+				orv, _ := strconv.Atoi(or.String())
+
+				var content []byte
+				var err error
+
+				switch orv {
+				case 1:
+					// Nothing
+				case 2:
+					content, err = e.Flip(img, "h", options)
+				case 3:
+					content, err = e.Rotate(img, 180, options)
+				case 4:
+					content, err = e.Flip(img, "v", options)
+				case 5:
+					content, err = e.Rotate(img, 270, options)
+					img.Source = content
+					content, err = e.Flip(img, "h", options)
+				case 6:
+					content, err = e.Rotate(img, 270, options)
+				case 7:
+					content, err = e.Rotate(img, 270, options)
+					img.Source = content
+					content, err = e.Flip(img, "v", options)
+				case 8:
+					content, err = e.Rotate(img, 90, options)
+				}
+
+				if err != nil {
+					return nil, err
+				}
+
+				if content != nil {
+					img.Source = content
+				}
+			}
+		}
 	}
 
 	switch operation {
