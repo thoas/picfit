@@ -1,8 +1,8 @@
 package application
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/thoas/gokvstores"
-	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/signature"
@@ -12,21 +12,37 @@ import (
 )
 
 type Request struct {
-	*muxer.Request
-	Operation  *engines.Operation
-	Connection gokvstores.KVStoreConnection
-	Key        string
-	URL        *url.URL
-	Filepath   string
+	Request     *http.Request
+	Operation   *engines.Operation
+	Connection  gokvstores.KVStoreConnection
+	Key         string
+	URL         *url.URL
+	Filepath    string
+	Params      map[string]string
+	QueryString map[string]string
 }
 
 const SIG_PARAM_NAME = "sig"
 
 func NewRequest(req *http.Request, con gokvstores.KVStoreConnection) (*Request, error) {
-	request := muxer.NewRequest(req)
+	req.ParseForm()
 
-	for k, v := range request.Params {
-		request.QueryString[k] = v
+	queryString := make(map[string]string)
+	params := mux.Vars(req)
+
+	if len(req.Form) > 0 {
+		for k, v := range req.Form {
+			queryString[k] = v[0]
+		}
+	}
+
+	for k, v := range params {
+		queryString[k] = v
+	}
+
+	request := &Request{
+		QueryString: queryString,
+		Params:      params,
 	}
 
 	extracted := map[string]interface{}{}
@@ -41,7 +57,7 @@ func NewRequest(req *http.Request, con gokvstores.KVStoreConnection) (*Request, 
 		extracted[key] = result
 	}
 
-	sorted := util.SortMapString(request.QueryString)
+	sorted := util.SortMapString(queryString)
 
 	delete(sorted, SIG_PARAM_NAME)
 
@@ -64,14 +80,13 @@ func NewRequest(req *http.Request, con gokvstores.KVStoreConnection) (*Request, 
 		path = value.(string)
 	}
 
-	return &Request{
-		request,
-		extracted["op"].(*engines.Operation),
-		con,
-		key,
-		u,
-		path,
-	}, nil
+	request.Operation = extracted["op"].(*engines.Operation)
+	request.Connection = con
+	request.Key = key
+	request.URL = u
+	request.Filepath = path
+
+	return request, nil
 }
 
 func (r *Request) IsAuthorized(key string) bool {

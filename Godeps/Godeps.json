@@ -95,10 +95,6 @@
 			"Rev": "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
 		},
 		{
-			"ImportPath": "github.com/thoas/muxer",
-			"Rev": "1df676b0c6d030a113000a25709961a1ee262f87"
-		},
-		{
 			"ImportPath": "github.com/thoas/gostorages",
 			"Rev": "a193818eb9acc5104bf1d73319da30b3c21e9a04"
 		},

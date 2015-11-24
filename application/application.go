@@ -12,9 +12,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/gostorages"
-	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
-	"github.com/thoas/picfit/extractors"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/middleware"
@@ -23,12 +21,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-var Extractors = map[string]extractors.Extractor{
-	"op":   extractors.Operation,
-	"url":  extractors.URL,
-	"path": extractors.Path,
-}
 
 type Shard struct {
 	Depth int
@@ -101,7 +93,7 @@ func (app *Application) ServeHTTP(h Handler) http.Handler {
 		con := app.KVStore.Connection()
 		defer con.Close()
 
-		res := muxer.NewResponse(w)
+		res := NewResponse(w)
 
 		request, err := NewRequest(req, con)
 
@@ -146,16 +138,12 @@ func (a *Application) InitRouter() *negroni.Negroni {
 	}
 
 	router.Handle("/upload", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		res := muxer.NewResponse(w)
-
-		UploadHandler(res, req, a)
+		UploadHandler(NewResponse(w), req, a)
 	}))
 
 	if a.EnableDelete {
 		router.Handle("/{path:[\\w\\-/.]+}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			res := muxer.NewResponse(w)
-			mreq := muxer.NewRequest(req)
-			DeleteHandler(res, mreq, a)
+			DeleteHandler(NewResponse(w), req, a)
 		})).Methods("DELETE")
 	}
 
@@ -240,7 +228,7 @@ func (a *Application) Store(filepath string, i *image.ImageFile) error {
 
 	// Write children info only when we actually want to be able to delete things.
 	if a.EnableDelete {
-		err = con.SetAdd(filepath + ":children", key)
+		err = con.SetAdd(filepath+":children", key)
 
 		if err != nil {
 			a.Logger.Fatal(err)

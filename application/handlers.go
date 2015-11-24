@@ -2,8 +2,8 @@ package application
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"github.com/mholt/binding"
-	"github.com/thoas/muxer"
 	"net/http"
 )
 
@@ -13,9 +13,9 @@ func NotFoundHandler() http.Handler {
 	})
 }
 
-type Handler func(muxer.Response, *Request, *Application)
+type Handler func(Response, *Request, *Application)
 
-var ImageHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+var ImageHandler Handler = func(res Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, true, true)
 
 	if err != nil {
@@ -26,7 +26,7 @@ var ImageHandler Handler = func(res muxer.Response, req *Request, app *Applicati
 	res.ResponseWriter.Write(file.Content())
 }
 
-var UploadHandler = func(res muxer.Response, req *http.Request, app *Application) {
+var UploadHandler = func(res Response, req *http.Request, app *Application) {
 	if !app.EnableUpload {
 		res.Forbidden()
 		return
@@ -65,13 +65,15 @@ var UploadHandler = func(res muxer.Response, req *http.Request, app *Application
 	res.ResponseWriter.Write(content)
 }
 
-var DeleteHandler = func(res muxer.Response, req *muxer.Request, app *Application) {
+var DeleteHandler = func(res Response, req *http.Request, app *Application) {
 	if app.SourceStorage == nil {
 		res.Abort(500, "Your application doesn't have a source storage")
 		return
 	}
 
-	filename := req.Params["path"]
+	params := mux.Vars(req)
+
+	filename := params["path"]
 
 	// Delete the image from the source storage right away.
 	// Upcoming requests will be able to read stuff from cache, but never
@@ -98,7 +100,7 @@ var DeleteHandler = func(res muxer.Response, req *muxer.Request, app *Applicatio
 	res.ResponseWriter.Write(content)
 }
 
-var GetHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+var GetHandler Handler = func(res Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, false, false)
 
 	if err != nil {
@@ -119,7 +121,7 @@ var GetHandler Handler = func(res muxer.Response, req *Request, app *Application
 	res.ResponseWriter.Write(content)
 }
 
-var RedirectHandler Handler = func(res muxer.Response, req *Request, app *Application) {
+var RedirectHandler Handler = func(res Response, req *Request, app *Application) {
 	file, err := app.ImageFileFromRequest(req, false, false)
 
 	if err != nil {

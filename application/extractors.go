@@ -1,8 +1,7 @@
-package extractors
+package application
 
 import (
 	"fmt"
-	"github.com/thoas/muxer"
 	"github.com/thoas/picfit/engines"
 	"github.com/thoas/picfit/image"
 	"mime"
@@ -10,9 +9,9 @@ import (
 	"path/filepath"
 )
 
-type Extractor func(key string, req *muxer.Request) (interface{}, error)
+type Extractor func(key string, req *Request) (interface{}, error)
 
-var Operation Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+var Operation Extractor = func(key string, req *Request) (interface{}, error) {
 	operation, ok := engines.Operations[req.QueryString[key]]
 
 	if !ok {
@@ -22,7 +21,7 @@ var Operation Extractor = func(key string, req *muxer.Request) (interface{}, err
 	return operation, nil
 }
 
-var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+var URL Extractor = func(key string, req *Request) (interface{}, error) {
 	value, ok := req.QueryString[key]
 
 	if !ok {
@@ -46,6 +45,12 @@ var URL Extractor = func(key string, req *muxer.Request) (interface{}, error) {
 	return url, nil
 }
 
-var Path Extractor = func(key string, req *muxer.Request) (interface{}, error) {
+var Path Extractor = func(key string, req *Request) (interface{}, error) {
 	return req.QueryString[key], nil
+}
+
+var Extractors = map[string]Extractor{
+	"op":   Operation,
+	"url":  URL,
+	"path": Path,
 }
