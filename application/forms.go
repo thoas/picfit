@@ -7,13 +7,14 @@ import (
 	"github.com/thoas/picfit/image"
 	"io"
 	"mime/multipart"
+	"net/http"
 )
 
 type MultipartForm struct {
 	Data *multipart.FileHeader `json:"data"`
 }
 
-func (f *MultipartForm) FieldMap() binding.FieldMap {
+func (f *MultipartForm) FieldMap(req *http.Request) binding.FieldMap {
 	return binding.FieldMap{
 		&f.Data: "data",
 	}
