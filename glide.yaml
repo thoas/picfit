@@ -1,0 +1,54 @@
+# Glide YAML configuration file
+# Set this to your fully qualified package name, e.g.
+# github.com/Masterminds/foo. This should be the
+# top level package.
+package: main
+
+import:
+  - package: github.com/Sirupsen/logrus
+    version: 6c28e16200e55c2549705ac24ea58976c07f18ac
+  - package: github.com/codegangsta/cli
+    version: f7ebb761e83e21225d1d8954fde853bf8edd46c4
+  - package: github.com/codegangsta/negroni
+    version: ae96f1c1ac9eb11be7dff4fe4cb42f6846b93d77
+  - package: github.com/disintegration/imaging
+    version: 3ab6ec550f20d497d2755ed3c48a3e45ad6b7eb9
+  - package: github.com/facebookgo/clock
+    version: 41df9c4b742349146d28ac5d8caa45161209f3fc
+  - package: github.com/facebookgo/grace
+    version: 1b0609c25d1f0d6aefdd5404eaa710a16daca9d6
+  - package: github.com/facebookgo/stats
+    version: a8126df93b2406675168d2930b6d3db46ffb805c
+  - package: github.com/franela/goreq
+    version: 6d074b8384a4b5359484d95e88e7566020bc4335
+  - package: github.com/garyburd/redigo
+    version: cca3df8fa0670249a3f746bcc062c69aeba0517c
+  - package: github.com/getsentry/raven-go
+    version: 3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7
+  - package: github.com/gorilla/context
+    version: 14f550f51af52180c2eefed15e5fd18d63c0a64a
+  - package: github.com/gorilla/mux
+    version: e444e69cbd2e2e3e0749a2f3c717cec491552bbf
+  - package: github.com/imdario/mergo
+    version: 6ce7536fed6623eff47b95768f858a0f8d1ac57b
+  - package: github.com/jmoiron/jsonq
+    version: 7c27c8eb9f6831555a4209f6a7d579159e766a3c
+  - package: github.com/meatballhat/negroni-logrus
+    version: d5e114d7a445f7a3652cf807d3f83d5dceb8de26
+  - package: github.com/mitchellh/goamz
+    version: e99a7300be9605de0c4b6366988e1df883fabfe3
+  - package: github.com/rs/cors
+    version: 5e4ce6bc0ecd3472f6f943666d84876691be2ced
+  - package: github.com/thoas/gokvstores
+    version: ae1105ba099c89f31af38c658ab6e64f1fc50e62
+  - package: github.com/thoas/gostorages
+    version: a193818eb9acc5104bf1d73319da30b3c21e9a04
+  - package: github.com/vaughan0/go-ini
+    version: a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
+  - package: github.com/stretchr/testify
+    version: e4ec8152c15fc46bd5056ce65997a07c7d415325
+  - package: github.com/thoas/stats
+    version: 6e037cd1c2e122afc99d4f9cb47c2c8d158ccdbd
+  - package: github.com/mholt/binding
+    version: 6c082304f300fc70793cb0be18af0fdd4acd2b75
+  - package: github.com/rs/xhandler
