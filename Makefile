@@ -7,7 +7,7 @@ GO15VENDOREXPERIMENT=1
 test: unit
 
 unit:
-	@(go list ./... | xargs -n1 go test -v -cover)
+	@(go list ./... | grep -v "vendor/" | xargs -n1 go test -v -cover)
 
 all: picfit
 	@(mkdir -p $(BIN_DIR))
