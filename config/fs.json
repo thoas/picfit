@@ -1,0 +1,16 @@
+{
+  "port": 3001,
+  "storage": {
+    "src": {
+      "type": "fs",
+      "location": "/Users/thoas/Sites/golang/src/github.com/thoas/picfit/media/src"
+    },
+    "dst": {
+      "type": "fs",
+      "location": "/Users/thoas/Sites/golang/src/github.com/thoas/picfit/media/dst"
+    }
+  },
+  "kvstore": {
+    "type": "cache"
+  }
+}
