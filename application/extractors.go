@@ -3,10 +3,7 @@ package application
 import (
 	"fmt"
 	"github.com/thoas/picfit/engines"
-	"github.com/thoas/picfit/image"
-	"mime"
 	"net/url"
-	"path/filepath"
 )
 
 type Extractor func(key string, req *Request) (interface{}, error)
@@ -32,14 +29,6 @@ var URL Extractor = func(key string, req *Request) (interface{}, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("URL %s is not valid", value)
-	}
-
-	mimetype := mime.TypeByExtension(filepath.Ext(value))
-
-	_, ok = image.Extensions[mimetype]
-
-	if !ok {
-		return nil, fmt.Errorf("Mimetype %s is not supported", mimetype)
 	}
 
 	return url, nil
