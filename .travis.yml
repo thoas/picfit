@@ -1,12 +1,8 @@
 language: go
 before_install:
   - go get golang.org/x/tools/cmd/cover
-  - go get github.com/tools/godep
-  - godep restore
 services:
   - redis-server
 go:
-  - 1.3
-  - 1.4
   - 1.5
 script: make test
