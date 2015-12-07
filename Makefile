@@ -1,8 +1,9 @@
+export GO15VENDOREXPERIMENT=1
+
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
 
 BIN_DIR = $(ROOT_DIR)/bin
-GO15VENDOREXPERIMENT=1
 
 test: unit
 
