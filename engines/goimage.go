@@ -269,9 +269,10 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	var format string
 
 	q, ok := qs["q"]
-
 	if ok {
-		quality, err := strconv.Atoi(q)
+		var err error
+
+		quality, err = strconv.Atoi(q)
 
 		if err != nil {
 			return nil, err
@@ -417,7 +418,6 @@ func (e *GoImageEngine) ToBytes(img image.Image, format imaging.Format, quality 
 	buf := &bytes.Buffer{}
 
 	var err error
-
 	err = encode(buf, img, format, quality)
 
 	if err != nil {

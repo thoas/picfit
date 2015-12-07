@@ -1,0 +1,40 @@
+{
+  "sentry": {
+    "dsn": "http://d91867f5d02f4910a92d99f8f59d1a67:594e9c0314de4646a7b79384d716616d@sentry.tools.ulule.com/3"
+  },
+  "debug": true,
+  "port": 3001,
+  "kvstore": {
+    "prefix": "picfit:",
+    "type": "redis",
+    "host": "127.0.0.1",
+    "db": 0,
+    "password": "",
+    "port": 6379
+  },
+  "storage": {
+    "src": {
+      "type": "s3",
+      "access_key_id": "AKIAJ5SNKJFJLYQRG42Q",
+      "secret_access_key": "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",
+      "bucket_name": "ulule-media",
+      "acl": "public-read",
+      "region": "eu-west-1",
+      "location": ""
+    },
+    "dst": {
+      "type": "s3",
+      "base_url": "https://drfhlmcehrc34.cloudfront.net",
+      "access_key_id": "AKIAJ5SNKJFJLYQRG42Q",
+      "secret_access_key": "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",
+      "bucket_name": "ulule-media",
+      "acl": "public-read",
+      "region": "eu-west-1",
+      "location": "cache"
+    }
+  },
+  "shard": {
+    "width": 1,
+    "depth": 2
+  }
+}
