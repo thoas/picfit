@@ -1,4 +1,4 @@
 ---
-go_tarball: "go1.4.2.linux-amd64.tar.gz"
-go_version_target: "go version go1.4.2 linux/amd64"
+go_tarball: "go1.5.2.linux-amd64.tar.gz"
+go_version_target: "go version go1.5.2 linux/amd64"
 go_path: "/usr/local/golib"
