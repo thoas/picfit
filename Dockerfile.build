@@ -8,6 +8,4 @@ WORKDIR /go/src/github.com/thoas/picfit
 
 VOLUME ["/go/src/github.com/thoas/picfit/bin"]
 
-RUN go get -v github.com/tools/godep
-
 CMD make build-static

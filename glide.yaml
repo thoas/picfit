@@ -5,6 +5,7 @@
 package: main
 
 import:
+  - package: golang.org/x/image
   - package: github.com/Sirupsen/logrus
     version: 6c28e16200e55c2549705ac24ea58976c07f18ac
   - package: github.com/codegangsta/cli
@@ -15,6 +16,8 @@ import:
     version: 3ab6ec550f20d497d2755ed3c48a3e45ad6b7eb9
   - package: github.com/facebookgo/clock
     version: 41df9c4b742349146d28ac5d8caa45161209f3fc
+  - package: github.com/facebookgo/httpdown
+    version: 1c143bb4362a4f297f9cabd74bf0d05ee2b4f5dc
   - package: github.com/facebookgo/grace
     version: 1b0609c25d1f0d6aefdd5404eaa710a16daca9d6
   - package: github.com/facebookgo/stats
