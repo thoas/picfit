@@ -26,7 +26,7 @@ format:
 build-static:
 	@(echo "-> Creating statically linked binary...")
 	mkdir -p $(BIN_DIR)
-	@(go build -a -installsuffix cgo -o $(BIN_DIR)/ulule-api)
+	@(go build -a -installsuffix cgo -o $(BIN_DIR)/picfit)
 
 .PNONY: all test format
 
