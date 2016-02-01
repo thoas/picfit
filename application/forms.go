@@ -1,6 +1,7 @@
 package application
 
 import (
+	"net/http"
 	"bytes"
 	"github.com/mholt/binding"
 	"github.com/thoas/gostorages"
@@ -13,7 +14,7 @@ type MultipartForm struct {
 	Data *multipart.FileHeader `json:"data"`
 }
 
-func (f *MultipartForm) FieldMap() binding.FieldMap {
+func (f *MultipartForm) FieldMap(r *http.Request) binding.FieldMap {
 	return binding.FieldMap{
 		&f.Data: "data",
 	}
