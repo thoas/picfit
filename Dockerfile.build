@@ -6,6 +6,4 @@ ADD . /go/src/github.com/thoas/picfit
 
 WORKDIR /go/src/github.com/thoas/picfit
 
-VOLUME ["/go/src/github.com/thoas/picfit/bin"]
-
-CMD make build-static
+CMD make docker-build-static
