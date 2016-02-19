@@ -1,6 +1,4 @@
-FROM golang:1.5.3
-
-ENV GO15VENDOREXPERIMENT 1
+FROM golang:1.6
 
 ADD . /go/src/github.com/thoas/picfit
 

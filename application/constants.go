@@ -1,7 +1,7 @@
 package application
 
 // Current version of the picfit
-const Version = "0.2"
+const Version = "0.3"
 
 const DefaultFormat = "png"
 const DefaultContentType = "image/png"
