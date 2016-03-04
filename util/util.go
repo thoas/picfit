@@ -3,7 +3,11 @@ package util
 import (
 	"fmt"
 	"sort"
+	"os"
+	"strings"
 )
+
+const ENV_VAR_PREFIX = "$"
 
 func MapInterfaceToMapString(obj map[string]interface{}) map[string]string {
 	results := make(map[string]string)
@@ -13,6 +17,17 @@ func MapInterfaceToMapString(obj map[string]interface{}) map[string]string {
 	}
 
 	return results
+}
+
+func parseConfigValue(value string) string {
+	if strings.HasPrefix(value, ENV_VAR_PREFIX) {
+		envVal := os.Getenv(value[1:])
+		if envVal == "" {
+			fmt.Printf("Warning: No value set for env var: %s \n", value)
+		}
+		return envVal
+	}
+	return value
 }
 
 func SortMapString(obj map[string]string) map[string]string {
