@@ -496,6 +496,8 @@ storage to your configuration file.
         "enable_upload": true
       }
     }
+    
+To work properly, the input field must be named "data"
 
 Test it with the excellent httpie_:
 

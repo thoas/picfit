@@ -2,12 +2,13 @@ package http
 
 import (
 	"fmt"
-	"github.com/franela/goreq"
-	"github.com/thoas/gostorages"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/franela/goreq"
+	"github.com/thoas/gostorages"
 )
 
 type HTTPStorage struct {
@@ -45,6 +46,8 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 		return nil, err
 	}
 
+	defer content.Body.Close()
+
 	if content.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s [status: %d]", u.String(), content.StatusCode)
 	}
@@ -63,6 +66,8 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer content.Body.Close()
 
 	for _, key := range HeaderKeys {
 		if value, ok := content.Header[key]; ok && len(value) > 0 {
