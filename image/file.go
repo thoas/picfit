@@ -41,7 +41,11 @@ func (i *ImageFile) Format() string {
 }
 
 func (i *ImageFile) ContentType() string {
-	return mime.TypeByExtension(i.FilenameExt())
+	if _, ok := i.Headers["Content-Type"]; ok {
+		return i.Headers["Content-Type"]
+	} else {
+		return mime.TypeByExtension(i.FilenameExt())
+	}
 }
 
 func (i *ImageFile) Filename() string {
