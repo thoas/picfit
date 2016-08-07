@@ -3,12 +3,18 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/negroni"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/jsonq"
-	"github.com/meatballhat/negroni-logrus"
+	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/gostorages"
@@ -17,9 +23,6 @@ import (
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/middleware"
 	"github.com/thoas/stats"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 type Shard struct {
@@ -186,6 +189,15 @@ func (a *Application) InitRouter() *negroni.Negroni {
 }
 
 func (a *Application) Port() int {
+
+	var portEnv = os.Getenv("PORT")
+	println(portEnv)
+	if len(portEnv) > 0 {
+		p, e := strconv.Atoi(portEnv)
+		if e == nil {
+			return p
+		}
+	}
 	port, err := a.Jq.Int("port")
 
 	if err != nil {
