@@ -4,12 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/stretchr/testify/assert"
-	"github.com/thoas/gokvstores"
-	"github.com/thoas/picfit/dummy"
-	"github.com/thoas/picfit/engines"
-	"github.com/thoas/picfit/signature"
 	"io/ioutil"
 	"mime"
 	"mime/multipart"
@@ -22,6 +16,12 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/stretchr/testify/assert"
+	"github.com/thoas/gokvstores"
+	"github.com/thoas/picfit/engines"
+	"github.com/thoas/picfit/signature"
 )
 
 type Dimension struct {

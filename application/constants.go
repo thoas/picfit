@@ -1,11 +1,13 @@
 package application
 
-// Current version of the picfit
-const Version = "0.3"
+// Version is the current version of picfit
+const Version = "0.4"
 
-const DefaultFormat = "png"
+// DefaultContentType is the default content type
 const DefaultContentType = "image/png"
+
+// DefaultShardWidth is the default shard width
 const DefaultShardWidth = 0
+
+// DefaultShardDepth is the default shard depth
 const DefaultShardDepth = 0
-const DefaultPort = 3001
-const DefaultQuality = 95
