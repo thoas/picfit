@@ -1,14 +1,15 @@
 package image
 
 import (
-	"github.com/thoas/gostorages"
-	"github.com/thoas/picfit/http"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/thoas/gostorages"
+	"github.com/thoas/picfit/storage"
 )
 
 func FromURL(u *url.URL) (*ImageFile, error) {
-	storage := &http.HTTPStorage{}
+	storage := &storage.HTTPStorage{}
 
 	content, err := storage.OpenFromURL(u)
 
