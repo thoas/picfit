@@ -1,10 +1,11 @@
 package image
 
 import (
-	"github.com/thoas/gostorages"
 	"mime"
 	"path"
 	"strings"
+
+	"github.com/thoas/gostorages"
 )
 
 type ImageFile struct {

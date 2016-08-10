@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/codegangsta/cli"
 	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
-	"os"
 )
 
 func main() {
@@ -78,12 +80,14 @@ func main() {
 			os.Exit(1)
 		}
 
-		err := application.Run(config)
+		ctx, err := application.Load(config)
 
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
+
+		server.Run(ctx)
 	}
 
 	app.Run(os.Args)

@@ -1,4 +1,4 @@
-package engines
+package engine
 
 import (
 	"github.com/disintegration/imaging"

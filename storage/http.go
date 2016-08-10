@@ -1,4 +1,4 @@
-package http
+package storage
 
 import (
 	"fmt"
@@ -9,12 +9,15 @@ import (
 
 	"github.com/franela/goreq"
 	"github.com/thoas/gostorages"
+	"github.com/thoas/picfit/errs"
 )
 
+// HTTPStorage wraps a storage
 type HTTPStorage struct {
 	gostorages.Storage
 }
 
+// HeaderKeys represents the list of headers
 var HeaderKeys = []string{
 	"Age",
 	"Content-Type",
@@ -23,6 +26,7 @@ var HeaderKeys = []string{
 	"Etag",
 }
 
+// Open retrieves a gostorages File from a filepath
 func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 	u, err := url.Parse(s.URL(filepath))
 
@@ -39,6 +43,7 @@ func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 	return gostorages.NewContentFile(content), nil
 }
 
+// OpenFromURL retrieves bytes from an url
 func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 	content, err := goreq.Request{Uri: u.String()}.Do()
 
@@ -48,6 +53,10 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 
 	defer content.Body.Close()
 
+	if content.StatusCode == http.StatusNotFound {
+		return nil, errs.ErrFileNotExists
+	}
+
 	if content.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s [status: %d]", u.String(), content.StatusCode)
 	}
@@ -55,6 +64,7 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 	return ioutil.ReadAll(content.Body)
 }
 
+// HeadersFromURL retrieves the headers from an url
 func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 	var headers = make(map[string]string)
 
@@ -78,6 +88,7 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 	return headers, nil
 }
 
+// Headers returns headers from a filepath
 func (s *HTTPStorage) Headers(filepath string) (map[string]string, error) {
 	u, err := url.Parse(s.URL(filepath))
 
@@ -88,6 +99,7 @@ func (s *HTTPStorage) Headers(filepath string) (map[string]string, error) {
 	return s.HeadersFromURL(u)
 }
 
+// ModifiedTime returns the modified time from a filepath
 func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 	headers, err := s.Headers(filepath)
 

@@ -1,4 +1,4 @@
-package dummy
+package kvstore
 
 import (
 	"github.com/thoas/gokvstores"

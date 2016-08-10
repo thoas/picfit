@@ -1,25 +1,30 @@
-package application
+package payload
 
 import (
 	"bytes"
+	"io"
+	"mime/multipart"
+	"net/http"
+
 	"github.com/mholt/binding"
 	"github.com/thoas/gostorages"
 	"github.com/thoas/picfit/image"
-	"io"
-	"mime/multipart"
 )
 
-type MultipartForm struct {
+// MultipartPayload represents a multipart upload
+type MultipartPayload struct {
 	Data *multipart.FileHeader `json:"data"`
 }
 
-func (f *MultipartForm) FieldMap() binding.FieldMap {
+// FieldMap defines excepted inputs
+func (f *MultipartPayload) FieldMap(req *http.Request) binding.FieldMap {
 	return binding.FieldMap{
 		&f.Data: "data",
 	}
 }
 
-func (f *MultipartForm) Upload(storage gostorages.Storage) (*image.ImageFile, error) {
+// Upload uploads a file to its storage
+func (f *MultipartPayload) Upload(storage gostorages.Storage) (*image.ImageFile, error) {
 	var fh io.ReadCloser
 
 	fh, err := f.Data.Open()

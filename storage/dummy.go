@@ -1,8 +1,9 @@
-package dummy
+package storage
 
 import (
-	"github.com/thoas/gostorages"
 	"time"
+
+	"github.com/thoas/gostorages"
 )
 
 type DummyStorage struct {

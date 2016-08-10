@@ -8,8 +8,7 @@ picfit
 .. image:: https://d262ilb51hltx0.cloudfront.net/max/800/1*oR04S6Ie7s1JctwjsDsN0w.png
 
 picfit is a reusable Go server to manipulate (resize, thumbnail, etc.)
-images built on top of `negroni <https://github.com/codegangsta/negroni>`_
-and `gorilla mux <https://github.com/gorilla/mux>`_.
+images built on top of `gin <https://github.com/codegangsta/negroni>`_.
 
 It will act as a proxy of your storage engine and will be
 served ideally behind an http cache system like varnish_.
@@ -135,7 +134,7 @@ Store images on Amazon S3, keys in Redis and shard filename
       "kvstore": {
         "type": "redis",
         "host": "127.0.0.1",
-        "port": "6379",
+        "port": 6379,
         "password": "",
         "db": 0
       },
@@ -211,7 +210,7 @@ Load images from file system and store them in Amazon S3, keys on Redis
       "kvstore": {
         "type": "redis",
         "host": "127.0.0.1",
-        "port": "6379",
+        "port": 6379,
         "password": "",
         "db": 0
       },
@@ -253,7 +252,7 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
       "kvstore": {
         "type": "redis",
         "host": "127.0.0.1",
-        "port": "6379",
+        "port": 6379,
         "password": "",
         "prefix": "dummy:",
         "db": 0
