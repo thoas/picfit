@@ -12,6 +12,7 @@ import (
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
+	"github.com/thoas/picfit/errs"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/kvstore"
@@ -79,13 +80,15 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 	prefix := cfg.KVStore.Prefix
 
+	storeKey := i.Key
+
 	key := i.Key
 
 	if prefix != "" {
-		key = prefix + key
+		storeKey = prefix + storeKey
 	}
 
-	err = con.Set(key, i.Filepath)
+	err = con.Set(storeKey, i.Filepath)
 
 	if err != nil {
 		l.Fatal(err)
@@ -93,7 +96,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 		return err
 	}
 
-	l.Infof("Save key %s => %s to kvstore", key, i.Filepath)
+	l.Infof("Save key %s => %s to kvstore", storeKey, i.Filepath)
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
@@ -205,17 +208,19 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 
 	prefix := cfg.KVStore.Prefix
 
+	storeKey := key
+
 	if prefix != "" {
-		key = prefix + key
+		storeKey = prefix + key
 	}
 
 	// Image from the KVStore found
-	stored, err := gokvstores.String(con.Get(key))
+	stored, err := gokvstores.String(con.Get(storeKey))
 
 	file.Filepath = stored
 
 	if stored != "" {
-		l.Infof("Key %s found in kvstore: %s", key, stored)
+		l.Infof("Key %s found in kvstore: %s", storeKey, stored)
 
 		if load {
 			file, err = image.FromStorage(destStorage, stored)
@@ -225,7 +230,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			}
 		}
 	} else {
-		l.Infof("Key %s not found in kvstore", key)
+		l.Infof("Key %s not found in kvstore", storeKey)
 
 		u, exists := c.Get("url")
 
@@ -237,7 +242,15 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			file, err = image.FromURL(u.(*url.URL))
 		} else {
 			// URL provided we use http protocol to retrieve it
-			file, err = image.FromStorage(storage.SourceFromContext(c), parameters["path"])
+			s := storage.SourceFromContext(c)
+
+			filepath := parameters["path"]
+
+			if !s.Exists(filepath) {
+				return nil, errs.ErrFileNotExists
+			}
+
+			file, err = image.FromStorage(s, filepath)
 		}
 
 		if err != nil {

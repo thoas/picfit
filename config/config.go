@@ -60,8 +60,8 @@ type Config struct {
 	Shard          *Shard
 	Port           int
 	Options        *Options
-	AllowedOrigins []string
-	AllowedMethods []string
+	AllowedOrigins []string `mapstructure:"allowed_origins"`
+	AllowedMethods []string `mapstructure:"allowed_methods"`
 	Storage        *Storages
 	KVStore        *KVStore
 }

@@ -80,14 +80,12 @@ func main() {
 			os.Exit(1)
 		}
 
-		ctx, err := application.Load(config)
+		err := server.Load(config)
 
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)
 			os.Exit(1)
 		}
-
-		server.Run(ctx)
 	}
 
 	app.Run(os.Args)

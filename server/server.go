@@ -7,6 +7,8 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/cors"
+	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/kvstore"
@@ -18,8 +20,19 @@ import (
 	netContext "golang.org/x/net/context"
 )
 
+// Load loads the application and launch the webserver
+func Load(path string) error {
+	ctx, err := application.Load(path)
+
+	if err != nil {
+		return err
+	}
+
+	return Run(ctx)
+}
+
 // Run loads a new server
-func Run(ctx netContext.Context) {
+func Run(ctx netContext.Context) error {
 	router := gin.Default()
 
 	cfg := config.FromContext(ctx)
@@ -33,8 +46,13 @@ func Run(ctx netContext.Context) {
 	kv := kvstore.FromContext(ctx)
 
 	if cfg.Sentry != nil {
-		raven.SetDSN(cfg.Sentry.DSN)
-		router.Use(sentry.Recovery(raven.DefaultClient, true))
+		client, err := raven.NewClient(cfg.Sentry.DSN, cfg.Sentry.Tags)
+
+		if err != nil {
+			return err
+		}
+
+		router.Use(sentry.Recovery(client, true))
 	}
 
 	router.Use(context.SetLogger(logger.FromContext(ctx)))
@@ -57,6 +75,19 @@ func Run(ctx netContext.Context) {
 		router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
 	}
 
+	if cfg.AllowedOrigins != nil && cfg.AllowedMethods != nil {
+		co := cors.New(cors.Options{
+			AllowedOrigins: cfg.AllowedOrigins,
+			AllowedMethods: cfg.AllowedMethods,
+		})
+
+		router.Use(func(c *gin.Context) {
+			co.HandlerFunc(c.Writer, c.Request)
+
+			c.Next()
+		})
+	}
+
 	if cfg.Options.EnableUpload {
 		router.POST("/upload", views.UploadView)
 	}
@@ -66,4 +97,6 @@ func Run(ctx netContext.Context) {
 	}
 
 	router.Run(fmt.Sprintf(":%s", strconv.Itoa(cfg.Port)))
+
+	return nil
 }

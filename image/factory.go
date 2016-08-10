@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"github.com/thoas/gostorages"
-	"github.com/thoas/picfit/errs"
 	"github.com/thoas/picfit/storage"
 )
 
@@ -36,10 +35,6 @@ func FromURL(u *url.URL) (*ImageFile, error) {
 func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error) {
 	var file *ImageFile
 	var err error
-
-	if !storage.Exists(filepath) {
-		return nil, errs.ErrFileNotExists
-	}
 
 	f, err := storage.Open(filepath)
 
