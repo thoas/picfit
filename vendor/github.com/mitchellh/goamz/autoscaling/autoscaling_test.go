@@ -79,6 +79,10 @@ func (s *S) Test_CreateLaunchConfiguration(c *C) {
 		KeyName:        "foobar",
 		Name:           "i-141421",
 		UserData:       "#!/bin/bash\necho Hello\n",
+		BlockDevices:   []autoscaling.BlockDeviceMapping{
+			{DeviceName: "/dev/sdb", VirtualName: "ephemeral0"},
+			{DeviceName: "/dev/sdc", SnapshotId: "snap-a08912c9", DeleteOnTermination: true},
+		},
 	}
 
 	resp, err := s.autoscaling.CreateLaunchConfiguration(&options)
@@ -88,6 +92,10 @@ func (s *S) Test_CreateLaunchConfiguration(c *C) {
 	c.Assert(req.Form["InstanceType"], DeepEquals, []string{"m1.small"})
 	c.Assert(req.Form["SecurityGroups.member.1"], DeepEquals, []string{"sg-1111"})
 	c.Assert(req.Form["UserData"], DeepEquals, []string{"IyEvYmluL2Jhc2gKZWNobyBIZWxsbwo="})
+	c.Assert(req.Form["BlockDeviceMappings.member.1.DeviceName"], DeepEquals, []string{"/dev/sdb"})
+	c.Assert(req.Form["BlockDeviceMappings.member.1.VirtualName"], DeepEquals, []string{"ephemeral0"})
+	c.Assert(req.Form["BlockDeviceMappings.member.2.Ebs.SnapshotId"], DeepEquals, []string{"snap-a08912c9"})
+	c.Assert(req.Form["BlockDeviceMappings.member.2.Ebs.DeleteOnTermination"], DeepEquals, []string{"true"})
 	c.Assert(err, IsNil)
 	c.Assert(resp.RequestId, Equals, "7c6e177f-f082-11e1-ac58-3714bEXAMPLE")
 }
@@ -108,6 +116,7 @@ func (s *S) Test_DescribeAutoScalingGroups(c *C) {
 	c.Assert(resp.RequestId, Equals, "0f02a07d-b677-11e2-9eb0-dd50EXAMPLE")
 	c.Assert(resp.AutoScalingGroups[0].Name, Equals, "my-test-asg-lbs")
 	c.Assert(resp.AutoScalingGroups[0].LaunchConfigurationName, Equals, "my-test-lc")
+	c.Assert(resp.AutoScalingGroups[0].TerminationPolicies[0], Equals, "Default")
 }
 
 func (s *S) Test_DescribeLaunchConfigurations(c *C) {

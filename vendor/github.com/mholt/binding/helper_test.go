@@ -2,6 +2,7 @@ package binding
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -53,7 +54,7 @@ type AllTypes struct {
 	TimeSlice        []time.Time
 }
 
-func (at *AllTypes) FieldMap() FieldMap {
+func (at *AllTypes) FieldMap(req *http.Request) FieldMap {
 	return FieldMap{
 		&at.Uint8:            Field{Form: "uint8", Required: true},
 		&at.PointerToUint8:   Field{Form: "pointerToUint8", Required: true},
@@ -105,7 +106,7 @@ func (at *AllTypes) FieldMap() FieldMap {
 
 func (at *AllTypes) FormValues() map[string][]string {
 	fv := make(map[string][]string)
-	fm := at.FieldMap()
+	fm := at.FieldMap(nil)
 
 	addField := func(key, value interface{}) {
 		f, ok := fm[key].(Field)

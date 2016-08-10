@@ -14,7 +14,7 @@ func trace() *raven.Stacktrace {
 }
 
 func main() {
-	client, err := raven.NewClient(os.Args[1], map[string]string{"foo": "bar"})
+	client, err := raven.NewWithTags(os.Args[1], map[string]string{"foo": "bar"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func main() {
 
 // CheckError sends error report to sentry and records event id and error name to the logs
 func CheckError(err error, r *http.Request) {
-	client, err := raven.NewClient(os.Args[1], map[string]string{"foo": "bar"})
+	client, err := raven.NewWithTags(os.Args[1], map[string]string{"foo": "bar"})
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -51,7 +51,7 @@ To use the ``FileSystemStorage`` you must have a location to save your files.
         storage := gostorages.NewFileSystemStorage(tmp, "http://img.example.com")
 
         // Saving a file named test
-        storage.Save("test", gostorages.ContentFile([]byte("(╯°□°）╯︵ ┻━┻")))
+        storage.Save("test", gostorages.NewContentFile([]byte("(╯°□°）╯︵ ┻━┻")))
 
         fmt.Println(storage.URL("test")) // => http://img.example.com/test
 
@@ -93,7 +93,7 @@ In the following example, I'm assuming my bucket is located in european region.
         storage := gostorages.NewS3Storage(os.Getenv("ACCESS_KEY_ID"), os.Getenv("SECRET_ACCESS_KEY"), "my-bucket", "", aws.Regions["eu-west-1"], s3.PublicReadWrite, baseURL)
 
         // Saving a file named test
-        storage.Save("test", gostorages.ContentFile([]byte("(>_<)")))
+        storage.Save("test", gostorages.NewContentFile([]byte("(>_<)")))
 
         fmt.Println(storage.URL("test")) // => http://s3-eu-west-1.amazonaws.com/my-bucket/test
 

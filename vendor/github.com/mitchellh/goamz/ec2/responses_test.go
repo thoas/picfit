@@ -605,6 +605,19 @@ var DescribeSecurityGroupsExample = `
            </ipRanges>
         </item>
       </ipPermissions>
+      <ipPermissionsEgress>
+        <item>
+          <ipProtocol>tcp</ipProtocol>
+          <fromPort>80</fromPort>
+          <toPort>80</toPort>
+          <groups/>
+          <ipRanges>
+            <item>
+              <cidrIp>0.0.0.0/0</cidrIp>
+            </item>
+          </ipRanges>
+        </item>
+      </ipPermissionsEgress>
     </item>
     <item>
       <ownerId>999988887777</ownerId>
@@ -995,7 +1008,7 @@ var ResetImageAttributeExample = `
 // http://goo.gl/ylxT4R
 var DescribeAvailabilityZonesExample1 = `
 <DescribeAvailabilityZonesResponse xmlns="http://ec2.amazonaws.com/doc/2014-05-01/">
-   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
    <availabilityZoneInfo>
    <item>
       <zoneName>us-east-1a</zoneName>
@@ -1028,7 +1041,7 @@ var DescribeAvailabilityZonesExample1 = `
 // http://goo.gl/ylxT4R
 var DescribeAvailabilityZonesExample2 = `
 <DescribeAvailabilityZonesResponse xmlns="http://ec2.amazonaws.com/doc/2014-05-01/">
-   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
    <availabilityZoneInfo>
    <item>
       <zoneName>us-east-1a</zoneName>
@@ -1051,7 +1064,7 @@ var DescribeAvailabilityZonesExample2 = `
 // http://goo.gl/sdomyE
 var CreateNetworkAclExample = `
 <CreateNetworkAclResponse xmlns="http://ec2.amazonaws.com/doc/2014-10-01/">
-   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
    <networkAcl>
       <networkAclId>acl-5fb85d36</networkAclId>
       <vpcId>vpc-11ad4878</vpcId>
@@ -1089,7 +1102,7 @@ var CreateNetworkAclEntryRespExample = `
 // http://goo.gl/5tqceF
 var DescribeNetworkAclsExample = `
 <DescribeNetworkAclsResponse xmlns="http://ec2.amazonaws.com/doc/2014-10-01/">
-   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
    <networkAclSet>
    <item>
      <networkAclId>acl-5566953c</networkAclId>
@@ -1201,7 +1214,50 @@ var DescribeNetworkAclsExample = `
 
 var ReplaceNetworkAclAssociationResponseExample = `
 <ReplaceNetworkAclAssociationResponse xmlns="http://ec2.amazonaws.com/doc/2014-10-01/">
-   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
    <newAssociationId>aclassoc-17b85d7e</newAssociationId>
 </ReplaceNetworkAclAssociationResponse>
 `
+
+var CreateCustomerGatewayResponseExample = `
+<CreateCustomerGatewayResponse xmlns="http://ec2.amazonaws.com/doc/2014-06-15/">
+   <requestId>7a62c49f-347e-4fc4-9331-6e8eEXAMPLE</requestId>
+   <customerGateway>
+      <customerGatewayId>cgw-b4dc3961</customerGatewayId>
+      <state>pending</state>
+      <type>ipsec.1</type>
+      <ipAddress>10.0.0.20</ipAddress>
+      <bgpAsn>65534</bgpAsn>
+      <tagSet/>
+   </customerGateway>
+</CreateCustomerGatewayResponse>
+`
+
+var DescribeCustomerGatewaysResponseExample = `
+<DescribeCustomerGatewaysResponse xmlns="http://ec2.amazonaws.com/doc/2014-06-15/">
+  <requestId>7a62c49f-347e-4fc4-9331-6e8eEXAMPLE</requestId>
+  <customerGatewaySet>
+    <item>
+      <customerGatewayId>cgw-b4dc3961</customerGatewayId>
+      <state>available</state>
+      <type>ipsec.1</type>
+      <ipAddress>12.1.2.3</ipAddress>
+      <bgpAsn>65534</bgpAsn>
+      <tagSet/>
+    </item>
+    <item>
+      <customerGatewayId>cgw-b4dc3962</customerGatewayId>
+      <state>pending</state>
+      <type>ipsec.1</type>
+      <ipAddress>12.1.2.4</ipAddress>
+      <bgpAsn>65500</bgpAsn>
+      <tagSet/>
+    </item>
+  </customerGatewaySet>
+</DescribeCustomerGatewaysResponse>
+`
+var DeleteCustomerGatewayResponseExample = `
+<DeleteCustomerGatewayResponse xmlns="http://ec2.amazonaws.com/doc/2014-06-15/">
+   <requestId>7a62c49f-347e-4fc4-9331-6e8eEXAMPLE</requestId>
+   <return>true</return>
+</DeleteCustomerGatewayResponse>`

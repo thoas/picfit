@@ -20,7 +20,7 @@ func TestValidate(t *testing.T) {
 			errs := Validate(req, &model)
 
 			expectedErrs := make(map[string]bool)
-			for _, v := range model.FieldMap() {
+			for _, v := range model.FieldMap(nil) {
 				f, ok := v.(Field)
 				if !ok {
 					t.Fatal("unexpected value in FieldMap")
@@ -66,7 +66,7 @@ func TestValidate(t *testing.T) {
 			errs := Validate(req, model)
 
 			expectedErrs := make(map[string]bool)
-			for _, v := range model.FieldMap() {
+			for _, v := range model.FieldMap(nil) {
 				f, ok := v.(Field)
 				if !ok {
 					t.Fatal("unexpected value in FieldMap")

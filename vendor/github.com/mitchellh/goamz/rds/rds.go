@@ -19,7 +19,7 @@ type Rds struct {
 	httpClient *http.Client
 }
 
-const APIVersion = "2013-09-09"
+const APIVersion = "2014-10-31"
 
 // New creates a new Rds instance.
 func New(auth aws.Auth, region aws.Region) *Rds {
@@ -93,6 +93,7 @@ func makeParams(action string) map[string]string {
 type DBInstance struct {
 	Address                    string        `xml:"Endpoint>Address"`
 	AllocatedStorage           int           `xml:"AllocatedStorage"`
+	StorageType                string        `xml:"StorageType"`
 	AvailabilityZone           string        `xml:"AvailabilityZone"`
 	BackupRetentionPeriod      int           `xml:"BackupRetentionPeriod"`
 	DBInstanceClass            string        `xml:"DBInstanceClass"`
@@ -101,6 +102,7 @@ type DBInstance struct {
 	DBName                     string        `xml:"DBName"`
 	Engine                     string        `xml:"Engine"`
 	EngineVersion              string        `xml:"EngineVersion"`
+	StorageEncrypted           bool          `xml:"StorageEncrypted"`
 	MasterUsername             string        `xml:"MasterUsername"`
 	MultiAZ                    bool          `xml:"MultiAZ"`
 	Port                       int           `xml:"Endpoint>Port"`
@@ -170,6 +172,7 @@ type Parameter struct {
 // The CreateDBInstance request parameters
 type CreateDBInstance struct {
 	AllocatedStorage           int
+	StorageType                string
 	AvailabilityZone           string
 	BackupRetentionPeriod      int
 	DBInstanceClass            string
@@ -178,6 +181,7 @@ type CreateDBInstance struct {
 	DBSubnetGroupName          string
 	Engine                     string
 	EngineVersion              string
+	StorageEncrypted           bool
 	Iops                       int
 	MasterUsername             string
 	MasterUserPassword         string
@@ -201,6 +205,10 @@ func (rds *Rds) CreateDBInstance(options *CreateDBInstance) (resp *SimpleResp, e
 
 	if options.SetAllocatedStorage {
 		params["AllocatedStorage"] = strconv.Itoa(options.AllocatedStorage)
+	}
+
+	if options.StorageType != "" {
+		params["StorageType"] = options.StorageType
 	}
 
 	if options.SetBackupRetentionPeriod {
@@ -241,6 +249,10 @@ func (rds *Rds) CreateDBInstance(options *CreateDBInstance) (resp *SimpleResp, e
 
 	if options.EngineVersion != "" {
 		params["EngineVersion"] = options.EngineVersion
+	}
+
+	if options.StorageEncrypted {
+		params["StorageEncrypted"] = "true"
 	}
 
 	if options.MasterUsername != "" {

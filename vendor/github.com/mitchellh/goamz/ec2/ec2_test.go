@@ -1,11 +1,12 @@
 package ec2_test
 
 import (
+	"testing"
+
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/ec2"
 	"github.com/mitchellh/goamz/testutil"
 	. "github.com/motain/gocheck"
-	"testing"
 )
 
 func Test(t *testing.T) {
@@ -375,6 +376,7 @@ func (s *S) TestDescribeInstancesExample1(c *C) {
 	c.Assert(r0i.PrivateDNSName, Equals, "domU-12-31-39-10-56-34.compute-1.internal")
 	c.Assert(r0i.DNSName, Equals, "ec2-174-129-165-232.compute-1.amazonaws.com")
 	c.Assert(r0i.AvailZone, Equals, "us-east-1b")
+	c.Assert(r0i.RootDeviceName, Equals, "/dev/sda1")
 
 	b0 := r0i.BlockDevices[0]
 	c.Assert(b0.DeviceName, Equals, "/dev/sda1")
@@ -758,12 +760,19 @@ func (s *S) TestDescribeSecurityGroupsExample(c *C) {
 	c.Assert(g0.Id, Equals, "sg-67ad940e")
 	c.Assert(g0.Description, Equals, "Web Servers")
 	c.Assert(g0.IPPerms, HasLen, 1)
+	c.Assert(g0.IPPermsEgress, HasLen, 1)
 
 	g0ipp := g0.IPPerms[0]
 	c.Assert(g0ipp.Protocol, Equals, "tcp")
 	c.Assert(g0ipp.FromPort, Equals, 80)
 	c.Assert(g0ipp.ToPort, Equals, 80)
 	c.Assert(g0ipp.SourceIPs, DeepEquals, []string{"0.0.0.0/0"})
+
+	g0ippe := g0.IPPermsEgress[0]
+	c.Assert(g0ippe.Protocol, Equals, "tcp")
+	c.Assert(g0ippe.FromPort, Equals, 80)
+	c.Assert(g0ippe.ToPort, Equals, 80)
+	c.Assert(g0ippe.SourceIPs, DeepEquals, []string{"0.0.0.0/0"})
 
 	g1 := resp.Groups[1]
 	c.Assert(g1.OwnerId, Equals, "999988887777")
@@ -1435,4 +1444,58 @@ func (s *S) TestReplaceNetworkAclAssociation(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(resp.RequestId, Equals, "59dbff89-35bd-4eac-99ed-be587EXAMPLE")
 	c.Assert(resp.NewAssociationId, Equals, "aclassoc-17b85d7e")
+}
+
+func (s *S) TestCreateCustomerGateway(c *C) {
+	testServer.Response(200, nil, CreateCustomerGatewayResponseExample)
+
+	options := &ec2.CreateCustomerGateway{
+		Type:      "ipsec.1",
+		IpAddress: "10.0.0.20",
+		BgpAsn:    65534,
+	}
+
+	resp, err := s.ec2.CreateCustomerGateway(options)
+
+	req := testServer.WaitRequest()
+	c.Assert(req.Form["Type"], DeepEquals, []string{"ipsec.1"})
+
+	c.Assert(err, IsNil)
+	c.Assert(resp.RequestId, Equals, "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE")
+	c.Assert(resp.CustomerGateway.Type, Equals, "ipsec.1")
+	c.Assert(resp.CustomerGateway.State, Equals, "pending")
+	c.Assert(resp.CustomerGateway.BgpAsn, Equals, 65534)
+	c.Assert(resp.CustomerGateway.IpAddress, Equals, "10.0.0.20")
+}
+
+func (s *S) TestDescribeCustomerGateways(c *C) {
+	testServer.Response(200, nil, DescribeCustomerGatewaysResponseExample)
+
+	filter := ec2.NewFilter()
+	filter.Add("state", "pending")
+
+	resp, err := s.ec2.DescribeCustomerGateways([]string{"cgw-b4dc3961", "cgw-b4dc3962"}, filter)
+
+	req := testServer.WaitRequest()
+	c.Assert(req.Form["Filter.1.Name"], DeepEquals, []string{"state"})
+	c.Assert(req.Form["Filter.1.Value.1"], DeepEquals, []string{"pending"})
+
+	c.Assert(err, IsNil)
+	c.Assert(resp.RequestId, Equals, "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE")
+	c.Assert(resp.CustomerGateways, HasLen, 2)
+	c.Assert(resp.CustomerGateways[0].CustomerGatewayId, Equals, "cgw-b4dc3961")
+	c.Assert(resp.CustomerGateways[1].CustomerGatewayId, Equals, "cgw-b4dc3962")
+}
+
+func (s *S) TestDeleteCustomerGateway(c *C) {
+	testServer.Response(200, nil, DeleteCustomerGatewayResponseExample)
+
+	resp, err := s.ec2.DeleteCustomerGateway("cgw-b4dc3961")
+
+	req := testServer.WaitRequest()
+	c.Assert(req.Form["CustomerGatewayId"], DeepEquals, []string{"cgw-b4dc3961"})
+
+	c.Assert(err, IsNil)
+	c.Assert(resp.RequestId, Equals, "7a62c49f-347e-4fc4-9331-6e8eEXAMPLE")
+	c.Assert(resp.Return, Equals, true)
 }

@@ -88,6 +88,44 @@ func makeParams(action string) map[string]string {
 	return params
 }
 
+func addBlockDeviceParams(prename string, params map[string]string, blockdevices []BlockDeviceMapping) {
+	for i, k := range blockdevices {
+		// Fixup index since Amazon counts these from 1
+		prefix := prename + "BlockDeviceMappings.member." + strconv.Itoa(i+1) + "."
+
+		if k.DeviceName != "" {
+			params[prefix+"DeviceName"] = k.DeviceName
+		}
+
+		if k.VirtualName != "" {
+			params[prefix+"VirtualName"] = k.VirtualName
+		} else if k.NoDevice {
+			params[prefix+"NoDevice"] = ""
+		} else {
+			if k.SnapshotId != "" {
+				params[prefix+"Ebs.SnapshotId"] = k.SnapshotId
+			}
+			if k.VolumeType != "" {
+				params[prefix+"Ebs.VolumeType"] = k.VolumeType
+			}
+			if k.IOPS != 0 {
+				params[prefix+"Ebs.Iops"] = strconv.FormatInt(k.IOPS, 10)
+			}
+			if k.VolumeSize != 0 {
+				params[prefix+"Ebs.VolumeSize"] = strconv.FormatInt(k.VolumeSize, 10)
+			}
+			if k.DeleteOnTermination {
+				params[prefix+"Ebs.DeleteOnTermination"] = "true"
+			} else {
+				params[prefix+"Ebs.DeleteOnTermination"] = "false"
+			}
+			if k.Encrypted {
+				params[prefix+"Ebs.Encrypted"] = "true"
+			}
+		}
+	}
+}
+
 // ----------------------------------------------------------------------------
 // AutoScaling objects
 
@@ -108,6 +146,7 @@ type LaunchConfiguration struct {
 	Name                     string   `xml:"LaunchConfigurationName"`
 	SecurityGroups           []string `xml:"SecurityGroups>member"`
 	UserData                 []byte   `xml:"UserData"`
+	BlockDevices             []BlockDeviceMapping `xml:"BlockDeviceMappings>member"`
 }
 
 type Instance struct {
@@ -135,6 +174,24 @@ type AutoScalingGroup struct {
 	Status                  string     `xml:"Status"`
 	Tags                    []Tag      `xml:"Tags>member"`
 	VPCZoneIdentifier       string     `xml:"VPCZoneIdentifier"`
+	TerminationPolicies     []string   `xml:"TerminationPolicies>member"`
+}
+
+// BlockDeviceMapping represents the association of a block device with an image.
+//
+// See http://goo.gl/wnDBf for more details.
+type BlockDeviceMapping struct {
+	DeviceName          string `xml:"DeviceName"`
+	VirtualName         string `xml:"VirtualName"`
+	SnapshotId          string `xml:"Ebs>SnapshotId"`
+	VolumeType          string `xml:"Ebs>VolumeType"`
+	VolumeSize          int64  `xml:"Ebs>VolumeSize"`
+	DeleteOnTermination bool   `xml:"Ebs>DeleteOnTermination"`
+	Encrypted           bool   `xml:"Ebs>Encrypted"`
+	NoDevice            bool   `xml:"NoDevice"`
+
+	// The number of I/O operations per second (IOPS) that the volume supports.
+	IOPS int64 `xml:"ebs>iops"`
 }
 
 // ----------------------------------------------------------------------------
@@ -252,6 +309,7 @@ type CreateLaunchConfiguration struct {
 	Name                     string
 	SecurityGroups           []string
 	UserData                 string
+	BlockDevices             []BlockDeviceMapping
 }
 
 func (autoscaling *AutoScaling) CreateLaunchConfiguration(options *CreateLaunchConfiguration) (resp *SimpleResp, err error) {
@@ -297,6 +355,7 @@ func (autoscaling *AutoScaling) CreateLaunchConfiguration(options *CreateLaunchC
 		b64.Encode(userData, []byte(options.UserData))
 		params["UserData"] = string(userData)
 	}
+	addBlockDeviceParams("", params, options.BlockDevices)
 
 	resp = &SimpleResp{}
 

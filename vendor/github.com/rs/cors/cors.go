@@ -26,12 +26,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/rs/xhandler"
+	"golang.org/x/net/context"
 )
 
 // Options is a configuration container to setup the CORS middleware.
 type Options struct {
 	// AllowedOrigins is a list of origins a cross-domain request can be executed from.
 	// If the special "*" value is present in the list, all origins will be allowed.
+	// An origin may contain a wildcard (*) to replace 0 or more characters
+	// (i.e.: http://*.domain.com). Usage of wildcards implies a small performance penality.
+	// Only one wildcard can be used per origin.
 	// Default value is ["*"]
 	AllowedOrigins []string
 	// AllowOriginFunc is a custom function to validate the origin. It take the origin
@@ -55,17 +61,23 @@ type Options struct {
 	// MaxAge indicates how long (in seconds) the results of a preflight request
 	// can be cached
 	MaxAge int
+	// OptionsPassthrough instructs preflight to let other potential next handlers to
+	// process the OPTIONS method. Turn this on if your application handles OPTIONS.
+	OptionsPassthrough bool
 	// Debugging flag adds additional output to debug server side CORS issues
 	Debug bool
 }
 
+// Cors http handler
 type Cors struct {
 	// Debug logger
-	log *log.Logger
+	Log *log.Logger
 	// Set to true when allowed origins contains a "*"
 	allowedOriginsAll bool
-	// Normalized list of allowed origins
+	// Normalized list of plain allowed origins
 	allowedOrigins []string
+	// List of allowed origins containing wildcards
+	allowedWOrigins []wildcard
 	// Optional origin validator function
 	allowOriginFunc func(origin string) bool
 	// Set to true when allowed headers contains a "*"
@@ -75,21 +87,23 @@ type Cors struct {
 	// Normalized list of allowed methods
 	allowedMethods []string
 	// Normalized list of exposed headers
-	exposedHeaders   []string
-	allowCredentials bool
-	maxAge           int
+	exposedHeaders    []string
+	allowCredentials  bool
+	maxAge            int
+	optionPassthrough bool
 }
 
 // New creates a new Cors handler with the provided options.
 func New(options Options) *Cors {
 	c := &Cors{
-		exposedHeaders:   convert(options.ExposedHeaders, http.CanonicalHeaderKey),
-		allowOriginFunc:  options.AllowOriginFunc,
-		allowCredentials: options.AllowCredentials,
-		maxAge:           options.MaxAge,
+		exposedHeaders:    convert(options.ExposedHeaders, http.CanonicalHeaderKey),
+		allowOriginFunc:   options.AllowOriginFunc,
+		allowCredentials:  options.AllowCredentials,
+		maxAge:            options.MaxAge,
+		optionPassthrough: options.OptionsPassthrough,
 	}
 	if options.Debug {
-		c.log = log.New(os.Stdout, "[cors] ", log.LstdFlags)
+		c.Log = log.New(os.Stdout, "[cors] ", log.LstdFlags)
 	}
 
 	// Normalize options
@@ -101,12 +115,23 @@ func New(options Options) *Cors {
 		// Default is all origins
 		c.allowedOriginsAll = true
 	} else {
-		c.allowedOrigins = convert(options.AllowedOrigins, strings.ToLower)
-		for _, o := range c.allowedOrigins {
-			if o == "*" {
+		c.allowedOrigins = []string{}
+		c.allowedWOrigins = []wildcard{}
+		for _, origin := range options.AllowedOrigins {
+			// Normalize
+			origin = strings.ToLower(origin)
+			if origin == "*" {
+				// If "*" is present in the list, turn the whole list into a match all
 				c.allowedOriginsAll = true
 				c.allowedOrigins = nil
+				c.allowedWOrigins = nil
 				break
+			} else if i := strings.IndexByte(origin, '*'); i >= 0 {
+				// Split the origin in two: start and end string without the *
+				w := wildcard{origin[0:i], origin[i+1 : len(origin)]}
+				c.allowedWOrigins = append(c.allowedWOrigins, w)
+			} else {
+				c.allowedOrigins = append(c.allowedOrigins, origin)
 			}
 		}
 	}
@@ -154,6 +179,11 @@ func (c *Cors) Handler(h http.Handler) http.Handler {
 			// middleware may not handle OPTIONS requests correctly. One typical example
 			// is authentication middleware ; OPTIONS requests won't carry authentication
 			// headers (see #1)
+			if c.optionPassthrough {
+				h.ServeHTTP(w, r)
+			} else {
+				w.WriteHeader(http.StatusOK)
+			}
 		} else {
 			c.logf("Handler: Actual request")
 			c.handleActualRequest(w, r)
@@ -162,7 +192,30 @@ func (c *Cors) Handler(h http.Handler) http.Handler {
 	})
 }
 
-// Martini compatible handler
+// HandlerC is net/context aware handler
+func (c *Cors) HandlerC(h xhandler.HandlerC) xhandler.HandlerC {
+	return xhandler.HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			c.logf("Handler: Preflight request")
+			c.handlePreflight(w, r)
+			// Preflight requests are standalone and should stop the chain as some other
+			// middleware may not handle OPTIONS requests correctly. One typical example
+			// is authentication middleware ; OPTIONS requests won't carry authentication
+			// headers (see #1)
+			if c.optionPassthrough {
+				h.ServeHTTPC(ctx, w, r)
+			} else {
+				w.WriteHeader(http.StatusOK)
+			}
+		} else {
+			c.logf("Handler: Actual request")
+			c.handleActualRequest(w, r)
+			h.ServeHTTPC(ctx, w, r)
+		}
+	})
+}
+
+// HandlerFunc provides Martini compatible handler
 func (c *Cors) HandlerFunc(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		c.logf("HandlerFunc: Preflight request")
@@ -182,6 +235,11 @@ func (c *Cors) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handl
 		// middleware may not handle OPTIONS requests correctly. One typical example
 		// is authentication middleware ; OPTIONS requests won't carry authentication
 		// headers (see #1)
+		if c.optionPassthrough {
+			next(w, r)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 	} else {
 		c.logf("ServeHTTP: Actual request")
 		c.handleActualRequest(w, r)
@@ -198,6 +256,13 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 		c.logf("  Preflight aborted: %s!=OPTIONS", r.Method)
 		return
 	}
+	// Always set Vary headers
+	// see https://github.com/rs/cors/issues/10,
+	//     https://github.com/rs/cors/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
+	headers.Add("Vary", "Origin")
+	headers.Add("Vary", "Access-Control-Request-Method")
+	headers.Add("Vary", "Access-Control-Request-Headers")
+
 	if origin == "" {
 		c.logf("  Preflight aborted: empty origin")
 		return
@@ -218,7 +283,6 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	headers.Set("Access-Control-Allow-Origin", origin)
-	headers.Add("Vary", "Origin")
 	// Spec says: Since the list of methods can be unbounded, simply returning the method indicated
 	// by Access-Control-Request-Method (if supported) can be enough
 	headers.Set("Access-Control-Allow-Methods", strings.ToUpper(reqMethod))
@@ -246,6 +310,8 @@ func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 		c.logf("  Actual request no headers added: method == %s", r.Method)
 		return
 	}
+	// Always set Vary, see https://github.com/rs/cors/issues/10
+	headers.Add("Vary", "Origin")
 	if origin == "" {
 		c.logf("  Actual request no headers added: missing origin")
 		return
@@ -260,15 +326,11 @@ func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	// spec doesn't instruct to check the allowed methods for simple cross-origin requests.
 	// We think it's a nice feature to be able to have control on those methods though.
 	if !c.isMethodAllowed(r.Method) {
-		if c.log != nil {
-			c.logf("  Actual request no headers added: method '%s' not allowed",
-				r.Method)
-		}
+		c.logf("  Actual request no headers added: method '%s' not allowed", r.Method)
 
 		return
 	}
 	headers.Set("Access-Control-Allow-Origin", origin)
-	headers.Add("Vary", "Origin")
 	if len(c.exposedHeaders) > 0 {
 		headers.Set("Access-Control-Expose-Headers", strings.Join(c.exposedHeaders, ", "))
 	}
@@ -280,8 +342,8 @@ func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 
 // convenience method. checks if debugging is turned on before printing
 func (c *Cors) logf(format string, a ...interface{}) {
-	if c.log != nil {
-		c.log.Printf(format, a...)
+	if c.Log != nil {
+		c.Log.Printf(format, a...)
 	}
 }
 
@@ -297,6 +359,11 @@ func (c *Cors) isOriginAllowed(origin string) bool {
 	origin = strings.ToLower(origin)
 	for _, o := range c.allowedOrigins {
 		if o == origin {
+			return true
+		}
+	}
+	for _, w := range c.allowedWOrigins {
+		if w.match(origin) {
 			return true
 		}
 	}

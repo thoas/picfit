@@ -73,12 +73,10 @@ func (e *Errors) Has(class string) bool {
 func (e Errors) Handle(response http.ResponseWriter) bool {
 	if e.Len() > 0 {
 		response.Header().Set("Content-Type", jsonContentType)
-		if e.Has(DeserializationError) {
-			response.WriteHeader(http.StatusBadRequest)
-		} else if e.Has(ContentTypeError) {
+		if e.Has(ContentTypeError) {
 			response.WriteHeader(http.StatusUnsupportedMediaType)
 		} else {
-			response.WriteHeader(StatusUnprocessableEntity)
+			response.WriteHeader(http.StatusBadRequest)
 		}
 		errOutput, _ := json.Marshal(e)
 		response.Write(errOutput)

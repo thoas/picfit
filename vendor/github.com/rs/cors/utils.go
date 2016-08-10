@@ -1,8 +1,19 @@
 package cors
 
+import "strings"
+
 const toLower = 'a' - 'A'
 
 type converter func(string) string
+
+type wildcard struct {
+	prefix string
+	suffix string
+}
+
+func (w wildcard) match(s string) bool {
+	return len(s) >= len(w.prefix+w.suffix) && strings.HasPrefix(s, w.prefix) && strings.HasSuffix(s, w.suffix)
+}
 
 // convert converts a list of string using the passed converter function
 func convert(s []string, c converter) []string {
@@ -40,7 +51,7 @@ func parseHeaderList(headerList string) []string {
 			} else {
 				h = append(h, b)
 			}
-		} else if b == '-' || (b >= '0' && b <= '9') {
+		} else if b == '-' || b == '_' || (b >= '0' && b <= '9') {
 			h = append(h, b)
 		}
 
@@ -52,7 +63,7 @@ func parseHeaderList(headerList string) []string {
 				upper = true
 			}
 		} else {
-			upper = b == '-'
+			upper = b == '-' || b == '_'
 		}
 	}
 	return headers

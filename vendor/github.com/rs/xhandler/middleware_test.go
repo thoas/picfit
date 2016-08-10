@@ -26,26 +26,42 @@ func TestTimeoutHandler(t *testing.T) {
 
 type closeNotifyWriter struct {
 	*httptest.ResponseRecorder
+	closed bool
 }
 
 func (w *closeNotifyWriter) CloseNotify() <-chan bool {
-	// return an already "closed" notifier
 	notify := make(chan bool, 1)
-	notify <- true
+	if w.closed {
+		// return an already "closed" notifier
+		notify <- true
+	}
 	return notify
 }
 
-func TestCloseHandler(t *testing.T) {
+func TestCloseHandlerClientClose(t *testing.T) {
 	ctx := context.WithValue(context.Background(), contextKey, "value")
 	xh := CloseHandler(&handler{})
 	h := New(ctx, xh)
-	w := &closeNotifyWriter{httptest.NewRecorder()}
+	w := &closeNotifyWriter{ResponseRecorder: httptest.NewRecorder(), closed: true}
 	r, err := http.NewRequest("GET", "http://example.com/foo", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	h.ServeHTTP(w, r)
 	assert.Equal(t, "value canceled", w.Body.String())
+}
+
+func TestCloseHandlerRequestEnds(t *testing.T) {
+	ctx := context.WithValue(context.Background(), contextKey, "value")
+	xh := CloseHandler(&handler{})
+	h := New(ctx, xh)
+	w := &closeNotifyWriter{ResponseRecorder: httptest.NewRecorder(), closed: false}
+	r, err := http.NewRequest("GET", "http://example.com/foo", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	h.ServeHTTP(w, r)
+	assert.Equal(t, "value", w.Body.String())
 }
 
 func TestIf(t *testing.T) {

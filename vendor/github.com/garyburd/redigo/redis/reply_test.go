@@ -19,7 +19,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/garyburd/redigo/internal/redistest"
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -38,6 +37,16 @@ var replyTests = []struct {
 	expected valueError
 }{
 	{
+		"ints([v1, v2])",
+		ve(redis.Ints([]interface{}{[]byte("4"), []byte("5")}, nil)),
+		ve([]int{4, 5}, nil),
+	},
+	{
+		"ints(nil)",
+		ve(redis.Ints(nil, nil)),
+		ve([]int(nil), redis.ErrNil),
+	},
+	{
 		"strings([v1, v2])",
 		ve(redis.Strings([]interface{}{[]byte("v1"), []byte("v2")}, nil)),
 		ve([]string{"v1", "v2"}, nil),
@@ -46,6 +55,16 @@ var replyTests = []struct {
 		"strings(nil)",
 		ve(redis.Strings(nil, nil)),
 		ve([]string(nil), redis.ErrNil),
+	},
+	{
+		"byteslices([v1, v2])",
+		ve(redis.ByteSlices([]interface{}{[]byte("v1"), []byte("v2")}, nil)),
+		ve([][]byte{[]byte("v1"), []byte("v2")}, nil),
+	},
+	{
+		"byteslices(nil)",
+		ve(redis.ByteSlices(nil, nil)),
+		ve([][]byte(nil), redis.ErrNil),
 	},
 	{
 		"values([v1, v2])",
@@ -91,15 +110,16 @@ func TestReply(t *testing.T) {
 	}
 }
 
-// dial wraps DialTestDB() with a more suitable function name for examples.
+// dial wraps DialDefaultServer() with a more suitable function name for examples.
 func dial() (redis.Conn, error) {
-	return redistest.Dial()
+	return redis.DialDefaultServer()
 }
 
 func ExampleBool() {
 	c, err := dial()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 	defer c.Close()
 
@@ -113,7 +133,8 @@ func ExampleBool() {
 func ExampleInt() {
 	c, err := dial()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 	defer c.Close()
 
@@ -127,10 +148,26 @@ func ExampleInt() {
 	// 2
 }
 
+func ExampleInts() {
+	c, err := dial()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer c.Close()
+
+	c.Do("SADD", "set_with_integers", 4, 5, 6)
+	ints, _ := redis.Ints(c.Do("SMEMBERS", "set_with_integers"))
+	fmt.Printf("%#v\n", ints)
+	// Output:
+	// []int{4, 5, 6}
+}
+
 func ExampleString() {
 	c, err := dial()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 	defer c.Close()
 

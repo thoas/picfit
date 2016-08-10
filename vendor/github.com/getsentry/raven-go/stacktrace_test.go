@@ -57,7 +57,7 @@ func TestStacktrace(t *testing.T) {
 	if f.Module != thisPackage {
 		t.Error("incorrect Module:", f.Module)
 	}
-	if f.Lineno != 83 {
+	if f.Lineno != 85 {
 		t.Error("incorrect Lineno:", f.Lineno)
 	}
 	if f.ContextLine != "\treturn NewStacktrace(0, 2, []string{thisPackage})" {
@@ -69,11 +69,13 @@ func TestStacktrace(t *testing.T) {
 	if len(f.PostContext) != 2 || f.PostContext[0] != "\t// b" || f.PostContext[1] != "}" {
 		t.Errorf("incorrect PostContext %#v", f.PostContext)
 	}
-	if !*f.InApp {
+	_, filename, _, _ := runtime.Caller(0)
+	runningInVendored := strings.Contains(filename, "vendor")
+	if f.InApp != !runningInVendored {
 		t.Error("expected InApp to be true")
 	}
 
-	if st.Culprit() != fmt.Sprintf("%s.trace", thisPackage) {
+	if f.InApp && st.Culprit() != fmt.Sprintf("%s.trace", thisPackage) {
 		t.Error("incorrect Culprit:", st.Culprit())
 	}
 }
@@ -129,5 +131,12 @@ func TestNewStacktrace_outOfBounds(t *testing.T) {
 	f := st.Frames[len(st.Frames)-1]
 	if f.ContextLine != "\tst := NewStacktrace(0, 1000000, []string{thisPackage})" {
 		t.Errorf("incorrect ContextLine: %#v", f.ContextLine)
+	}
+}
+
+func TestNewStacktrace_noFrames(t *testing.T) {
+	st := NewStacktrace(999999999, 0, []string{})
+	if st != nil {
+		t.Errorf("expected st.Frames to be nil:", st)
 	}
 }

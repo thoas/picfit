@@ -1,7 +1,6 @@
 package goreq
 
 import (
-	"compress/flate"
 	"compress/gzip"
 	"compress/zlib"
 	"encoding/base64"
@@ -10,6 +9,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -45,9 +45,11 @@ func TestRequest(t *testing.T) {
 
 		g.Describe("General request methods", func() {
 			var ts *httptest.Server
+			var requestHeaders http.Header
 
 			g.Before(func() {
 				ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					requestHeaders = r.Header
 					if (r.Method == "GET" || r.Method == "OPTIONS" || r.Method == "TRACE" || r.Method == "PATCH" || r.Method == "FOOBAR") && r.URL.Path == "/foo" {
 						w.WriteHeader(200)
 						fmt.Fprint(w, "bar")
@@ -88,6 +90,19 @@ func TestRequest(t *testing.T) {
 					if r.Method == "GET" && r.URL.Path == "/redirect_test/307" {
 						http.Redirect(w, r, "/getquery", 307)
 					}
+					if r.Method == "GET" && r.URL.Path == "/redirect_test/destination" {
+						http.Redirect(w, r, ts.URL+"/destination", 301)
+					}
+					if r.Method == "GET" && r.URL.Path == "/getcookies" {
+						defer r.Body.Close()
+						w.WriteHeader(200)
+						fmt.Fprint(w, requestHeaders.Get("Cookie"))
+					}
+					if r.Method == "GET" && r.URL.Path == "/setcookies" {
+						defer r.Body.Close()
+						w.Header().Add("Set-Cookie", "foobar=42 ; Path=/")
+						w.WriteHeader(200)
+					}
 					if r.Method == "GET" && r.URL.Path == "/compressed" {
 						defer r.Body.Close()
 						b := "{\"foo\":\"bar\",\"fuu\":\"baz\"}"
@@ -100,17 +115,6 @@ func TestRequest(t *testing.T) {
 						gw.Write([]byte(b))
 					}
 					if r.Method == "GET" && r.URL.Path == "/compressed_deflate" {
-						defer r.Body.Close()
-						b := "{\"foo\":\"bar\",\"fuu\":\"baz\"}"
-						gw, _ := flate.NewWriter(w, -1)
-						defer gw.Close()
-						if strings.Contains(r.Header.Get("Content-Encoding"), "deflate") {
-							w.Header().Add("Content-Encoding", "deflate")
-						}
-						w.WriteHeader(200)
-						gw.Write([]byte(b))
-					}
-					if r.Method == "GET" && r.URL.Path == "/compressed_zlib" {
 						defer r.Body.Close()
 						b := "{\"foo\":\"bar\",\"fuu\":\"baz\"}"
 						gw := zlib.NewWriter(w)
@@ -132,14 +136,6 @@ func TestRequest(t *testing.T) {
 					if r.Method == "GET" && r.URL.Path == "/compressed_deflate_and_return_compressed_without_header" {
 						defer r.Body.Close()
 						b := "{\"foo\":\"bar\",\"fuu\":\"baz\"}"
-						gw, _ := flate.NewWriter(w, -1)
-						defer gw.Close()
-						w.WriteHeader(200)
-						gw.Write([]byte(b))
-					}
-					if r.Method == "GET" && r.URL.Path == "/compressed_zlib_and_return_compressed_without_header" {
-						defer r.Body.Close()
-						b := "{\"foo\":\"bar\",\"fuu\":\"baz\"}"
 						gw := zlib.NewWriter(w)
 						defer gw.Close()
 						w.WriteHeader(200)
@@ -155,14 +151,6 @@ func TestRequest(t *testing.T) {
 					}
 					if r.Method == "POST" && r.URL.Path == "/compressed_deflate" && r.Header.Get("Content-Encoding") == "deflate" {
 						defer r.Body.Close()
-						gr := flate.NewReader(r.Body)
-						defer gr.Close()
-						b, _ := ioutil.ReadAll(gr)
-						w.WriteHeader(201)
-						w.Write(b)
-					}
-					if r.Method == "POST" && r.URL.Path == "/compressed_zlib" && r.Header.Get("Content-Encoding") == "deflate" {
-						defer r.Body.Close()
 						gr, _ := zlib.NewReader(r.Body)
 						defer gr.Close()
 						b, _ := ioutil.ReadAll(gr)
@@ -176,17 +164,6 @@ func TestRequest(t *testing.T) {
 						io.Copy(w, r.Body)
 					}
 					if r.Method == "POST" && r.URL.Path == "/compressed_deflate_and_return_compressed" {
-						defer r.Body.Close()
-						w.Header().Add("Content-Encoding", "deflate")
-						w.WriteHeader(201)
-						io.Copy(w, r.Body)
-					}
-					if r.Method == "POST" && r.URL.Path == "/compressed_zlib_and_return_compressed_without_header" {
-						defer r.Body.Close()
-						w.WriteHeader(201)
-						io.Copy(w, r.Body)
-					}
-					if r.Method == "POST" && r.URL.Path == "/compressed_zlib_and_return_compressed" {
 						defer r.Body.Close()
 						w.Header().Add("Content-Encoding", "deflate")
 						w.WriteHeader(201)
@@ -354,20 +331,103 @@ func TestRequest(t *testing.T) {
 					Expect(string(b)).ShouldNot(Equal("{\"foo\":\"bar\",\"fuu\":\"baz\"}"))
 				})
 
-				g.It("Should return a zlib reader if Content-Encoding is 'deflate'", func() {
-					res, err := Request{Uri: ts.URL + "/compressed_zlib", Compression: Zlib()}.Do()
+				g.It("Should return a deflate reader when using zlib if Content-Encoding is 'deflate'", func() {
+					res, err := Request{Uri: ts.URL + "/compressed_deflate", Compression: Zlib()}.Do()
 					b, _ := ioutil.ReadAll(res.Body)
 					Expect(err).Should(BeNil())
 					Expect(string(b)).Should(Equal("{\"foo\":\"bar\",\"fuu\":\"baz\"}"))
 				})
 
-				g.It("Should not return a zlib reader if Content-Encoding is not 'deflate'", func() {
-					res, err := Request{Uri: ts.URL + "/compressed_zlib_and_return_compressed_without_header", Compression: Zlib()}.Do()
+				g.It("Should not return a delfate reader when using zlib if Content-Encoding is not 'deflate'", func() {
+					res, err := Request{Uri: ts.URL + "/compressed_deflate_and_return_compressed_without_header", Compression: Zlib()}.Do()
 					b, _ := ioutil.ReadAll(res.Body)
 					Expect(err).Should(BeNil())
 					Expect(string(b)).ShouldNot(Equal("{\"foo\":\"bar\",\"fuu\":\"baz\"}"))
 				})
 
+				g.It("Should send cookies from the cookiejar", func() {
+					uri, err := url.Parse(ts.URL + "/getcookies")
+					Expect(err).Should(BeNil())
+
+					jar, err := cookiejar.New(nil)
+					Expect(err).Should(BeNil())
+
+					jar.SetCookies(uri, []*http.Cookie{
+						{
+							Name:  "bar",
+							Value: "foo",
+							Path:  "/",
+						},
+					})
+
+					res, err := Request{
+						Uri:       ts.URL + "/getcookies",
+						CookieJar: jar,
+					}.Do()
+
+					Expect(err).Should(BeNil())
+					str, _ := res.Body.ToString()
+					Expect(str).Should(Equal("bar=foo"))
+					Expect(res.StatusCode).Should(Equal(200))
+					Expect(res.ContentLength).Should(Equal(int64(7)))
+				})
+
+				g.It("Should send cookies added with .AddCookie", func() {
+					c1 := &http.Cookie{Name: "c1", Value: "v1"}
+					c2 := &http.Cookie{Name: "c2", Value: "v2"}
+
+					req := Request{Uri: ts.URL + "/getcookies"}
+					req.AddCookie(c1)
+					req.AddCookie(c2)
+
+					res, err := req.Do()
+					Expect(err).Should(BeNil())
+					str, _ := res.Body.ToString()
+					Expect(str).Should(Equal("c1=v1; c2=v2"))
+					Expect(res.StatusCode).Should(Equal(200))
+					Expect(res.ContentLength).Should(Equal(int64(12)))
+				})
+
+				g.It("Should send cookies added with .WithCookie", func() {
+					c1 := &http.Cookie{Name: "c1", Value: "v2"}
+					c2 := &http.Cookie{Name: "c2", Value: "v3"}
+
+					res, err := Request{Uri: ts.URL + "/getcookies"}.
+						WithCookie(c1).
+						WithCookie(c2).
+						Do()
+					Expect(err).Should(BeNil())
+					str, _ := res.Body.ToString()
+					Expect(str).Should(Equal("c1=v2; c2=v3"))
+					Expect(res.StatusCode).Should(Equal(200))
+					Expect(res.ContentLength).Should(Equal(int64(12)))
+				})
+
+				g.It("Should populate the cookiejar", func() {
+					uri, err := url.Parse(ts.URL + "/setcookies")
+					Expect(err).Should(BeNil())
+
+					jar, _ := cookiejar.New(nil)
+					Expect(err).Should(BeNil())
+
+					res, err := Request{
+						Uri:       ts.URL + "/setcookies",
+						CookieJar: jar,
+					}.Do()
+
+					Expect(err).Should(BeNil())
+
+					Expect(res.Header.Get("Set-Cookie")).Should(Equal("foobar=42 ; Path=/"))
+
+					cookies := jar.Cookies(uri)
+					Expect(len(cookies)).Should(Equal(1))
+
+					cookie := cookies[0]
+					Expect(*cookie).Should(Equal(http.Cookie{
+						Name:  "foobar",
+						Value: "42",
+					}))
+				})
 			})
 
 			g.Describe("POST", func() {
@@ -455,9 +515,9 @@ func TestRequest(t *testing.T) {
 					Expect(res.StatusCode).Should(Equal(201))
 				})
 
-				g.It("Should send body as zlib if compressed", func() {
+				g.It("Should send body as deflate using zlib if compressed", func() {
 					obj := map[string]string{"foo": "bar"}
-					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_zlib", Body: obj, Compression: Zlib()}.Do()
+					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_deflate", Body: obj, Compression: Zlib()}.Do()
 
 					Expect(err).Should(BeNil())
 					str, _ := res.Body.ToString()
@@ -485,9 +545,9 @@ func TestRequest(t *testing.T) {
 					Expect(res.StatusCode).Should(Equal(201))
 				})
 
-				g.It("Should send body as zlib if compressed and parse return body", func() {
+				g.It("Should send body as deflate using zlib if compressed and parse return body", func() {
 					obj := map[string]string{"foo": "bar"}
-					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_zlib_and_return_compressed", Body: obj, Compression: Zlib()}.Do()
+					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_deflate_and_return_compressed", Body: obj, Compression: Zlib()}.Do()
 
 					Expect(err).Should(BeNil())
 					b, _ := ioutil.ReadAll(res.Body)
@@ -515,9 +575,9 @@ func TestRequest(t *testing.T) {
 					Expect(res.StatusCode).Should(Equal(201))
 				})
 
-				g.It("Should send body as zlib if compressed and not parse return body if header not set ", func() {
+				g.It("Should send body as deflate using zlib if compressed and not parse return body if header not set ", func() {
 					obj := map[string]string{"foo": "bar"}
-					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_zlib_and_return_compressed_without_header", Body: obj, Compression: Zlib()}.Do()
+					res, err := Request{Method: "POST", Uri: ts.URL + "/compressed_deflate_and_return_compressed_without_header", Body: obj, Compression: Zlib()}.Do()
 
 					Expect(err).Should(BeNil())
 					b, _ := ioutil.ReadAll(res.Body)
@@ -602,6 +662,12 @@ func TestRequest(t *testing.T) {
 
 					Expect(foobar).Should(Equal(map[string]string{"foo": "bar"}))
 				})
+
+				g.It("Should return the original request response", func() {
+					res, _ := Request{Method: "POST", Uri: ts.URL, Body: `{"foo": "bar"}`}.Do()
+
+					Expect(res.Response).ShouldNot(BeNil())
+				})
 			})
 			g.Describe("Redirects", func() {
 				g.It("Should not follow by default", func() {
@@ -617,7 +683,30 @@ func TestRequest(t *testing.T) {
 						Uri:    ts.URL + "/redirect_test/301",
 					}.Do()
 					Expect(res.StatusCode).Should(Equal(301))
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+
+				g.It("Should throw an error if MaxRedirect limit is exceeded", func() {
+					res, err := Request{
+						Method:       "GET",
+						MaxRedirects: 1,
+						Uri:          ts.URL + "/redirect_test/301",
+					}.Do()
+					Expect(res.StatusCode).Should(Equal(302))
 					Expect(err).Should(HaveOccurred())
+				})
+
+				g.It("Should copy request headers headers when redirecting if specified", func() {
+					req := Request{
+						Method:          "GET",
+						Uri:             ts.URL + "/redirect_test/301",
+						MaxRedirects:    4,
+						RedirectHeaders: true,
+					}
+					req.AddHeader("Testheader", "TestValue")
+					res, _ := req.Do()
+					Expect(res.StatusCode).Should(Equal(200))
+					Expect(requestHeaders.Get("Testheader")).Should(Equal("TestValue"))
 				})
 
 				g.It("Should follow only specified number of MaxRedirects", func() {
@@ -641,6 +730,14 @@ func TestRequest(t *testing.T) {
 						MaxRedirects: 4,
 					}.Do()
 					Expect(res.StatusCode).Should(Equal(200))
+				})
+
+				g.It("Should return final URL of the response when redirecting", func() {
+					res, _ := Request{
+						Uri:          ts.URL + "/redirect_test/destination",
+						MaxRedirects: 2,
+					}.Do()
+					Expect(res.Uri).Should(Equal(ts.URL + "/destination"))
 				})
 			})
 		})
@@ -712,10 +809,46 @@ func TestRequest(t *testing.T) {
 					Expect(res).Should(BeNil())
 					Expect(err.(*Error).Timeout()).Should(BeTrue())
 				})
+				g.It("Should request timeout after a custom amount of time even with proxy", func() {
+					proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						time.Sleep(2000 * time.Millisecond)
+						w.WriteHeader(200)
+					}))
+					SetConnectTimeout(1000 * time.Millisecond)
+					start := time.Now()
+					request := Request{
+						Uri:     ts.URL,
+						Proxy:   proxy.URL,
+						Timeout: 500 * time.Millisecond,
+					}
+					res, err := request.Do()
+					elapsed := time.Since(start)
+
+					Expect(elapsed).Should(BeNumerically("<", 550*time.Millisecond))
+					Expect(elapsed).Should(BeNumerically(">=", 500*time.Millisecond))
+					Expect(res).Should(BeNil())
+					Expect(err.(*Error).Timeout()).Should(BeTrue())
+				})
 			})
 		})
 
 		g.Describe("Misc", func() {
+			g.It("Should set default golang user agent when not explicitly passed", func() {
+				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					Expect(r.Header.Get("User-Agent")).ShouldNot(BeZero())
+					Expect(r.Host).Should(Equal("foobar.com"))
+
+					w.WriteHeader(200)
+				}))
+				defer ts.Close()
+
+				req := Request{Uri: ts.URL, Host: "foobar.com"}
+				res, err := req.Do()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(res.StatusCode).Should(Equal(200))
+			})
+
 			g.It("Should offer to set request headers", func() {
 				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					Expect(r.Header.Get("User-Agent")).Should(Equal("foobaragent"))
@@ -723,6 +856,7 @@ func TestRequest(t *testing.T) {
 					Expect(r.Header.Get("Accept")).Should(Equal("application/json"))
 					Expect(r.Header.Get("Content-Type")).Should(Equal("application/json"))
 					Expect(r.Header.Get("X-Custom")).Should(Equal("foobar"))
+					Expect(r.Header.Get("X-Custom2")).Should(Equal("barfoo"))
 
 					w.WriteHeader(200)
 				}))
@@ -730,6 +864,23 @@ func TestRequest(t *testing.T) {
 
 				req := Request{Uri: ts.URL, Accept: "application/json", ContentType: "application/json", UserAgent: "foobaragent", Host: "foobar.com"}
 				req.AddHeader("X-Custom", "foobar")
+				res, _ := req.WithHeader("X-Custom2", "barfoo").Do()
+
+				Expect(res.StatusCode).Should(Equal(200))
+			})
+
+			g.It("Should call hook before request", func() {
+				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					Expect(r.Header.Get("X-Custom")).Should(Equal("foobar"))
+
+					w.WriteHeader(200)
+				}))
+				defer ts.Close()
+
+				hook := func(goreq *Request, httpreq *http.Request) {
+					httpreq.Header.Add("X-Custom", "foobar")
+				}
+				req := Request{Uri: ts.URL, OnBeforeRequest: hook}
 				res, _ := req.Do()
 
 				Expect(res.StatusCode).Should(Equal(200))
@@ -747,7 +898,7 @@ func TestRequest(t *testing.T) {
 				req.Do()
 			})
 			g.It("Should change transport TLS config if Request.Insecure is set", func() {
-				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(200)
 				}))
 				defer ts.Close()
@@ -759,8 +910,59 @@ func TestRequest(t *testing.T) {
 				}
 				res, _ := req.Do()
 
-				Expect(defaultTransport.TLSClientConfig.InsecureSkipVerify).Should(Equal(true))
+				Expect(DefaultClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify).Should(Equal(true))
 				Expect(res.StatusCode).Should(Equal(200))
+			})
+			g.It("Should work if a different transport is specified", func() {
+				ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(200)
+				}))
+				defer ts.Close()
+				var currentTransport = DefaultTransport
+				DefaultTransport = &http.Transport{Dial: DefaultDialer.Dial}
+
+				req := Request{
+					Insecure: true,
+					Uri:      ts.URL,
+					Host:     "foobar.com",
+				}
+				res, _ := req.Do()
+
+				Expect(DefaultClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify).Should(Equal(true))
+				Expect(res.StatusCode).Should(Equal(200))
+
+				DefaultTransport = currentTransport
+
+			})
+			g.It("GetRequest should return the underlying httpRequest ", func() {
+				req := Request{
+					Host: "foobar.com",
+				}
+
+				request, _ := req.NewRequest()
+				Expect(request).ShouldNot(BeNil())
+				Expect(request.Host).Should(Equal(req.Host))
+			})
+
+			g.It("Response should allow to cancel in-flight request", func() {
+				unblockc := make(chan bool)
+				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					fmt.Fprintf(w, "Hello")
+					w.(http.Flusher).Flush()
+					<-unblockc
+				}))
+				defer ts.Close()
+				defer close(unblockc)
+
+				req := Request{
+					Insecure: true,
+					Uri:      ts.URL,
+					Host:     "foobar.com",
+				}
+				res, _ := req.Do()
+				res.CancelRequest()
+				_, err := ioutil.ReadAll(res.Body)
+				g.Assert(err != nil).IsTrue()
 			})
 		})
 
@@ -781,7 +983,7 @@ func TestRequest(t *testing.T) {
 				ts.Close()
 			})
 			g.It("Should throw an error when FromJsonTo fails", func() {
-				res, _ := Request{Method: "POST", Uri: ts.URL, Body: `{"foo": "bar"`}.Do()
+				res, _ := Request{Method: "POST", Uri: ts.URL, Body: `{"foo" "bar"}`}.Do()
 				var foobar map[string]string
 
 				err := res.Body.FromJsonTo(&foobar)
@@ -806,10 +1008,14 @@ func TestRequest(t *testing.T) {
 					if r.Method == "GET" && r.URL.Path == "/" {
 						lastReq = r
 						w.Header().Add("x-forwarded-for", "test")
+						w.Header().Add("Set-Cookie", "foo=bar")
 						w.WriteHeader(200)
 						w.Write([]byte(""))
+					} else if r.Method == "GET" && r.URL.Path == "/redirect_test/301" {
+						http.Redirect(w, r, "/", 301)
 					}
 				}))
+
 			})
 
 			g.BeforeEach(func() {
@@ -829,6 +1035,12 @@ func TestRequest(t *testing.T) {
 				Expect(lastReq.Host).Should(Equal(proxiedHost))
 			})
 
+			g.It("Should not redirect if MaxRedirects is not set", func() {
+				res, err := Request{Uri: ts.URL + "/redirect_test/301", Proxy: ts.URL}.Do()
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(res.StatusCode).Should(Equal(301))
+			})
+
 			g.It("Should use Proxy authentication", func() {
 				proxiedHost := "www.google.com"
 				uri := strings.Replace(ts.URL, "http://", "http://user:pass@", -1)
@@ -837,6 +1049,18 @@ func TestRequest(t *testing.T) {
 				Expect(res.Header.Get("x-forwarded-for")).Should(Equal("test"))
 				Expect(lastReq).ShouldNot(BeNil())
 				Expect(lastReq.Header.Get("Proxy-Authorization")).Should(Equal("Basic dXNlcjpwYXNz"))
+			})
+
+			g.It("Should propagate cookies", func() {
+				proxiedHost, _ := url.Parse("http://www.google.com")
+				jar, _ := cookiejar.New(nil)
+				res, err := Request{Uri: proxiedHost.String(), Proxy: ts.URL, CookieJar: jar}.Do()
+				Expect(err).Should(BeNil())
+				Expect(res.Header.Get("x-forwarded-for")).Should(Equal("test"))
+
+				Expect(jar.Cookies(proxiedHost)).Should(HaveLen(1))
+				Expect(jar.Cookies(proxiedHost)[0].Name).Should(Equal("foo"))
+				Expect(jar.Cookies(proxiedHost)[0].Value).Should(Equal("bar"))
 			})
 
 		})
@@ -889,4 +1113,92 @@ func TestRequest(t *testing.T) {
 			})
 		})
 	})
+}
+
+func Test_paramParse(t *testing.T) {
+	type Form struct {
+		A string
+		B string
+		c string
+	}
+
+	type AnnotedForm struct {
+		Foo  string `url:"foo_bar"`
+		Baz  string `url:"bad,omitempty"`
+		Norf string `url:"norf,omitempty"`
+		Qux  string `url:"-"`
+	}
+
+	type EmbedForm struct {
+		AnnotedForm `url:",squash"`
+		Form        `url:",squash"`
+		Corge       string `url:"corge"`
+	}
+
+	g := Goblin(t)
+	RegisterFailHandler(func(m string, _ ...int) { g.Fail(m) })
+	var form = Form{}
+	var aform = AnnotedForm{}
+	var eform = EmbedForm{}
+	var values = url.Values{}
+	const result = "a=1&b=2"
+	g.Describe("QueryString ParamParse", func() {
+		g.Before(func() {
+			form.A = "1"
+			form.B = "2"
+			form.c = "3"
+			aform.Foo = "xyz"
+			aform.Norf = "abc"
+			aform.Qux = "def"
+			eform.Form = form
+			eform.AnnotedForm = aform
+			eform.Corge = "xxx"
+			values.Add("a", "1")
+			values.Add("b", "2")
+		})
+		g.It("Should accept struct and ignores unexported field", func() {
+			str, err := paramParse(form)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+		g.It("Should accept struct and use the field annotations", func() {
+			str, err := paramParse(aform)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal("foo_bar=xyz&norf=abc"))
+		})
+		g.It("Should accept pointer of struct", func() {
+			str, err := paramParse(&form)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+		g.It("Should accept recursive pointer of struct", func() {
+			f := &form
+			ff := &f
+			str, err := paramParse(ff)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+		g.It("Should accept embedded struct", func() {
+			str, err := paramParse(eform)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal("a=1&b=2&corge=xxx&foo_bar=xyz&norf=abc"))
+		})
+		g.It("Should accept interface{} which forcely converted by struct", func() {
+			str, err := paramParse(interface{}(&form))
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+
+		g.It("Should accept url.Values", func() {
+			str, err := paramParse(values)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+		g.It("Should accept &url.Values", func() {
+			str, err := paramParse(&values)
+			Expect(err).Should(BeNil())
+			Expect(str).Should(Equal(result))
+		})
+	})
+
 }

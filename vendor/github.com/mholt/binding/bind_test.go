@@ -19,7 +19,7 @@ type Model struct {
 	Child ChildModel `json:"child"`
 }
 
-func (m *Model) FieldMap() FieldMap {
+func (m *Model) FieldMap(req *http.Request) FieldMap {
 	return FieldMap{
 		&m.Foo: Field{
 			Form:     "foo",

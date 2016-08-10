@@ -73,34 +73,47 @@ func main() {
 }
 ```
 
-### Using existing muxers
+### Using xmux
 
-How to use it with a non- `net/context` aware router. Lets try with the Go's `ServerMux`:
+Xhandler comes with an optional context aware [muxer](https://github.com/rs/xmux) forked from [httprouter](https://github.com/julienschmidt/httprouter):
 
 ```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/rs/xhandler"
+	"github.com/rs/xmux"
+	"golang.org/x/net/context"
+)
+
 func main() {
 	c := xhandler.Chain{}
 
 	// Append a context-aware middleware handler
 	c.UseC(xhandler.CloseHandler)
 
-	// Mix it with a non-context-aware middleware handler
-	c.Use(cors.Default().Handler)
-
 	// Another context-aware middleware handler
 	c.UseC(xhandler.TimeoutHandler(2 * time.Second))
 
-	mux := http.NewServeMux()
+	mux := xmux.New()
 
 	// Use c.Handler to terminate the chain with your final handler
-	mux.Handle("/", c.Handler(xhandler.HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "Welcome to the home page!")
-	})))
+	mux.GET("/welcome/:name", xhandler.HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, "Welcome %s!", xmux.Params(ctx).Get("name"))
+	}))
 
-	// You can reuse the same chain for other handlers
-	mux.Handle("/api", c.Handler(apiHandler))
+	if err := http.ListenAndServe(":8080", c.Handler(mux)); err != nil {
+		log.Fatal(err)
+	}
 }
 ```
+
+See [xmux](https://github.com/rs/xmux) for more examples.
 
 ## Context Aware Middleware
 
@@ -110,6 +123,7 @@ Feel free to put up a PR linking your middleware if you have built one:
 
 | Middleware | Author | Description |
 | ---------- | ------ | ----------- |
+| [xmux](https://github.com/rs/xmux) | [Olivier Poitrey](https://github.com/rs) | HTTP request muxer |
 | [xlog](https://github.com/rs/xlog) | [Olivier Poitrey](https://github.com/rs) | HTTP handler logger |
 | [xstats](https://github.com/rs/xstats) | [Olivier Poitrey](https://github.com/rs) | A generic client for service instrumentation |
 | [xaccess](https://github.com/rs/xaccess) | [Olivier Poitrey](https://github.com/rs) | HTTP handler access logger with [xlog](https://github.com/rs/xlog) and [xstats](https://github.com/rs/xstats) |

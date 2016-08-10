@@ -12,6 +12,7 @@ import (
 )
 
 type handler struct{}
+
 type key int
 
 const contextKey key = 0

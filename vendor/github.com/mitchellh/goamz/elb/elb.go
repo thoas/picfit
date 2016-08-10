@@ -4,11 +4,12 @@ package elb
 
 import (
 	"encoding/xml"
-	"github.com/mitchellh/goamz/aws"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/mitchellh/goamz/aws"
 )
 
 // The ELB type encapsulates operations operations with the elb endpoint.
@@ -115,11 +116,6 @@ type InstanceState struct {
 	Description string `xml:"Description"`
 	State       string `xml:"State"`
 	ReasonCode  string `xml:"ReasonCode"`
-}
-
-// An Instance attaches to an elb
-type AvailabilityZone struct {
-	AvailabilityZone string `xml:"member"`
 }
 
 // ----------------------------------------------------------------------------
@@ -276,15 +272,16 @@ func (elb *ELB) DeleteLoadBalancer(options *DeleteLoadBalancer) (resp *SimpleRes
 
 // An individual load balancer
 type LoadBalancer struct {
-	LoadBalancerName  string             `xml:"LoadBalancerName"`
-	Listeners         []Listener         `xml:"ListenerDescriptions>member"`
-	Instances         []Instance         `xml:"Instances>member"`
-	HealthCheck       HealthCheck        `xml:"HealthCheck"`
-	AvailabilityZones []AvailabilityZone `xml:"AvailabilityZones"`
-	DNSName           string             `xml:"DNSName"`
-	SecurityGroups    []string           `xml:"SecurityGroups>member"`
-	Scheme            string             `xml:"Scheme"`
-	Subnets           []string           `xml:"Subnets>member"`
+	LoadBalancerName  string      `xml:"LoadBalancerName"`
+	Listeners         []Listener  `xml:"ListenerDescriptions>member"`
+	Instances         []Instance  `xml:"Instances>member"`
+	HealthCheck       HealthCheck `xml:"HealthCheck"`
+	AvailabilityZones []string    `xml:"AvailabilityZones>member"`
+	HostedZoneNameID  string      `xml:"CanonicalHostedZoneNameID"`
+	DNSName           string      `xml:"DNSName"`
+	SecurityGroups    []string    `xml:"SecurityGroups>member"`
+	Scheme            string      `xml:"Scheme"`
+	Subnets           []string    `xml:"Subnets>member"`
 }
 
 // DescribeLoadBalancer request params

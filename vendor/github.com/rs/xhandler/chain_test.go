@@ -110,3 +110,100 @@ func TestChainHandlerC(t *testing.T) {
 
 	assert.Equal(t, 3, handlerCalls, "all handler called once")
 }
+
+func TestAdd(t *testing.T) {
+	handlerCalls := 0
+	h1 := func(next HandlerC) HandlerC {
+		return HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			handlerCalls++
+			ctx = context.WithValue(ctx, "test", 1)
+			next.ServeHTTPC(ctx, w, r)
+		})
+	}
+	h2 := func(next http.Handler) http.Handler {
+		handlerCalls++
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Change r and w values
+			w = httptest.NewRecorder()
+			r = &http.Request{}
+			next.ServeHTTP(w, r)
+		})
+	}
+	h3 := func(next HandlerC) HandlerC {
+		return HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			handlerCalls++
+			ctx = context.WithValue(ctx, "test", 2)
+			next.ServeHTTPC(ctx, w, r)
+		})
+	}
+
+	c := Chain{}
+	c.Add(h1, h2, h3)
+	h := c.HandlerC(HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		handlerCalls++
+
+		assert.Equal(t, 2, ctx.Value("test"),
+			"third handler should overwrite first handler's context value")
+		assert.Equal(t, 1, ctx.Value("mainCtx"),
+			"the mainCtx value should be pass through")
+	}))
+
+	mainCtx := context.WithValue(context.Background(), "mainCtx", 1)
+	h.ServeHTTPC(mainCtx, nil, nil)
+	assert.Equal(t, 4, handlerCalls, "all handler called once")
+}
+
+func TestWith(t *testing.T) {
+	handlerCalls := 0
+	h1 := func(next HandlerC) HandlerC {
+		return HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			handlerCalls++
+			ctx = context.WithValue(ctx, "test", 1)
+			next.ServeHTTPC(ctx, w, r)
+		})
+	}
+	h2 := func(next http.Handler) http.Handler {
+		handlerCalls++
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Change r and w values
+			w = httptest.NewRecorder()
+			r = &http.Request{}
+			next.ServeHTTP(w, r)
+		})
+	}
+	h3 := func(next HandlerC) HandlerC {
+		return HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			handlerCalls++
+			ctx = context.WithValue(ctx, "test", 2)
+			next.ServeHTTPC(ctx, w, r)
+		})
+	}
+
+	c := Chain{}
+	c.Add(h1)
+	d := c.With(h2, h3)
+
+	h := c.HandlerC(HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		handlerCalls++
+
+		assert.Equal(t, 1, ctx.Value("test"),
+			"third handler should not overwrite the first handler's context value")
+		assert.Equal(t, 1, ctx.Value("mainCtx"),
+			"the mainCtx value should be pass through")
+	}))
+	i := d.HandlerC(HandlerFuncC(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		handlerCalls++
+
+		assert.Equal(t, 2, ctx.Value("test"),
+			"third handler should overwrite first handler's context value")
+		assert.Equal(t, 1, ctx.Value("mainCtx"),
+			"the mainCtx value should be pass through")
+	}))
+
+	mainCtx := context.WithValue(context.Background(), "mainCtx", 1)
+	h.ServeHTTPC(mainCtx, nil, nil)
+	assert.Equal(t, 2, handlerCalls, "all handlers called once")
+	handlerCalls = 0
+	i.ServeHTTPC(mainCtx, nil, nil)
+	assert.Equal(t, 4, handlerCalls, "all handler called once")
+}

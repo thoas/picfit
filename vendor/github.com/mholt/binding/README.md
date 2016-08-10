@@ -52,7 +52,7 @@ type ContactForm struct {
 }
 
 // Then provide a field mapping (pointer receiver is vital)
-func (cf *ContactForm) FieldMap() binding.FieldMap {
+func (cf *ContactForm) FieldMap(req *http.Request) binding.FieldMap {
 	return binding.FieldMap{
 		&cf.User.ID: "user_id",
 		&cf.Email:   "email",
@@ -102,7 +102,7 @@ type MultipartForm struct {
 	Data *multipart.FileHeader `json:"data"`
 }
 
-func (f *MultipartForm) FieldMap() binding.FieldMap {
+func (f *MultipartForm) FieldMap(req *http.Request) binding.FieldMap {
 	return binding.FieldMap{
 		&f.Data: "data",
 	}
