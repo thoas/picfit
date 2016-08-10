@@ -62,19 +62,6 @@ func Run(ctx netContext.Context) error {
 	router.Use(context.SetEngine(engine.FromContext(ctx)))
 	router.Use(context.SetConfig(cfg))
 
-	for name, view := range methods {
-		views := []gin.HandlerFunc{
-			middleware.ParametersParser(),
-			middleware.KeyParser(),
-			middleware.URLParser(),
-			middleware.OperationParser(),
-			view,
-		}
-
-		router.GET(fmt.Sprintf("/%s", name), views...)
-		router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
-	}
-
 	if cfg.AllowedOrigins != nil && cfg.AllowedMethods != nil {
 		co := cors.New(cors.Options{
 			AllowedOrigins: cfg.AllowedOrigins,
@@ -86,6 +73,19 @@ func Run(ctx netContext.Context) error {
 
 			c.Next()
 		})
+	}
+
+	for name, view := range methods {
+		views := []gin.HandlerFunc{
+			middleware.ParametersParser(),
+			middleware.KeyParser(),
+			middleware.URLParser(),
+			middleware.OperationParser(),
+			view,
+		}
+
+		router.GET(fmt.Sprintf("/%s", name), views...)
+		router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
 	}
 
 	if cfg.Options.EnableUpload {
