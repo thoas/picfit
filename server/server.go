@@ -31,8 +31,8 @@ func Load(path string) error {
 	return Run(ctx)
 }
 
-// Run loads a new server
-func Run(ctx netContext.Context) error {
+// Router returns a gin Engine
+func Router(ctx netContext.Context) (*gin.Engine, error) {
 	router := gin.Default()
 
 	cfg := config.FromContext(ctx)
@@ -49,7 +49,7 @@ func Run(ctx netContext.Context) error {
 		client, err := raven.NewClient(cfg.Sentry.DSN, cfg.Sentry.Tags)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		router.Use(sentry.Recovery(client, true))
@@ -96,7 +96,18 @@ func Run(ctx netContext.Context) error {
 		router.DELETE("/{path:[\\w\\-/.]+}", views.DeleteView)
 	}
 
-	router.Run(fmt.Sprintf(":%s", strconv.Itoa(cfg.Port)))
+	return router, nil
+}
+
+// Run loads a new server
+func Run(ctx netContext.Context) error {
+	engine, err := Router(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	engine.Run(fmt.Sprintf(":%s", strconv.Itoa(config.FromContext(ctx).Port)))
 
 	return nil
 }

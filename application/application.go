@@ -20,14 +20,19 @@ import (
 	"github.com/thoas/picfit/storage"
 )
 
-// Load creates a net/context from a file config path
-func Load(path string) (context.Context, error) {
-	cfg, err := config.Load(path)
+// LoadFromConfigContent returns a net/context from content
+func LoadFromConfigContent(content string) (context.Context, error) {
+	cfg, err := config.LoadFromContent(content)
 
 	if err != nil {
 		return nil, err
 	}
 
+	return LoadFromConfig(cfg)
+}
+
+// LoadFromConfig returns a net/context from a config.Config instance
+func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
 	sourceStorage, destinationStorage, err := storage.NewStoragesFromConfig(cfg)
@@ -57,6 +62,17 @@ func Load(path string) (context.Context, error) {
 	ctx = logger.NewContext(ctx, *logrus.New())
 
 	return ctx, nil
+}
+
+// Load creates a net/context from a file config path
+func Load(path string) (context.Context, error) {
+	cfg, err := config.Load(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return LoadFromConfig(cfg)
 }
 
 // Store stores an image file with the defined filepath

@@ -17,10 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/gokvstores"
-	"github.com/thoas/picfit/engines"
+	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/signature"
 )
 
@@ -35,14 +38,12 @@ type TestRequest struct {
 	ContentType string
 }
 
-func newDummyApplication() *Application {
-	app := NewApplication()
-	app.SourceStorage = &dummy.DummyStorage{}
-	app.DestStorage = &dummy.DummyStorage{}
-	app.KVStore = &dummy.DummyKVStore{}
-	app.Engine = &engines.GoImageEngine{}
+func newDummyApplication() context.Context {
+	ctx, err := application.LoadFromConfig(config.DefaultConfig())
 
-	return app
+	assert.Nil(t, err)
+
+	return ctx
 }
 
 func newHTTPServer() *httptest.Server {

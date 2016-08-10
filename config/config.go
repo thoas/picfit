@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"bytes"
+
+	"github.com/spf13/viper"
+)
 
 // Shard is a struct to allow shard location when files are uploaded
 type Shard struct {
@@ -66,30 +70,67 @@ type Config struct {
 	KVStore        *KVStore
 }
 
+// DefaultConfig returns a default config instance
+func DefaultConfig() *Config {
+	return &Config{
+		Options: &Options{
+			EnableDelete:  false,
+			EnableUpload:  false,
+			DefaultFormat: DefaultFormat,
+			Quality:       DefaultQuality,
+			Format:        "",
+		},
+		Port: DefaultPort,
+		KVStore: &KVStore{
+			Type: "dummy",
+		},
+		Shard: &Shard{
+			Width: DefaultShardWidth,
+			Depth: DefaultShardDepth,
+		},
+	}
+}
+
 // Load creates a Config struct from a config file path
 func Load(path string) (*Config, error) {
 	config := &Config{}
 
-	viper.SetDefault("options", &Options{
-		EnableDelete:  false,
-		EnableUpload:  false,
-		DefaultFormat: DefaultFormat,
-		Quality:       DefaultQuality,
-		Format:        "",
-	})
+	defaultConfig := DefaultConfig()
 
-	viper.SetDefault("shard", &Shard{
-		Width: DefaultShardWidth,
-		Depth: DefaultShardDepth,
-	})
-
-	viper.SetDefault("port", DefaultPort)
-	viper.SetDefault("kvstore", &KVStore{
-		Type: "dummy",
-	})
+	viper.SetDefault("options", defaultConfig.Options)
+	viper.SetDefault("shard", defaultConfig.Shard)
+	viper.SetDefault("port", defaultConfig.Port)
+	viper.SetDefault("kvstore", defaultConfig.KVStore)
+	viper.SetEnvPrefix("picfit")
 
 	viper.SetConfigFile(path)
 	err := viper.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// LoadFromContent creates a Config struct from a config content
+func LoadFromContent(content string) (*Config, error) {
+	config := &Config{}
+
+	defaultConfig := DefaultConfig()
+
+	viper.SetDefault("options", defaultConfig.Options)
+	viper.SetDefault("shard", defaultConfig.Shard)
+	viper.SetDefault("port", defaultConfig.Port)
+	viper.SetDefault("kvstore", defaultConfig.KVStore)
+	viper.SetEnvPrefix("picfit")
+
+	err := viper.ReadConfig(bytes.NewBuffer([]byte(content)))
+
 	if err != nil {
 		return nil, err
 	}
