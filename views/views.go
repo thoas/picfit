@@ -53,7 +53,7 @@ func UploadView(c *gin.Context) {
 
 // DeleteView deletes a file from storages
 func DeleteView(c *gin.Context) {
-	err := application.ImageCleanup(c, c.Param("path"))
+	err := application.Delete(c, c.Param("path"))
 
 	if err != nil {
 		errs.Handle(err, c.Writer)

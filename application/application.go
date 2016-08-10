@@ -100,7 +100,9 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
-		err = con.SetAdd(filepath+":children", key)
+		parentKey := fmt.Sprintf("%s:children", hash.Tokey(filepath))
+
+		err = con.SetAdd(parentKey, key)
 
 		if err != nil {
 			l.Fatal(err)
@@ -113,8 +115,8 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	return nil
 }
 
-// ImageCleanup removes a file from kvstore and storage
-func ImageCleanup(ctx context.Context, filepath string) error {
+// Delete removes a file from kvstore and storage
+func Delete(ctx context.Context, filepath string) error {
 	k := kvstore.FromContext(ctx)
 	con := k.Connection()
 	defer con.Close()
