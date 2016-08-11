@@ -39,7 +39,7 @@ import:
   - package: github.com/stretchr/testify
     version: e4ec8152c15fc46bd5056ce65997a07c7d415325
   - package: github.com/mholt/binding
-    version: 6c082304f300fc70793cb0be18af0fdd4acd2b75
+    version: 89411c4ffb61f0ebef45d8bdb830103b358ef9fa
   - package: github.com/rs/xhandler
   - package: github.com/spf13/viper
     version: 346299ea79e446ebdddb834371ceba2e5926b732
