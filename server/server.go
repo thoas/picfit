@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/getsentry/raven-go"
@@ -17,6 +18,7 @@ import (
 	"github.com/thoas/picfit/middleware/context"
 	"github.com/thoas/picfit/storage"
 	"github.com/thoas/picfit/views"
+	"github.com/thoas/stats"
 	netContext "golang.org/x/net/context"
 )
 
@@ -75,17 +77,35 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		})
 	}
 
+	s := stats.New()
+
+	router.Use(func() gin.HandlerFunc {
+		return func(c *gin.Context) {
+			beginning, recorder := s.Begin(c.Writer)
+			c.Next()
+			s.End(beginning, recorder)
+		}
+	}())
+
+	router.GET("/stats", func(c *gin.Context) {
+		c.JSON(http.StatusOK, s.Data())
+	})
+
 	for name, view := range methods {
 		views := []gin.HandlerFunc{
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
+			middleware.Security(),
 			middleware.URLParser(),
 			middleware.OperationParser(),
 			view,
 		}
 
 		router.GET(fmt.Sprintf("/%s", name), views...)
-		router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
+
+		if cfg.Storage != nil && cfg.Storage.Src != nil {
+			router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
+		}
 	}
 
 	if cfg.Options.EnableUpload {
@@ -93,7 +113,7 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 	}
 
 	if cfg.Options.EnableDelete {
-		router.DELETE("/{path:[\\w\\-/.]+}", views.DeleteView)
+		router.DELETE("/*path", views.DeleteView)
 	}
 
 	return router, nil

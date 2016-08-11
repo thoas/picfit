@@ -22,6 +22,8 @@ import:
     version: 547e518040cfb96576b507d2f26779ab9c6fc829
   - package: github.com/gin-gonic/gin
     version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
+  - package: github.com/thoas/stats
+    version: 152b5d051953fdb6e45f14b6826962aadc032324
   - package: github.com/imdario/mergo
     version: 6ce7536fed6623eff47b95768f858a0f8d1ac57b
   - package: github.com/mitchellh/goamz

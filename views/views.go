@@ -53,7 +53,7 @@ func UploadView(c *gin.Context) {
 
 // DeleteView deletes a file from storages
 func DeleteView(c *gin.Context) {
-	err := application.Delete(c, c.Param("path"))
+	err := application.Delete(c, c.Param("path")[1:])
 
 	if err != nil {
 		errs.Handle(err, c.Writer)
@@ -66,7 +66,7 @@ func DeleteView(c *gin.Context) {
 
 // GetView generates an image synchronously and return its information from storages
 func GetView(c *gin.Context) {
-	file, err := application.ImageFileFromContext(c, true, true)
+	file, err := application.ImageFileFromContext(c, false, false)
 
 	if err != nil {
 		errs.Handle(err, c.Writer)
@@ -83,7 +83,7 @@ func GetView(c *gin.Context) {
 
 // RedirectView redirects to the image using base url from storage
 func RedirectView(c *gin.Context) {
-	file, err := application.ImageFileFromContext(c, true, true)
+	file, err := application.ImageFileFromContext(c, false, false)
 
 	if err != nil {
 		errs.Handle(err, c.Writer)

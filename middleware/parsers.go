@@ -39,6 +39,7 @@ func ParametersParser() gin.HandlerFunc {
 		} else {
 			if c.Query("url") == "" {
 				c.String(http.StatusBadRequest, "Request should contains parameters or query string")
+				c.Abort()
 				return
 			}
 		}
@@ -89,6 +90,7 @@ func URLParser() gin.HandlerFunc {
 
 			if err != nil {
 				c.String(http.StatusBadRequest, fmt.Sprintf("URL %s is not valid", value))
+				c.Abort()
 				return
 			}
 
@@ -98,6 +100,7 @@ func URLParser() gin.HandlerFunc {
 
 			if !ok {
 				c.String(http.StatusBadRequest, fmt.Sprintf("Mimetype %s is not supported", mimetype))
+				c.Abort()
 				return
 			}
 
@@ -117,6 +120,7 @@ func OperationParser() gin.HandlerFunc {
 
 		if !ok {
 			c.String(http.StatusBadRequest, "`op` parameter or query string cannot be empty")
+			c.Abort()
 			return
 		}
 
@@ -124,6 +128,7 @@ func OperationParser() gin.HandlerFunc {
 
 		if !ok {
 			c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operation))
+			c.Abort()
 			return
 		}
 

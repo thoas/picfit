@@ -116,16 +116,22 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
-		parentKey := fmt.Sprintf("%s:children", hash.Tokey(filepath))
+		parentKey := hash.Tokey(filepath)
 
-		err = con.SetAdd(parentKey, key)
+		if prefix != "" {
+			parentKey = prefix + parentKey
+		}
+
+		parentKey = fmt.Sprintf("%s:children", parentKey)
+
+		err = con.SetAdd(parentKey, storeKey)
 
 		if err != nil {
 			l.Fatal(err)
 			return err
 		}
 
-		l.Infof("Put key into set %s:children => %s in kvstore", filepath, key)
+		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, key)
 	}
 
 	return nil
@@ -141,28 +147,42 @@ func Delete(ctx context.Context, filepath string) error {
 
 	l.Infof("Deleting source storage file: %s", filepath)
 
-	err := storage.SourceFromContext(ctx).Delete(filepath)
+	sourceStorage := storage.SourceFromContext(ctx)
+
+	if !sourceStorage.Exists(filepath) {
+		l.Infof("File %s does not exist anymore on source storage", filepath)
+
+		return errs.ErrFileNotExists
+	}
+
+	err := sourceStorage.Delete(filepath)
 
 	if err != nil {
 		return err
 	}
 
-	childrenPath := filepath + ":children"
+	parentKey := hash.Tokey(filepath)
+
+	prefix := config.FromContext(ctx).KVStore.Prefix
+
+	if prefix != "" {
+		parentKey = prefix + parentKey
+	}
+
+	childrenKey := fmt.Sprintf("%s:children", parentKey)
+
+	if !con.Exists(childrenKey) {
+		l.Infof("Children key %s does not exist for parent %s", childrenKey, parentKey)
+
+		return errs.ErrKeyNotExists
+	}
 
 	// Get the list of items to cleanup.
-	children := con.SetMembers(childrenPath)
+	children := con.SetMembers(childrenKey)
 
-	// Delete them right away, we don't care about them anymore.
-	l.Infof("Deleting children set: %s", childrenPath)
-
-	err = con.Delete(childrenPath)
-
-	if err != nil {
-		return err
-	}
-
-	// No children? Okay..
 	if children == nil {
+		l.Infof("No children to delete for %s", parentKey)
+
 		return nil
 	}
 
@@ -183,7 +203,7 @@ func Delete(ctx context.Context, filepath string) error {
 			return err
 		}
 
-		// And try to delete it all. Ignore errors.
+		// And try to delete it all.
 		err = store.Delete(dstfile)
 
 		if err != nil {
@@ -196,7 +216,16 @@ func Delete(ctx context.Context, filepath string) error {
 			return err
 		}
 
-		l.Infof("Deleting child %s and its KV store entry %s", dstfile, key)
+		l.Infof("Deleting child %s and its entry %s", dstfile, key)
+	}
+
+	// Delete them right away, we don't care about them anymore.
+	l.Infof("Deleting children set %s", childrenKey)
+
+	err = con.Delete(childrenKey)
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -223,6 +252,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 		Headers: map[string]string{},
 	}
 	var err error
+	var filepath string
 
 	prefix := cfg.KVStore.Prefix
 
@@ -262,7 +292,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			// URL provided we use http protocol to retrieve it
 			s := storage.SourceFromContext(c)
 
-			filepath := parameters["path"]
+			filepath = parameters["path"]
 
 			if !s.Exists(filepath) {
 				return nil, errs.ErrFileNotExists
@@ -294,8 +324,6 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	file.Headers["ETag"] = key
 
 	if stored == "" {
-		filepath := c.Param("path")
-
 		if async == true {
 			go Store(c, filepath, file)
 		} else {

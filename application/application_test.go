@@ -1,10 +1,11 @@
-package application
+package application_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -24,7 +25,10 @@ import (
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
+	"github.com/thoas/picfit/kvstore"
+	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
+	"github.com/thoas/picfit/storage"
 )
 
 type Dimension struct {
@@ -38,10 +42,18 @@ type TestRequest struct {
 	ContentType string
 }
 
-func newDummyApplication() context.Context {
-	ctx, err := application.LoadFromConfig(config.DefaultConfig())
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-	assert.Nil(t, err)
+func RandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func newDummyApplication() context.Context {
+	ctx, _ := application.LoadFromConfig(config.DefaultConfig())
 
 	return ctx
 }
@@ -80,7 +92,7 @@ func TestSignatureApplicationNotAuthorized(t *testing.T) {
 	  "secret_key": "dummy"
 	}`
 
-	app, err := NewFromConfig(content)
+	ctx, err := application.LoadFromConfigContent(content)
 
 	assert.Nil(t, err)
 
@@ -92,11 +104,13 @@ func TestSignatureApplicationNotAuthorized(t *testing.T) {
 
 	request, _ := http.NewRequest("GET", location, nil)
 
-	negroni := app.InitRouter()
+	router, err := server.Router(ctx)
+
+	assert.Nil(t, err)
 
 	res := httptest.NewRecorder()
 
-	negroni.ServeHTTP(res, request)
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, 401, res.Code)
 }
@@ -112,7 +126,7 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 	  "secret_key": "dummy"
 	}`
 
-	app, err := NewFromConfig(content)
+	ctx, err := application.LoadFromConfigContent(content)
 
 	assert.Nil(t, err)
 
@@ -130,11 +144,13 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 
 	request, _ := http.NewRequest("GET", location, nil)
 
-	negroni := app.InitRouter()
+	router, err := server.Router(ctx)
+
+	assert.Nil(t, err)
 
 	res := httptest.NewRecorder()
 
-	negroni.ServeHTTP(res, request)
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, 200, res.Code)
 }
@@ -159,7 +175,7 @@ func TestUploadHandler(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	app, err := NewFromConfig(content)
+	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
 
 	f, err := os.Open("testdata/avatar.png")
@@ -197,24 +213,32 @@ func TestUploadHandler(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	negroni := app.InitRouter()
-	negroni.ServeHTTP(res, req)
+	router, err := server.Router(ctx)
 
-	assert.Equal(t, res.Code, 200)
+	assert.Nil(t, err)
 
-	assert.True(t, app.SourceStorage.Exists("avatar.png"))
+	router.ServeHTTP(res, req)
 
-	file, err := app.SourceStorage.Open("avatar.png")
+	assert.Equal(t, 200, res.Code)
+
+	sourceStorage := storage.SourceFromContext(ctx)
+
+	assert.True(t, sourceStorage.Exists("avatar.png"))
+
+	file, err := sourceStorage.Open("avatar.png")
 
 	assert.Nil(t, err)
 	assert.Equal(t, file.Size(), stats.Size())
-	assert.Equal(t, "application/json", res.Header().Get("Content-Type"))
+	assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
 }
 
 func TestDeleteHandler(t *testing.T) {
-	tmp := os.TempDir()
-	tmpSrcStorage := filepath.Join(tmp, "dh_src_storage")
-	tmpDstStorage := filepath.Join(tmp, "dh_dst_storage")
+	tmp, err := ioutil.TempDir("", RandString(10))
+
+	assert.Nil(t, err)
+
+	tmpSrcStorage := filepath.Join(tmp, "src")
+	tmpDstStorage := filepath.Join(tmp, "dst")
 
 	os.MkdirAll(tmpSrcStorage, 0755)
 	os.MkdirAll(tmpDstStorage, 0755)
@@ -259,10 +283,12 @@ func TestDeleteHandler(t *testing.T) {
 	`
 
 	cfg = fmt.Sprintf(cfg, tmpSrcStorage, tmpDstStorage)
-	app, err := NewFromConfig(cfg)
+	ctx, err := application.LoadFromConfigContent(cfg)
 	assert.Nil(t, err)
 
-	negroni := app.InitRouter()
+	router, err := server.Router(ctx)
+
+	assert.Nil(t, err)
 
 	// generate 5 resized image1.jpg
 	for i := 0; i < 5; i++ {
@@ -272,9 +298,11 @@ func TestDeleteHandler(t *testing.T) {
 		assert.Nil(t, err)
 
 		res := httptest.NewRecorder()
-		negroni.ServeHTTP(res, req)
+		router.ServeHTTP(res, req)
 		assert.Equal(t, res.Code, 200)
 	}
+
+	checkDirCount(tmpDstStorage, 5, "after resize requests")
 
 	// generate 2 resized image2.jpg
 	for i := 0; i < 2; i++ {
@@ -284,52 +312,54 @@ func TestDeleteHandler(t *testing.T) {
 		assert.Nil(t, err)
 
 		res := httptest.NewRecorder()
-		negroni.ServeHTTP(res, req)
+		router.ServeHTTP(res, req)
 		assert.Equal(t, res.Code, 200)
 	}
 
+	sourceStorage := storage.SourceFromContext(ctx)
+
 	checkDirCount(tmpSrcStorage, 5, "after resize requests")
 	checkDirCount(tmpDstStorage, 7, "after resize requests")
-	assert.True(t, app.SourceStorage.Exists("image1.jpg"))
+	assert.True(t, sourceStorage.Exists("image1.jpg"))
 
 	// Delete image1.jpg and all of the derived images
 	req, err := http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
 	assert.Nil(t, err)
 
 	res := httptest.NewRecorder()
-	negroni.ServeHTTP(res, req)
+	router.ServeHTTP(res, req)
 	assert.Equal(t, res.Code, 200)
 
 	checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
 	checkDirCount(tmpDstStorage, 2, "after 1st delete request")
-	assert.False(t, app.SourceStorage.Exists("image1.jpg"))
+	assert.False(t, sourceStorage.Exists("image1.jpg"))
 
 	// Try to delete image1.jpg again
 	req, err = http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
 	assert.Nil(t, err)
 
 	res = httptest.NewRecorder()
-	negroni.ServeHTTP(res, req)
-	assert.Equal(t, res.Code, 200)
+	router.ServeHTTP(res, req)
+	assert.Equal(t, res.Code, 404)
 
 	checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
 	checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
 
-	assert.False(t, app.SourceStorage.Exists("image1.jpg"))
+	assert.False(t, sourceStorage.Exists("image1.jpg"))
 
-	assert.True(t, app.SourceStorage.Exists("image2.jpg"))
+	assert.True(t, sourceStorage.Exists("image2.jpg"))
 
 	// Delete image2.jpg and all of the derived images
 	req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
 	assert.Nil(t, err)
 
 	res = httptest.NewRecorder()
-	negroni.ServeHTTP(res, req)
+	router.ServeHTTP(res, req)
 	assert.Equal(t, res.Code, 200)
 
 	checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
 	checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
-	assert.False(t, app.SourceStorage.Exists("image2.jpg"))
+	assert.False(t, sourceStorage.Exists("image2.jpg"))
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
@@ -376,12 +406,16 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	app, err := NewFromConfig(content)
+	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
 
-	negroni := app.InitRouter()
+	router, err := server.Router(ctx)
 
-	connection := app.KVStore.Connection()
+	assert.Nil(t, err)
+
+	store := kvstore.FromContext(ctx)
+
+	connection := store.Connection()
 	defer connection.Close()
 
 	location := "http://example.com/display/resize/100x100/avatar.png"
@@ -390,7 +424,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	negroni.ServeHTTP(res, request)
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, 200, res.Code)
 
@@ -400,7 +434,9 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	etag := res.Header().Get("ETag")
 
-	key := app.WithPrefix(etag)
+	cfg := config.FromContext(ctx)
+
+	key := cfg.KVStore.Prefix + etag
 
 	assert.True(t, connection.Exists(key))
 
@@ -412,7 +448,9 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	assert.Equal(t, len(parts[0]), 1)
 	assert.Equal(t, len(parts[1]), 1)
 
-	assert.True(t, app.SourceStorage.Exists(filepath))
+	sourceStorage := storage.SourceFromContext(ctx)
+
+	assert.True(t, sourceStorage.Exists(filepath))
 
 	location = "http://example.com/get/resize/100x100/avatar.png"
 
@@ -420,10 +458,10 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	res = httptest.NewRecorder()
 
-	negroni.ServeHTTP(res, request)
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, 200, res.Code)
-	assert.Equal(t, "application/json", res.Header().Get("Content-Type"))
+	assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
 
 	var dat map[string]interface{}
 
@@ -441,7 +479,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	res = httptest.NewRecorder()
 
-	negroni.ServeHTTP(res, request)
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, expected, res.Header().Get("Location"))
 	assert.Equal(t, 301, res.Code)
@@ -475,14 +513,16 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	app, err := NewFromConfig(content)
+	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
 
-	connection := app.KVStore.Connection()
+	connection := kvstore.FromContext(ctx).Connection()
 	defer connection.Close()
 
-	assert.NotNil(t, app.SourceStorage)
-	assert.Equal(t, app.SourceStorage, app.DestStorage)
+	sourceStorage := storage.SourceFromContext(ctx)
+
+	assert.NotNil(t, sourceStorage)
+	assert.Equal(t, sourceStorage, storage.DestinationFromContext(ctx))
 
 	filename := "avatar.png"
 
@@ -494,9 +534,11 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	handler := app.ServeHTTP(ImageHandler)
+	router, err := server.Router(ctx)
 
-	handler.ServeHTTP(res, request)
+	assert.Nil(t, err)
+
+	router.ServeHTTP(res, request)
 
 	assert.Equal(t, res.Code, 200)
 
@@ -506,7 +548,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	etag := res.Header().Get("ETag")
 
-	key := app.WithPrefix(etag)
+	key := config.FromContext(ctx).KVStore.Prefix + etag
 
 	assert.True(t, connection.Exists(key))
 
@@ -516,11 +558,11 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	assert.Equal(t, len(parts), 1)
 
-	assert.True(t, app.SourceStorage.Exists(filepath))
+	assert.True(t, sourceStorage.Exists(filepath))
 }
 
 func TestDummyApplicationErrors(t *testing.T) {
-	app := newDummyApplication()
+	ctx := newDummyApplication()
 
 	location := "http://example.com/display/resize/100x100/avatar.png"
 
@@ -528,10 +570,12 @@ func TestDummyApplicationErrors(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	handler := app.ServeHTTP(ImageHandler)
+	router, err := server.Router(ctx)
 
-	handler.ServeHTTP(res, request)
-	assert.Equal(t, 400, res.Code)
+	assert.Nil(t, err)
+
+	router.ServeHTTP(res, request)
+	assert.Equal(t, 404, res.Code)
 }
 
 func TestDummyApplication(t *testing.T) {
@@ -539,7 +583,7 @@ func TestDummyApplication(t *testing.T) {
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
-	app := newDummyApplication()
+	ctx := newDummyApplication()
 
 	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {
 		u, _ := url.Parse(ts.URL + "/" + filename)
@@ -578,14 +622,16 @@ func TestDummyApplication(t *testing.T) {
 			},
 		}
 
+		router, err := server.Router(ctx)
+
+		assert.Nil(t, err)
+
 		for _, test := range tests {
 			request, _ := http.NewRequest("GET", test.URL, nil)
 
 			res := httptest.NewRecorder()
 
-			handler := app.ServeHTTP(ImageHandler)
-
-			handler.ServeHTTP(res, request)
+			router.ServeHTTP(res, request)
 
 			img, err := imaging.Decode(res.Body)
 

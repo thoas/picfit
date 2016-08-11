@@ -14,8 +14,8 @@ type Shard struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	EnableUpload  bool
-	EnableDelete  bool
+	EnableUpload  bool `mapstructure:"enable_upload"`
+	EnableDelete  bool `mapstructure:"enable_delete"`
 	DefaultFormat string
 	Format        string
 	Quality       int
@@ -60,7 +60,7 @@ type Sentry struct {
 type Config struct {
 	Debug          bool
 	Sentry         *Sentry
-	SecretKey      string
+	SecretKey      string `mapstructure:"secret_key"`
 	Shard          *Shard
 	Port           int
 	Options        *Options
@@ -128,6 +128,7 @@ func LoadFromContent(content string) (*Config, error) {
 	viper.SetDefault("port", defaultConfig.Port)
 	viper.SetDefault("kvstore", defaultConfig.KVStore)
 	viper.SetEnvPrefix("picfit")
+	viper.SetConfigType("json")
 
 	err := viper.ReadConfig(bytes.NewBuffer([]byte(content)))
 
