@@ -41,3 +41,15 @@ import:
   - package: github.com/mholt/binding
     version: 6c082304f300fc70793cb0be18af0fdd4acd2b75
   - package: github.com/rs/xhandler
+  - package: github.com/spf13/viper
+    version: 346299ea79e446ebdddb834371ceba2e5926b732
+  - package: github.com/spf13/afero
+    version: cc9c21814bb945440253108c4d3c65c85aac3c68
+  - package: github.com/fsnotify/fsnotify
+  - package: github.com/pkg/sftp
+  - package: golang.org/x/text/transform
+  - package: golang.org/x/text/unicode/norm
+  - package: github.com/pkg/errors
+  - package: github.com/spf13/cast
+  - package: github.com/spf13/pflag
+  - package: github.com/spf13/jwalterweatherman
