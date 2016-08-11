@@ -52,12 +52,12 @@ func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) f
 }
 
 func scalingFactorImage(img image.Image, dstWidth int, dstHeight int) float64 {
-	width, height := ImageSize(img)
+	width, height := imageSize(img)
 
 	return scalingFactor(width, height, dstWidth, dstHeight)
 }
 
-func ImageSize(e image.Image) (int, int) {
+func imageSize(e image.Image) (int, int) {
 	return e.Bounds().Max.X, e.Bounds().Max.Y
 }
 
@@ -130,6 +130,19 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 
 	close(done)
 
+	srcW, srcH := imageSize(first)
+
+	if width == 0 {
+		tmpW := float64(height) * float64(srcW) / float64(srcH)
+		width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	}
+	if height == 0 {
+		tmpH := float64(width) * float64(srcH) / float64(srcW)
+		height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
+	}
+
+	g.Config.Width = width
+	g.Config.Height = height
 	g.Image = images
 
 	buf := &bytes.Buffer{}
