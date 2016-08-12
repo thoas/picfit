@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color/palette"
 	"image/draw"
 	"image/gif"
 	"image/jpeg"
@@ -11,7 +12,6 @@ import (
 	"io"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
@@ -37,12 +37,6 @@ var RotateTransformations = map[int]ImageTransformation{
 	90:  imaging.Rotate90,
 	270: imaging.Rotate270,
 	180: imaging.Rotate180,
-}
-
-type Result struct {
-	Image    image.Image
-	Position int
-	Paletted *image.Paletted
 }
 
 type Transformation func(img image.Image, width int, height int, filter imaging.ResampleFilter) *image.NRGBA
@@ -71,6 +65,13 @@ func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upsc
 	return img
 }
 
+func imageToPaletted(img image.Image) *image.Paletted {
+	b := img.Bounds()
+	pm := image.NewPaletted(b, palette.Plan9)
+	draw.FloydSteinberg.Draw(pm, b, img, image.ZP)
+	return pm
+}
+
 func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height int, options *Options, trans Transformation) ([]byte, error) {
 	first, err := gif.Decode(bytes.NewReader(img.Source))
 
@@ -90,60 +91,15 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 		return nil, err
 	}
 
-	length := len(g.Image)
-	done := make(chan *Result)
-	images := make([]*image.Paletted, length)
-	processed := 0
+	firstFrame := g.Image[0].Bounds()
+	b := image.Rect(0, 0, firstFrame.Dx(), firstFrame.Dy())
+	im := image.NewRGBA(b)
 
-	for i := range g.Image {
-		go func(paletted *image.Paletted, width int, height int, position int, trans Transformation, options *Options) {
-			img := e.Scale(paletted, width, height, options.Upscale, trans)
-
-			bounds := img.Bounds()
-
-			done <- &Result{
-				Image:    img,
-				Position: position,
-				Paletted: image.NewPaletted(image.Rect(0, 0, bounds.Max.X, bounds.Max.Y), paletted.Palette),
-			}
-		}(g.Image[i], width, height, i, trans, options)
+	for i, frame := range g.Image {
+		bounds := frame.Bounds()
+		draw.Draw(im, bounds, frame, bounds.Min, draw.Over)
+		g.Image[i] = imageToPaletted(e.Scale(im, width, height, options.Upscale, trans))
 	}
-
-	for {
-		select {
-		case result := <-done:
-			bounds := result.Image.Bounds()
-
-			draw.Draw(result.Paletted, bounds, result.Image, bounds.Min, draw.Src)
-
-			images[result.Position] = result.Paletted
-
-			processed++
-		case <-time.After(time.Second * 5):
-			break
-		}
-
-		if processed == length {
-			break
-		}
-	}
-
-	close(done)
-
-	srcW, srcH := imageSize(first)
-
-	if width == 0 {
-		tmpW := float64(height) * float64(srcW) / float64(srcH)
-		width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
-	}
-	if height == 0 {
-		tmpH := float64(width) * float64(srcH) / float64(srcW)
-		height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
-	}
-
-	g.Config.Width = width
-	g.Config.Height = height
-	g.Image = images
 
 	buf := &bytes.Buffer{}
 
