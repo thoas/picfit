@@ -28,8 +28,6 @@ import:
     version: 6ce7536fed6623eff47b95768f858a0f8d1ac57b
   - package: github.com/mitchellh/goamz
     version: e99a7300be9605de0c4b6366988e1df883fabfe3
-  - package: github.com/rs/cors
-    version: 5e4ce6bc0ecd3472f6f943666d84876691be2ced
   - package: github.com/thoas/gokvstores
     version: ae1105ba099c89f31af38c658ab6e64f1fc50e62
   - package: github.com/thoas/gostorages
@@ -40,7 +38,6 @@ import:
     version: e4ec8152c15fc46bd5056ce65997a07c7d415325
   - package: github.com/mholt/binding
     version: 89411c4ffb61f0ebef45d8bdb830103b358ef9fa
-  - package: github.com/rs/xhandler
   - package: github.com/spf13/viper
     version: 346299ea79e446ebdddb834371ceba2e5926b732
   - package: github.com/spf13/afero

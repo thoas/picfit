@@ -8,6 +8,9 @@ APP_DIR = /go/src/github.com/thoas/picfit
 
 test: unit
 
+vendorize:
+	find vendor/ -type f -not -path "*/.git*" -exec git add {} \;
+
 unit:
 	@(go list ./... | grep -v "vendor/" | xargs -n1 go test -v -cover)
 

@@ -595,7 +595,7 @@ CORS
 
 picfit supports CORS headers customization in your config file.
 
-To enable this feature, set ``allowed_origins`` and ``allowed_methods``,
+To enable this feature, set ``allowed_origins``, ``allowed_headers`` and ``allowed_methods``,
 for example:
 
 ``config.json``
@@ -603,6 +603,7 @@ for example:
 .. code-block:: json
 
     {
+      "allowed_headers": ["Content-Type", "Authorization", "Accept", "Accept-Encoding", "Accept-Language"],
       "allowed_origins": ["*.ulule.com"],
       "allowed_methods": ["GET", "HEAD"]
     }

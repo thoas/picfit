@@ -66,6 +66,7 @@ type Config struct {
 	Options        *Options
 	AllowedOrigins []string `mapstructure:"allowed_origins"`
 	AllowedMethods []string `mapstructure:"allowed_methods"`
+	AllowedHeaders []string `mapstructure:"allowed_headers"`
 	Storage        *Storages
 	KVStore        *KVStore
 }

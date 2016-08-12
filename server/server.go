@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/getsentry/raven-go"
+	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/cors"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
@@ -65,16 +65,28 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 	router.Use(context.SetConfig(cfg))
 
 	if cfg.AllowedOrigins != nil && cfg.AllowedMethods != nil {
-		co := cors.New(cors.Options{
-			AllowedOrigins: cfg.AllowedOrigins,
-			AllowedMethods: cfg.AllowedMethods,
-		})
+		allowedOrigins := cfg.AllowedOrigins
 
-		router.Use(func(c *gin.Context) {
-			co.HandlerFunc(c.Writer, c.Request)
+		allowAllOrigins := false
 
-			c.Next()
-		})
+		if len(allowedOrigins) == 1 {
+			for _, origin := range allowedOrigins {
+				if origin == "*" {
+					allowAllOrigins = true
+				}
+			}
+		}
+
+		if allowAllOrigins {
+			allowedOrigins = nil
+		}
+
+		router.Use(cors.New(cors.Config{
+			AllowAllOrigins: allowAllOrigins,
+			AllowedOrigins:  allowedOrigins,
+			AllowedMethods:  cfg.AllowedMethods,
+			AllowedHeaders:  cfg.AllowedHeaders,
+		}))
 	}
 
 	s := stats.New()
