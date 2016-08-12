@@ -70,10 +70,8 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		allowAllOrigins := false
 
 		if len(allowedOrigins) == 1 {
-			for _, origin := range allowedOrigins {
-				if origin == "*" {
-					allowAllOrigins = true
-				}
+			if allowedOrigins[0] == "*" {
+				allowAllOrigins = true
 			}
 		}
 
