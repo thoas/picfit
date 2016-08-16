@@ -59,7 +59,7 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	}
 
 	ctx = engine.NewContext(ctx, e)
-	ctx = logger.NewContext(ctx, *logrus.New())
+	ctx = logger.NewContext(ctx, logrus.New())
 
 	return ctx, nil
 }

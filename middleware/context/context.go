@@ -1,7 +1,6 @@
 package context
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/gostorages"
@@ -78,7 +77,7 @@ func KVStore(c *gin.Context) gokvstores.KVStore {
 }
 
 // SetLogger adds a logger to the gin context
-func SetLogger(l logrus.Logger) gin.HandlerFunc {
+func SetLogger(l logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.ToContext(c, l)
 		c.Next()
@@ -86,6 +85,6 @@ func SetLogger(l logrus.Logger) gin.HandlerFunc {
 }
 
 // Logger extracts a logger from the gin context
-func Logger(c *gin.Context) logrus.Logger {
-	return c.MustGet("logger").(logrus.Logger)
+func Logger(c *gin.Context) logger.Logger {
+	return c.MustGet("logger").(logger.Logger)
 }
