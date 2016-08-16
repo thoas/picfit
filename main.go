@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/codegangsta/cli"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
-	"github.com/thoas/picfit/util"
 )
 
 func main() {
@@ -57,28 +55,14 @@ func main() {
 					os.Exit(1)
 				}
 
-				values, err := url.ParseQuery(c.Args()[0])
+				queryString := c.Args()[0]
+
+				sig, err := signature.SignRaw(key, queryString)
 
 				if err != nil {
 					fmt.Println(err.Error())
 					os.Exit(1)
 				}
-
-				qs := url.Values{}
-
-				params := map[string]string{}
-
-				for k, v := range values {
-					params[k] = v[0]
-				}
-
-				for k, v := range util.SortMapString(params) {
-					qs.Set(k, v)
-				}
-
-				queryString := qs.Encode()
-
-				sig := signature.Sign(key, queryString)
 
 				appended := signature.AppendSign(key, queryString)
 
