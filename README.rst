@@ -535,6 +535,8 @@ The below python code provides an implementation example::
 
         return m.hexdigest()
 
+The implemention has to sort and encode query string to generate a proper signature.
+
 The signature is passed to the application by appending the ``sig``
 parameter to the query string; e.g.
 ``w=100&h=100&sig=c9516346abf62876b6345817dba2f9a0c797ef26``.
