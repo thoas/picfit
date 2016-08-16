@@ -24,10 +24,15 @@ var Fit = &Operation{
 	"fit",
 }
 
+var Noop = &Operation{
+	"noop",
+}
+
 var Operations = map[string]*Operation{
 	Resize.Name:    Resize,
 	Thumbnail.Name: Thumbnail,
 	Flip.Name:      Flip,
 	Rotate.Name:    Rotate,
 	Fit.Name:       Fit,
+	Noop.Name:      Noop,
 }

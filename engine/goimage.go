@@ -294,6 +294,10 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 	}
 
 	switch operation {
+	case Noop:
+		file.Processed = file.Source
+
+		return file, err
 	case Flip:
 		pos, ok := qs["pos"]
 
