@@ -72,7 +72,7 @@ var BasicInitializer Initializer = func(jq *jsonq.JsonQuery, app *Application) e
 
 	q, err := jq.Int("options", "quality")
 
-	if err != nil {
+	if err == nil {
 		quality = q
 	}
 
