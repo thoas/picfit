@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	netContext "context"
+
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
@@ -19,7 +21,6 @@ import (
 	"github.com/thoas/picfit/storage"
 	"github.com/thoas/picfit/views"
 	"github.com/thoas/stats"
-	netContext "golang.org/x/net/context"
 )
 
 // Load loads the application and launch the webserver

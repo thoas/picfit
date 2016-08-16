@@ -1,8 +1,9 @@
 package kvstore
 
 import (
+	"context"
+
 	"github.com/thoas/gokvstores"
-	"golang.org/x/net/context"
 )
 
 const key = "kvstore"

@@ -1,8 +1,9 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/thoas/gostorages"
-	"golang.org/x/net/context"
 )
 
 const sourceKey = "srcStorage"
