@@ -14,8 +14,8 @@ type Shard struct {
 
 // AllowedSize is a struct used in the allowed_sizes option
 type AllowedSize struct {
-	H int
-	W int
+	Height int
+	Width  int
 }
 
 // Options is a struct to add options to the application

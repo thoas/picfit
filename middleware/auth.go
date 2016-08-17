@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/picfit/config"
@@ -21,6 +22,47 @@ func Security() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
+		}
+
+		c.Next()
+	}
+}
+
+func RestrictSizes() gin.HandlerFunc {
+	handler := func(c *gin.Context, sizes []config.AllowedSize) {
+		params := c.MustGet("parameters").(map[string]string)
+
+		var w int
+		var h int
+		var err error
+
+		if w, err = strconv.Atoi(params["w"]); err != nil {
+			return
+		}
+
+		if h, err = strconv.Atoi(params["h"]); err != nil {
+			return
+		}
+
+		ok := false
+		for _, size := range sizes {
+			if size.Height == h && size.Width == w {
+				ok = true
+				break
+			}
+		}
+
+		if !ok {
+			c.String(http.StatusForbidden, "Requested size not allowed")
+			c.Abort()
+		}
+	}
+
+	return func(c *gin.Context) {
+		sizes := config.FromContext(c).Options.AllowedSizes
+
+		if len(sizes) > 0 {
+			handler(c, sizes)
 		}
 
 		c.Next()

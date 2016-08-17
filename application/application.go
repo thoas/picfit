@@ -52,20 +52,10 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 
 	ctx = kvstore.NewContext(ctx, keystore)
 
-	allowedSizes := make([]engine.AllowedSize, len(cfg.Options.AllowedSizes))
-
-	for i, size := range cfg.Options.AllowedSizes {
-		allowedSizes[i] = engine.AllowedSize{
-			Height: size.H,
-			Width:  size.W,
-		}
-	}
-
 	e := &engine.GoImageEngine{
 		DefaultFormat:  cfg.Options.DefaultFormat,
 		Format:         cfg.Options.Format,
 		DefaultQuality: cfg.Options.Quality,
-		AllowedSizes:   allowedSizes,
 	}
 
 	ctx = engine.NewContext(ctx, e)

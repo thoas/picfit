@@ -697,9 +697,9 @@ preserve aspect ratio.
     {
       "options": {
         "allowed_sizes": [
-          {"w": 1920, "h": 1080},
-          {"w": 720, "h": 480},
-          {"w": 480}
+          {"width": 1920, "height": 1080},
+          {"width": 720, "height": 480},
+          {"width": 480}
         ]
       }
     }

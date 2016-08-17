@@ -15,22 +15,15 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
-	"github.com/thoas/picfit/errs"
 	imagefile "github.com/thoas/picfit/image"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
 
-type AllowedSize struct {
-	Height int
-	Width  int
-}
-
 type GoImageEngine struct {
 	DefaultFormat  string
 	Format         string
 	DefaultQuality int
-	AllowedSizes   []AllowedSize
 }
 
 type ImageTransformation func(img image.Image) *image.NRGBA
@@ -352,20 +345,6 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 		if h, err = strconv.Atoi(qs["h"]); err != nil {
 			return nil, err
-		}
-
-		if len(e.AllowedSizes) > 0 {
-			ok := false
-			for _, size := range e.AllowedSizes {
-				if size.Height == h && size.Width == w {
-					ok = true
-					break
-				}
-			}
-
-			if !ok {
-				return nil, errs.ErrInvalidSize
-			}
 		}
 
 		options.Upscale = upscale
