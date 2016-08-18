@@ -92,8 +92,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-// Load creates a Config struct from a config file path
-func Load(path string) (*Config, error) {
+func load(content string, path bool) (*Config, error) {
 	config := &Config{}
 
 	defaultConfig := DefaultConfig()
@@ -104,43 +103,45 @@ func Load(path string) (*Config, error) {
 	viper.SetDefault("kvstore", defaultConfig.KVStore)
 	viper.SetEnvPrefix("picfit")
 
-	viper.SetConfigFile(path)
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
+	var err error
+
+	if path {
+		viper.SetConfigFile(content)
+		err = viper.ReadInConfig()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = viper.ReadConfig(bytes.NewBuffer([]byte(content)))
+
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
 		return nil, err
+	}
+
+	if config.Options.Quality == 0 {
+		config.Options.Quality = defaultConfig.Options.Quality
+	}
+
+	if config.Options.DefaultFormat == "" {
+		config.Options.DefaultFormat = defaultConfig.Options.DefaultFormat
 	}
 
 	return config, nil
 }
 
+// Load creates a Config struct from a config file path
+func Load(path string) (*Config, error) {
+	return load(path, true)
+}
+
 // LoadFromContent creates a Config struct from a config content
 func LoadFromContent(content string) (*Config, error) {
-	config := &Config{}
-
-	defaultConfig := DefaultConfig()
-
-	viper.SetDefault("options", defaultConfig.Options)
-	viper.SetDefault("shard", defaultConfig.Shard)
-	viper.SetDefault("port", defaultConfig.Port)
-	viper.SetDefault("kvstore", defaultConfig.KVStore)
-	viper.SetEnvPrefix("picfit")
-	viper.SetConfigType("json")
-
-	err := viper.ReadConfig(bytes.NewBuffer([]byte(content)))
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		return nil, err
-	}
-
-	return config, nil
+	return load(content, false)
 }
