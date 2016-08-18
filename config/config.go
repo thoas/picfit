@@ -92,7 +92,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-func load(content string, path bool) (*Config, error) {
+func load(content string, isPath bool) (*Config, error) {
 	config := &Config{}
 
 	defaultConfig := DefaultConfig()
@@ -105,19 +105,20 @@ func load(content string, path bool) (*Config, error) {
 
 	var err error
 
-	if path {
+	if isPath == true {
 		viper.SetConfigFile(content)
 		err = viper.ReadInConfig()
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		viper.SetConfigType("json")
+
 		err = viper.ReadConfig(bytes.NewBuffer([]byte(content)))
 
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
 	err = viper.Unmarshal(&config)
