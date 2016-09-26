@@ -24,6 +24,7 @@ func main() {
 			EnvVar: "PICFIT_CONFIG_PATH",
 		},
 	}
+
 	app.Commands = []cli.Command{
 		{
 			Name:      "version",

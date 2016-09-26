@@ -101,6 +101,20 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 		g.Image[i] = imageToPaletted(e.Scale(im, width, height, options.Upscale, trans))
 	}
 
+	srcW, srcH := imageSize(first)
+
+	if width == 0 {
+		tmpW := float64(height) * float64(srcW) / float64(srcH)
+		width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	}
+	if height == 0 {
+		tmpH := float64(width) * float64(srcH) / float64(srcW)
+		height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
+	}
+
+	g.Config.Height = height
+	g.Config.Width = width
+
 	buf := &bytes.Buffer{}
 
 	err = gif.EncodeAll(buf, g)
