@@ -152,7 +152,8 @@ Store images on Amazon S3, keys in Redis and shard filename
       },
       "shard": {
         "width": 1,
-        "depth": 2
+        "depth": 2,
+        "restonly": true
       }
     }
 
@@ -188,10 +189,13 @@ in the bucket ``[BUCKET_NAME]``.
 
 - ``depth`` - 2 directories
 - ``width`` - 1 letter for each directory
+- ``restonly`` - true, filename won't contain characters in sharding path
 
 Example:
 
 ``06102586671300cd02ae90f1faa16897.png`` will become ``0/6/102586671300cd02ae90f1faa16897.jpg``
+
+with restonly=false it would become ``0/6/06102586671300cd02ae90f1faa16897.jpg``
 
 It would be useful if you are using the file system storage backend.
 

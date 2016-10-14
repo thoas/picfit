@@ -10,6 +10,7 @@ import (
 type Shard struct {
 	Depth int
 	Width int
+	RestOnly bool
 }
 
 // Options is a struct to add options to the application
@@ -88,6 +89,7 @@ func DefaultConfig() *Config {
 		Shard: &Shard{
 			Width: DefaultShardWidth,
 			Depth: DefaultShardDepth,
+			RestOnly: DefaultShardRestOnly,
 		},
 	}
 }

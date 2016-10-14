@@ -14,3 +14,6 @@ const DefaultShardWidth = 0
 
 // DefaultShardDepth is the default shard depth
 const DefaultShardDepth = 0
+
+// DefaultShardRestOnly is the default shard rest behaviour
+const DefaultShardRestOnly = true
