@@ -338,7 +338,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 func ShardFilename(ctx context.Context, filename string) string {
 	cfg := config.FromContext(ctx)
 
-	results := hash.Shard(filename, cfg.Shard.Width, cfg.Shard.Depth, true)
+	results := hash.Shard(filename, cfg.Shard.Width, cfg.Shard.Depth, cfg.Shard.RestOnly)
 
 	return strings.Join(results, "/")
 }
