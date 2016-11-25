@@ -5,11 +5,6 @@ This package is based on the standard Go image package and works best along with
 Image manipulation functions provided by the package take any image type
 that implements `image.Image` interface as an input, and return a new image of
 `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
-
-Imaging package uses parallel goroutines for faster image processing.
-To achieve maximum performance, make sure to allow Go to utilize all CPU cores:
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
 */
 package imaging
 
@@ -231,9 +226,13 @@ func Clone(img image.Image) *image.NRGBA {
 						dst.Pix[di+1] = src.Pix[si+1]
 						dst.Pix[di+2] = src.Pix[si+2]
 					default:
-						dst.Pix[di+0] = uint8(uint16(src.Pix[si+0]) * 0xff / uint16(a))
-						dst.Pix[di+1] = uint8(uint16(src.Pix[si+1]) * 0xff / uint16(a))
-						dst.Pix[di+2] = uint8(uint16(src.Pix[si+2]) * 0xff / uint16(a))
+						var tmp uint16
+						tmp = uint16(src.Pix[si+0]) * 0xff / uint16(a)
+						dst.Pix[di+0] = uint8(tmp)
+						tmp = uint16(src.Pix[si+1]) * 0xff / uint16(a)
+						dst.Pix[di+1] = uint8(tmp)
+						tmp = uint16(src.Pix[si+2]) * 0xff / uint16(a)
+						dst.Pix[di+2] = uint8(tmp)
 					}
 
 					di += 4
@@ -262,9 +261,13 @@ func Clone(img image.Image) *image.NRGBA {
 						dst.Pix[di+1] = src.Pix[si+2]
 						dst.Pix[di+2] = src.Pix[si+4]
 					default:
-						dst.Pix[di+0] = uint8(uint16(src.Pix[si+0]) * 0xff / uint16(a))
-						dst.Pix[di+1] = uint8(uint16(src.Pix[si+2]) * 0xff / uint16(a))
-						dst.Pix[di+2] = uint8(uint16(src.Pix[si+4]) * 0xff / uint16(a))
+						var tmp uint16
+						tmp = uint16(src.Pix[si+0]) * 0xff / uint16(a)
+						dst.Pix[di+0] = uint8(tmp)
+						tmp = uint16(src.Pix[si+2]) * 0xff / uint16(a)
+						dst.Pix[di+1] = uint8(tmp)
+						tmp = uint16(src.Pix[si+4]) * 0xff / uint16(a)
+						dst.Pix[di+2] = uint8(tmp)
 					}
 
 					di += 4
@@ -318,59 +321,20 @@ func Clone(img image.Image) *image.NRGBA {
 		parallel(dstH, func(partStart, partEnd int) {
 			for dstY := partStart; dstY < partEnd; dstY++ {
 				di := dst.PixOffset(0, dstY)
-				switch src.SubsampleRatio {
-				case image.YCbCrSubsampleRatio422:
-					siy0 := dstY * src.YStride
-					sic0 := dstY * src.CStride
-					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
-						siy := siy0 + dstX
-						sic := sic0 + ((srcMinX+dstX)/2 - srcMinX/2)
-						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-						dst.Pix[di+0] = r
-						dst.Pix[di+1] = g
-						dst.Pix[di+2] = b
-						dst.Pix[di+3] = 0xff
-						di += 4
-					}
-				case image.YCbCrSubsampleRatio420:
-					siy0 := dstY * src.YStride
-					sic0 := ((srcMinY+dstY)/2 - srcMinY/2) * src.CStride
-					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
-						siy := siy0 + dstX
-						sic := sic0 + ((srcMinX+dstX)/2 - srcMinX/2)
-						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-						dst.Pix[di+0] = r
-						dst.Pix[di+1] = g
-						dst.Pix[di+2] = b
-						dst.Pix[di+3] = 0xff
-						di += 4
-					}
-				case image.YCbCrSubsampleRatio440:
-					siy0 := dstY * src.YStride
-					sic0 := ((srcMinY+dstY)/2 - srcMinY/2) * src.CStride
-					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
-						siy := siy0 + dstX
-						sic := sic0 + dstX
-						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-						dst.Pix[di+0] = r
-						dst.Pix[di+1] = g
-						dst.Pix[di+2] = b
-						dst.Pix[di+3] = 0xff
-						di += 4
-					}
-				default:
-					siy0 := dstY * src.YStride
-					sic0 := dstY * src.CStride
-					for dstX := 0; dstX < dstW; dstX++ {
-						siy := siy0 + dstX
-						sic := sic0 + dstX
-						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-						dst.Pix[di+0] = r
-						dst.Pix[di+1] = g
-						dst.Pix[di+2] = b
-						dst.Pix[di+3] = 0xff
-						di += 4
-					}
+				for dstX := 0; dstX < dstW; dstX++ {
+
+					srcX := srcMinX + dstX
+					srcY := srcMinY + dstY
+					siy := src.YOffset(srcX, srcY)
+					sic := src.COffset(srcX, srcY)
+					r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+					dst.Pix[di+0] = r
+					dst.Pix[di+1] = g
+					dst.Pix[di+2] = b
+					dst.Pix[di+3] = 0xff
+
+					di += 4
+
 				}
 			}
 		})

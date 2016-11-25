@@ -128,20 +128,21 @@ func resizeHorizontal(src *image.NRGBA, width int, filter ResampleFilter) *image
 	parallel(dstH, func(partStart, partEnd int) {
 		for dstY := partStart; dstY < partEnd; dstY++ {
 			for dstX := 0; dstX < dstW; dstX++ {
-				var c [4]int32
+				var c [4]int64
 				for _, iw := range weights[dstX].iwpairs {
 					i := dstY*src.Stride + iw.i*4
-					c[0] += int32(src.Pix[i+0]) * iw.w
-					c[1] += int32(src.Pix[i+1]) * iw.w
-					c[2] += int32(src.Pix[i+2]) * iw.w
-					c[3] += int32(src.Pix[i+3]) * iw.w
+					a := int64(src.Pix[i+3]) * int64(iw.w)
+					c[0] += int64(src.Pix[i+0]) * a
+					c[1] += int64(src.Pix[i+1]) * a
+					c[2] += int64(src.Pix[i+2]) * a
+					c[3] += a
 				}
 				j := dstY*dst.Stride + dstX*4
 				sum := weights[dstX].wsum
-				dst.Pix[j+0] = clampint32(int32(float32(c[0])/float32(sum) + 0.5))
-				dst.Pix[j+1] = clampint32(int32(float32(c[1])/float32(sum) + 0.5))
-				dst.Pix[j+2] = clampint32(int32(float32(c[2])/float32(sum) + 0.5))
-				dst.Pix[j+3] = clampint32(int32(float32(c[3])/float32(sum) + 0.5))
+				dst.Pix[j+0] = clampint32(int32(float64(c[0])/float64(c[3]) + 0.5))
+				dst.Pix[j+1] = clampint32(int32(float64(c[1])/float64(c[3]) + 0.5))
+				dst.Pix[j+2] = clampint32(int32(float64(c[2])/float64(c[3]) + 0.5))
+				dst.Pix[j+3] = clampint32(int32(float64(c[3])/float64(sum) + 0.5))
 			}
 		}
 	})
@@ -165,20 +166,21 @@ func resizeVertical(src *image.NRGBA, height int, filter ResampleFilter) *image.
 
 		for dstX := partStart; dstX < partEnd; dstX++ {
 			for dstY := 0; dstY < dstH; dstY++ {
-				var c [4]int32
+				var c [4]int64
 				for _, iw := range weights[dstY].iwpairs {
 					i := iw.i*src.Stride + dstX*4
-					c[0] += int32(src.Pix[i+0]) * iw.w
-					c[1] += int32(src.Pix[i+1]) * iw.w
-					c[2] += int32(src.Pix[i+2]) * iw.w
-					c[3] += int32(src.Pix[i+3]) * iw.w
+					a := int64(src.Pix[i+3]) * int64(iw.w)
+					c[0] += int64(src.Pix[i+0]) * a
+					c[1] += int64(src.Pix[i+1]) * a
+					c[2] += int64(src.Pix[i+2]) * a
+					c[3] += a
 				}
 				j := dstY*dst.Stride + dstX*4
 				sum := weights[dstY].wsum
-				dst.Pix[j+0] = clampint32(int32(float32(c[0])/float32(sum) + 0.5))
-				dst.Pix[j+1] = clampint32(int32(float32(c[1])/float32(sum) + 0.5))
-				dst.Pix[j+2] = clampint32(int32(float32(c[2])/float32(sum) + 0.5))
-				dst.Pix[j+3] = clampint32(int32(float32(c[3])/float32(sum) + 0.5))
+				dst.Pix[j+0] = clampint32(int32(float64(c[0])/float64(c[3]) + 0.5))
+				dst.Pix[j+1] = clampint32(int32(float64(c[1])/float64(c[3]) + 0.5))
+				dst.Pix[j+2] = clampint32(int32(float64(c[2])/float64(c[3]) + 0.5))
+				dst.Pix[j+3] = clampint32(int32(float64(c[3])/float64(sum) + 0.5))
 			}
 		}
 
@@ -267,20 +269,21 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 	return Resize(img, newW, newH, filter)
 }
 
-// Thumbnail scales the image up or down using the specified resample filter, crops it
-// to the specified width and hight and returns the transformed image.
+// Fill scales the image to the smallest possible size that will cover the specified dimensions,
+// crops the resized image to the specified dimensions using the given anchor point and returns
+// the transformed image.
 //
 // Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
 // CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
 //
 // Usage example:
 //
-//		dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
+//		dstImage := imaging.Fill(srcImage, 800, 600, imaging.Center, imaging.Lanczos)
 //
-func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
-	thumbW, thumbH := width, height
+func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
+	minW, minH := width, height
 
-	if thumbW <= 0 || thumbH <= 0 {
+	if minW <= 0 || minH <= 0 {
 		return &image.NRGBA{}
 	}
 
@@ -292,17 +295,35 @@ func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image
 		return &image.NRGBA{}
 	}
 
-	srcAspectRatio := float64(srcW) / float64(srcH)
-	thumbAspectRatio := float64(thumbW) / float64(thumbH)
-
-	var tmp image.Image
-	if srcAspectRatio > thumbAspectRatio {
-		tmp = Resize(img, 0, thumbH, filter)
-	} else {
-		tmp = Resize(img, thumbW, 0, filter)
+	if srcW == minW && srcH == minH {
+		return Clone(img)
 	}
 
-	return CropCenter(tmp, thumbW, thumbH)
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	minAspectRatio := float64(minW) / float64(minH)
+
+	var tmp *image.NRGBA
+	if srcAspectRatio < minAspectRatio {
+		tmp = Resize(img, minW, 0, filter)
+	} else {
+		tmp = Resize(img, 0, minH, filter)
+	}
+
+	return CropAnchor(tmp, minW, minH, anchor)
+}
+
+// Thumbnail scales the image up or down using the specified resample filter, crops it
+// to the specified width and hight and returns the transformed image.
+//
+// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
+// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+//
+// Usage example:
+//
+//		dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
+//
+func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
+	return Fill(img, width, height, Center, filter)
 }
 
 // Resample filter struct. It can be used to make custom filters.
