@@ -155,6 +155,62 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 	assert.Equal(t, 200, res.Code)
 }
 
+func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	content := `{
+	  "debug": true,
+	  "port": 3001,
+	  "options": {
+	    "allowed_sizes": [
+	      {"width": 100, "height": 100}
+	    ]
+	  }
+	}`
+
+	ctx, err := application.LoadFromConfigContent(content)
+
+	assert.Nil(t, err)
+
+	u, _ := url.Parse(ts.URL + "/avatar.png")
+
+	// unallowed size
+	params := fmt.Sprintf("url=%s&w=50&h=50&op=resize", u.String())
+
+	location := fmt.Sprintf("http://example.com/display?%s", params)
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	router, err := server.Router(ctx)
+
+	assert.Nil(t, err)
+
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, request)
+
+	assert.Equal(t, 403, res.Code)
+
+	// allowed size
+	params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
+
+	location := fmt.Sprintf("http://example.com/display?%s", params)
+
+	request, _ := http.NewRequest("GET", location, nil)
+
+	router, err := server.Router(ctx)
+
+	assert.Nil(t, err)
+
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, request)
+
+	assert.Equal(t, 200, res.Code)
+}
+
 func TestUploadHandler(t *testing.T) {
 	tmp := os.TempDir()
 
