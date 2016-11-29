@@ -176,14 +176,14 @@ func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
 
 	u, _ := url.Parse(ts.URL + "/avatar.png")
 
+	router, err := server.Router(ctx)
+
 	// unallowed size
 	params := fmt.Sprintf("url=%s&w=50&h=50&op=resize", u.String())
 
 	location := fmt.Sprintf("http://example.com/display?%s", params)
 
 	request, _ := http.NewRequest("GET", location, nil)
-
-	router, err := server.Router(ctx)
 
 	assert.Nil(t, err)
 
@@ -194,17 +194,15 @@ func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
 	assert.Equal(t, 403, res.Code)
 
 	// allowed size
-	params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
+	params = fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
 
-	location := fmt.Sprintf("http://example.com/display?%s", params)
+	location = fmt.Sprintf("http://example.com/display?%s", params)
 
-	request, _ := http.NewRequest("GET", location, nil)
-
-	router, err := server.Router(ctx)
+	request, _ = http.NewRequest("GET", location, nil)
 
 	assert.Nil(t, err)
 
-	res := httptest.NewRecorder()
+	res = httptest.NewRecorder()
 
 	router.ServeHTTP(res, request)
 
