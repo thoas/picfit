@@ -513,6 +513,9 @@ You will retrieve the uploaded image information in ``JSON`` format.
 Security
 ========
 
+Request signing
+---------------
+
 In order to secure requests and avoid unknown third parties to
 use the service, the application can require a request to provide a signature.
 To enable this feature, set the ``secret_key`` option in your config file.
@@ -548,6 +551,13 @@ parameter to the query string; e.g.
 Note, the application does not include the leading question mark when verifying
 the supplied signature. To verify your signature implementation, see the
 ``signature`` command described in the `Tools`_ section.
+
+Limiting allowed sizes
+----------------------
+
+Depending on your use case it may be more appropriate to simply restrict the
+image sizes picfit is allowed to generate. See the `Allowed sizes`_ section for
+more information on this configuration.
 
 Tools
 =====
@@ -673,6 +683,28 @@ it in your config:
     {
       "options": {
         "enable_upload": true
+      }
+    }
+
+Allowed sizes
+-------------
+
+To restrict the sizes picfit is allowed to generate you may specify the
+``allowed_sizes`` option as an array of sizes. Note that if you omit a width or
+height from a size it will allow requests that exclude height or width to
+preserve aspect ratio.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "allowed_sizes": [
+          {"width": 1920, "height": 1080},
+          {"width": 720, "height": 480},
+          {"width": 480}
+        ]
       }
     }
 

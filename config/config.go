@@ -13,6 +13,12 @@ type Shard struct {
 	RestOnly bool
 }
 
+// AllowedSize is a struct used in the allowed_sizes option
+type AllowedSize struct {
+	Height int
+	Width  int
+}
+
 // Options is a struct to add options to the application
 type Options struct {
 	EnableUpload  bool `mapstructure:"enable_upload"`
@@ -20,6 +26,7 @@ type Options struct {
 	DefaultFormat string
 	Format        string
 	Quality       int
+	AllowedSizes  []AllowedSize `mapstructure:"allowed_sizes"`
 }
 
 // KVStore is a struct to represent a key/value store (redis, cache)
