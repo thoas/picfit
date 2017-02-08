@@ -1,4 +1,4 @@
-FROM scratch
+FROM alpine
 
 ADD bin/picfit /picfit
 ADD ssl/ /etc/ssl
