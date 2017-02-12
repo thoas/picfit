@@ -20,6 +20,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "config, c",
+			Value:  "config.json",
 			Usage:  "Config file path",
 			EnvVar: "PICFIT_CONFIG_PATH",
 		},
