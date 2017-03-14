@@ -36,9 +36,14 @@ func Load(path string) error {
 
 // Router returns a gin Engine
 func Router(ctx netContext.Context) (*gin.Engine, error) {
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
 
 	cfg := config.FromContext(ctx)
+
+	if cfg.Debug {
+		router.Use(gin.Logger())
+	}
 
 	methods := map[string]gin.HandlerFunc{
 		"redirect": views.RedirectView,
