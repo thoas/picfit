@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"mime"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -20,6 +21,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/alicebob/miniredis"
 	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/gokvstores"
@@ -421,6 +423,16 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("Failed to start redis server: %v", err)
+	}
+	defer rs.Close()
+	rHost, rPort, err := net.SplitHostPort(rs.Addr())
+	if err != nil {
+		t.Fatalf("Failed to parse redis addr %q: %v", rs.Addr(), err)
+	}
+
 	tmp := os.TempDir()
 
 	f, err := os.Open("testdata/avatar.png")
@@ -438,19 +450,19 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	  "debug": true,
 	  "port": 3001,
 	  "kvstore": {
-		"prefix": "picfit:",
-		"type": "redis",
-		"host": "127.0.0.1",
-		"db": 0,
-		"password": "",
-		"port": 6379
+			"prefix": "picfit:",
+			"type": "redis",
+			"host": "%s",
+			"db": 0,
+			"password": "",
+			"port": %s
 	  },
 	  "storage": {
-		"src": {
-		  "type": "fs",
-		  "location": "%s",
-		  "base_url": "http://img.example.com"
-		}
+			"src": {
+				"type": "fs",
+				"location": "%s",
+				"base_url": "http://img.example.com"
+			}
 	  },
 	  "shard": {
 		"width": 1,
@@ -458,7 +470,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	  }
 	}`
 
-	content = fmt.Sprintf(content, tmp)
+	content = fmt.Sprintf(content, rHost, rPort, tmp)
 
 	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
@@ -544,28 +556,38 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("Failed to start redis server: %v", err)
+	}
+	defer rs.Close()
+	rHost, rPort, err := net.SplitHostPort(rs.Addr())
+	if err != nil {
+		t.Fatalf("Failed to parse redis addr %q: %v", rs.Addr(), err)
+	}
+
 	tmp := os.TempDir()
 
 	content := `{
 	  "debug": true,
 	  "port": 3001,
 	  "kvstore": {
-		"prefix": "picfit:",
-		"type": "redis",
-		"host": "127.0.0.1",
-		"db": 0,
-		"password": "",
-		"port": 6379
+			"prefix": "picfit:",
+			"type": "redis",
+			"host": "%s",
+			"db": 0,
+			"password": "",
+			"port": %s
 	  },
 	  "storage": {
-		"src": {
-		  "type": "fs",
-		  "location": "%s"
-		}
+			"src": {
+				"type": "fs",
+				"location": "%s"
+			}
 	  }
 	}`
 
-	content = fmt.Sprintf(content, tmp)
+	content = fmt.Sprintf(content, rHost, rPort, tmp)
 
 	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
