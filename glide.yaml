@@ -50,3 +50,4 @@ import:
   - package: github.com/spf13/cast
   - package: github.com/spf13/pflag
   - package: github.com/spf13/jwalterweatherman
+  - package: github.com/alicebob/miniredis
