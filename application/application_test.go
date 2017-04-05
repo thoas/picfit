@@ -632,6 +632,90 @@ func TestDummyApplicationErrors(t *testing.T) {
 	assert.Equal(t, 404, res.Code)
 }
 
+func TestCalculatedSizes(t *testing.T) {
+	ts := newHTTPServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	ctx := newDummyApplication()
+
+	filename := "avatar.png"
+	u, _ := url.Parse(ts.URL + "/" + filename)
+	contentType := mime.TypeByExtension(path.Ext(filename))
+
+	for _, op := range []string{"resize", "thumbnail", "fit"} {
+		tests := []*TestRequest{
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=%s", u.String(), op),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&h=0&op=%s", u.String(), op),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=0&h=50&op=%s", u.String(), op),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&w=50&op=%s", u.String(), op),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&h=50&op=%s", u.String(), op),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 50,
+				},
+			},
+		}
+
+		router, err := server.Router(ctx)
+
+		assert.Nil(t, err)
+
+		for _, test := range tests {
+			request, _ := http.NewRequest("GET", test.URL, nil)
+
+			res := httptest.NewRecorder()
+
+			router.ServeHTTP(res, request)
+
+			img, err := imaging.Decode(res.Body)
+
+			assert.Nil(t, err)
+
+			if test.ContentType != "" {
+				assert.Equal(t, res.Header().Get("Content-Type"), test.ContentType)
+			} else {
+				assert.Equal(t, res.Header().Get("Content-Type"), contentType)
+			}
+
+			assert.Equal(t, res.Code, 200)
+
+			if img.Bounds().Max.X != test.Dimensions.Width {
+				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.X, test.Dimensions.Width)
+			}
+
+			if img.Bounds().Max.Y != test.Dimensions.Height {
+				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.Y, test.Dimensions.Height)
+			}
+		}
+	}
+}
+
 func TestDummyApplication(t *testing.T) {
 	ts := newHTTPServer()
 	defer ts.Close()

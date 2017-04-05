@@ -56,6 +56,14 @@ func imageSize(e image.Image) (int, int) {
 }
 
 func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upscale bool, trans Transformation) image.Image {
+	b := img.Bounds()
+	srcWidth, srcHeight := b.Dx(), b.Dy()
+	if dstWidth == 0 {
+		dstWidth = dstHeight * srcWidth / srcHeight
+	}
+	if dstHeight == 0 {
+		dstHeight = dstWidth * srcHeight / srcWidth
+	}
 	factor := scalingFactorImage(img, dstWidth, dstHeight)
 
 	if factor < 1 || upscale {
