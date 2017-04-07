@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/hcl/hcl/ast"
 	"github.com/hashicorp/hcl/testhelper"
 )
@@ -63,7 +65,7 @@ func TestDecode_interface(t *testing.T) {
 				"qux":          "back\\slash",
 				"bar":          "new\nline",
 				"qax":          `slash\:colon`,
-				"nested":       `${HH\:mm\:ss}`,
+				"nested":       `${HH\\:mm\\:ss}`,
 				"nestedquotes": `${"\"stringwrappedinquotes\""}`,
 			},
 		},
@@ -81,9 +83,14 @@ func TestDecode_interface(t *testing.T) {
 		},
 		{
 			"multiline_literal.hcl",
+			true,
+			nil,
+		},
+		{
+			"multiline_literal_with_hil.hcl",
 			false,
-			map[string]interface{}{"multiline_literal": testhelper.Unix2dos(`hello
-  world`)},
+			map[string]interface{}{"multiline_literal_with_hil": testhelper.Unix2dos(`${hello
+  world}`)},
 		},
 		{
 			"multiline_no_marker.hcl",
@@ -201,6 +208,16 @@ func TestDecode_interface(t *testing.T) {
 			},
 		},
 		{
+			"list_of_lists.hcl",
+			false,
+			map[string]interface{}{
+				"foo": []interface{}{
+					[]interface{}{"foo"},
+					[]interface{}{"bar"},
+				},
+			},
+		},
+		{
 			"list_of_maps.hcl",
 			false,
 			map[string]interface{}{
@@ -274,6 +291,14 @@ func TestDecode_interface(t *testing.T) {
 		},
 
 		{
+			"structure_list_empty.json",
+			false,
+			map[string]interface{}{
+				"foo": []interface{}{},
+			},
+		},
+
+		{
 			"nested_block_comment.hcl",
 			false,
 			map[string]interface{}{
@@ -322,6 +347,71 @@ func TestDecode_interface(t *testing.T) {
 										},
 									},
 								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		// Terraform GH-8295 sanity test that basic decoding into
+		// interface{} works.
+		{
+			"terraform_variable_invalid.json",
+			false,
+			map[string]interface{}{
+				"variable": []map[string]interface{}{
+					map[string]interface{}{
+						"whatever": "abc123",
+					},
+				},
+			},
+		},
+
+		{
+			"interpolate.json",
+			false,
+			map[string]interface{}{
+				"default": `${replace("europe-west", "-", " ")}`,
+			},
+		},
+
+		{
+			"block_assign.hcl",
+			true,
+			nil,
+		},
+
+		{
+			"escape_backslash.hcl",
+			false,
+			map[string]interface{}{
+				"output": []map[string]interface{}{
+					map[string]interface{}{
+						"one":  `${replace(var.sub_domain, ".", "\\.")}`,
+						"two":  `${replace(var.sub_domain, ".", "\\\\.")}`,
+						"many": `${replace(var.sub_domain, ".", "\\\\\\\\.")}`,
+					},
+				},
+			},
+		},
+
+		{
+			"git_crypt.hcl",
+			true,
+			nil,
+		},
+
+		{
+			"object_with_bool.hcl",
+			false,
+			map[string]interface{}{
+				"path": []map[string]interface{}{
+					map[string]interface{}{
+						"policy": "write",
+						"permissions": []map[string]interface{}{
+							map[string]interface{}{
+								"bool": []interface{}{false},
 							},
 						},
 					},
@@ -676,6 +766,26 @@ func TestDecode_structureMap(t *testing.T) {
 	}
 }
 
+func TestDecode_structureMapInvalid(t *testing.T) {
+	// Terraform GH-8295
+
+	type hclVariable struct {
+		Default     interface{}
+		Description string
+		Fields      []string `hcl:",decodedFields"`
+	}
+
+	type rawConfig struct {
+		Variable map[string]*hclVariable
+	}
+
+	var actual rawConfig
+	err := Decode(&actual, testReadFile(t, "terraform_variable_invalid.json"))
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 func TestDecode_interfaceNonPointer(t *testing.T) {
 	var value interface{}
 	err := Decode(value, testReadFile(t, "basic_int_string.hcl"))
@@ -695,6 +805,21 @@ func TestDecode_intString(t *testing.T) {
 	}
 
 	if value.Count != 3 {
+		t.Fatalf("bad: %#v", value.Count)
+	}
+}
+
+func TestDecode_intStringAliased(t *testing.T) {
+	var value struct {
+		Count time.Duration
+	}
+
+	err := Decode(&value, testReadFile(t, "basic_int_string.hcl"))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if value.Count != time.Duration(3) {
 		t.Fatalf("bad: %#v", value.Count)
 	}
 }
@@ -801,5 +926,240 @@ func TestDecode_topLevelKeys(t *testing.T) {
 
 	if templates.Templates[1].Source != "blahblah" {
 		t.Errorf("bad source: %s", templates.Templates[1].Source)
+	}
+}
+
+func TestDecode_flattenedJSON(t *testing.T) {
+	// make sure we can also correctly extract a Name key too
+	type V struct {
+		Name        string `hcl:",key"`
+		Description string
+		Default     map[string]string
+	}
+	type Vars struct {
+		Variable []*V
+	}
+
+	cases := []struct {
+		JSON     string
+		Out      interface{}
+		Expected interface{}
+	}{
+		{ // Nested object, no sibling keys
+			JSON: `
+{
+  "var_name": {
+    "default": {
+      "key1": "a",
+      "key2": "b"
+    }
+  }
+}
+			`,
+			Out: &[]*V{},
+			Expected: &[]*V{
+				&V{
+					Name:    "var_name",
+					Default: map[string]string{"key1": "a", "key2": "b"},
+				},
+			},
+		},
+
+		{ // Nested object with a sibling key (this worked previously)
+			JSON: `
+{
+  "var_name": {
+    "description": "Described",
+    "default": {
+      "key1": "a",
+      "key2": "b"
+    }
+  }
+}
+			`,
+			Out: &[]*V{},
+			Expected: &[]*V{
+				&V{
+					Name:        "var_name",
+					Description: "Described",
+					Default:     map[string]string{"key1": "a", "key2": "b"},
+				},
+			},
+		},
+
+		{ // Multiple nested objects, one with a sibling key
+			JSON: `
+{
+  "variable": {
+    "var_1": {
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    },
+    "var_2": {
+      "description": "Described",
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    }
+  }
+}
+			`,
+			Out: &Vars{},
+			Expected: &Vars{
+				Variable: []*V{
+					&V{
+						Name:    "var_1",
+						Default: map[string]string{"key1": "a", "key2": "b"},
+					},
+					&V{
+						Name:        "var_2",
+						Description: "Described",
+						Default:     map[string]string{"key1": "a", "key2": "b"},
+					},
+				},
+			},
+		},
+
+		{ // Nested object to maps
+			JSON: `
+{
+  "variable": {
+    "var_name": {
+      "description": "Described",
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    }
+  }
+}
+			`,
+			Out: &[]map[string]interface{}{},
+			Expected: &[]map[string]interface{}{
+				{
+					"variable": []map[string]interface{}{
+						{
+							"var_name": []map[string]interface{}{
+								{
+									"description": "Described",
+									"default": []map[string]interface{}{
+										{
+											"key1": "a",
+											"key2": "b",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{ // Nested object to maps without a sibling key should decode the same as above
+			JSON: `
+{
+  "variable": {
+    "var_name": {
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    }
+  }
+}
+			`,
+			Out: &[]map[string]interface{}{},
+			Expected: &[]map[string]interface{}{
+				{
+					"variable": []map[string]interface{}{
+						{
+							"var_name": []map[string]interface{}{
+								{
+									"default": []map[string]interface{}{
+										{
+											"key1": "a",
+											"key2": "b",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{ // Nested objects, one with a sibling key, and one without
+			JSON: `
+{
+  "variable": {
+    "var_1": {
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    },
+    "var_2": {
+      "description": "Described",
+      "default": {
+        "key1": "a",
+        "key2": "b"
+      }
+    }
+  }
+}
+			`,
+			Out: &[]map[string]interface{}{},
+			Expected: &[]map[string]interface{}{
+				{
+					"variable": []map[string]interface{}{
+						{
+							"var_1": []map[string]interface{}{
+								{
+									"default": []map[string]interface{}{
+										{
+											"key1": "a",
+											"key2": "b",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					"variable": []map[string]interface{}{
+						{
+							"var_2": []map[string]interface{}{
+								{
+									"description": "Described",
+									"default": []map[string]interface{}{
+										{
+											"key1": "a",
+											"key2": "b",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i, tc := range cases {
+		err := Decode(tc.Out, tc.JSON)
+		if err != nil {
+			t.Fatalf("[%d] err: %s", i, err)
+		}
+
+		if !reflect.DeepEqual(tc.Out, tc.Expected) {
+			t.Fatalf("[%d]\ngot: %s\nexpected: %s\n", i, spew.Sdump(tc.Out), spew.Sdump(tc.Expected))
+		}
 	}
 }

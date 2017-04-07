@@ -31,18 +31,31 @@ type entry struct {
 var data = []entry{
 	{"complexhcl.input", "complexhcl.golden"},
 	{"list.input", "list.golden"},
+	{"list_comment.input", "list_comment.golden"},
 	{"comment.input", "comment.golden"},
 	{"comment_aligned.input", "comment_aligned.golden"},
+	{"comment_array.input", "comment_array.golden"},
+	{"comment_end_file.input", "comment_end_file.golden"},
+	{"comment_multiline_indent.input", "comment_multiline_indent.golden"},
+	{"comment_multiline_no_stanza.input", "comment_multiline_no_stanza.golden"},
+	{"comment_multiline_stanza.input", "comment_multiline_stanza.golden"},
+	{"comment_newline.input", "comment_newline.golden"},
+	{"comment_object_multi.input", "comment_object_multi.golden"},
 	{"comment_standalone.input", "comment_standalone.golden"},
 	{"empty_block.input", "empty_block.golden"},
 	{"list_of_objects.input", "list_of_objects.golden"},
+	{"multiline_string.input", "multiline_string.golden"},
+	{"object_singleline.input", "object_singleline.golden"},
+	{"object_with_heredoc.input", "object_with_heredoc.golden"},
 }
 
 func TestFiles(t *testing.T) {
 	for _, e := range data {
 		source := filepath.Join(dataDir, e.source)
 		golden := filepath.Join(dataDir, e.golden)
-		check(t, source, golden)
+		t.Run(e.source, func(t *testing.T) {
+			check(t, source, golden)
+		})
 	}
 }
 
@@ -124,7 +137,7 @@ func format(src []byte) ([]byte, error) {
 
 	// make sure formatted output is syntactically correct
 	if _, err := parser.Parse(formatted); err != nil {
-		return nil, fmt.Errorf("parse: %s\n%s", err, src)
+		return nil, fmt.Errorf("parse: %s\n%s", err, formatted)
 	}
 
 	return formatted, nil

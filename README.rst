@@ -85,7 +85,7 @@ Basic
 .. code-block:: json
 
     {
-      "port": 3001,
+      "port": 3001
     }
 
 Images are generated on the fly at each request

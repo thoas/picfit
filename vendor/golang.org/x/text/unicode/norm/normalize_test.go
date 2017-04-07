@@ -13,6 +13,9 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"golang.org/x/text/internal/testtext"
+	"golang.org/x/text/transform"
 )
 
 var (
@@ -368,94 +371,122 @@ func TestLastBoundary(t *testing.T) {
 	runPosTests(t, "TestLastBoundary", NFC, lastBoundaryF, lastBoundaryTests)
 }
 
-var quickSpanTests = []PositionTest{
-	{"", 0, ""},
+type spanTest struct {
+	input string
+	atEOF bool
+	n     int
+	err   error
+}
+
+var quickSpanTests = []spanTest{
+	{"", true, 0, nil},
 	// starters
-	{"a", 1, ""},
-	{"abc", 3, ""},
-	{"\u043Eb", 3, ""},
+	{"a", true, 1, nil},
+	{"abc", true, 3, nil},
+	{"\u043Eb", true, 3, nil},
 	// incomplete last rune.
-	{"\xCC", 1, ""},
-	{"a\xCC", 2, ""},
+	{"\xCC", true, 1, nil},
+	{"\xCC", false, 0, transform.ErrShortSrc},
+	{"a\xCC", true, 2, nil},
+	{"a\xCC", false, 0, transform.ErrShortSrc}, // TODO: could be 1 for NFD
 	// incorrectly ordered combining characters
-	{"\u0300\u0316", 0, ""},
-	{"\u0300\u0316cd", 0, ""},
+	{"\u0300\u0316", true, 0, transform.ErrEndOfSpan},
+	{"\u0300\u0316", false, 0, transform.ErrEndOfSpan},
+	{"\u0300\u0316cd", true, 0, transform.ErrEndOfSpan},
+	{"\u0300\u0316cd", false, 0, transform.ErrEndOfSpan},
 	// have a maximum number of combining characters.
-	{rep(0x035D, 30) + "\u035B", 0, ""},
-	{"a" + rep(0x035D, 30) + "\u035B", 0, ""},
-	{"Ɵ" + rep(0x035D, 30) + "\u035B", 0, ""},
-	{"aa" + rep(0x035D, 30) + "\u035B", 1, ""},
-	{rep(0x035D, 30) + cgj + "\u035B", 64, ""},
-	{"a" + rep(0x035D, 30) + cgj + "\u035B", 65, ""},
-	{"Ɵ" + rep(0x035D, 30) + cgj + "\u035B", 66, ""},
-	{"aa" + rep(0x035D, 30) + cgj + "\u035B", 66, ""},
+	{rep(0x035D, 30) + "\u035B", true, 0, transform.ErrEndOfSpan},
+	{"a" + rep(0x035D, 30) + "\u035B", true, 0, transform.ErrEndOfSpan},
+	{"Ɵ" + rep(0x035D, 30) + "\u035B", true, 0, transform.ErrEndOfSpan},
+	{"aa" + rep(0x035D, 30) + "\u035B", true, 1, transform.ErrEndOfSpan},
+	{rep(0x035D, 30) + cgj + "\u035B", true, 64, nil},
+	{"a" + rep(0x035D, 30) + cgj + "\u035B", true, 65, nil},
+	{"Ɵ" + rep(0x035D, 30) + cgj + "\u035B", true, 66, nil},
+	{"aa" + rep(0x035D, 30) + cgj + "\u035B", true, 66, nil},
+
+	{"a" + rep(0x035D, 30) + cgj + "\u035B", false, 61, transform.ErrShortSrc},
+	{"Ɵ" + rep(0x035D, 30) + cgj + "\u035B", false, 62, transform.ErrShortSrc},
+	{"aa" + rep(0x035D, 30) + cgj + "\u035B", false, 62, transform.ErrShortSrc},
 }
 
-var quickSpanNFDTests = []PositionTest{
+var quickSpanNFDTests = []spanTest{
 	// needs decomposing
-	{"\u00C0", 0, ""},
-	{"abc\u00C0", 3, ""},
+	{"\u00C0", true, 0, transform.ErrEndOfSpan},
+	{"abc\u00C0", true, 3, transform.ErrEndOfSpan},
 	// correctly ordered combining characters
-	{"\u0300", 2, ""},
-	{"ab\u0300", 4, ""},
-	{"ab\u0300cd", 6, ""},
-	{"\u0300cd", 4, ""},
-	{"\u0316\u0300", 4, ""},
-	{"ab\u0316\u0300", 6, ""},
-	{"ab\u0316\u0300cd", 8, ""},
-	{"ab\u0316\u0300\u00C0", 6, ""},
-	{"\u0316\u0300cd", 6, ""},
-	{"\u043E\u0308b", 5, ""},
+	{"\u0300", true, 2, nil},
+	{"ab\u0300", true, 4, nil},
+	{"ab\u0300cd", true, 6, nil},
+	{"\u0300cd", true, 4, nil},
+	{"\u0316\u0300", true, 4, nil},
+	{"ab\u0316\u0300", true, 6, nil},
+	{"ab\u0316\u0300cd", true, 8, nil},
+	{"ab\u0316\u0300\u00C0", true, 6, transform.ErrEndOfSpan},
+	{"\u0316\u0300cd", true, 6, nil},
+	{"\u043E\u0308b", true, 5, nil},
 	// incorrectly ordered combining characters
-	{"ab\u0300\u0316", 1, ""}, // TODO: we could skip 'b' as well.
-	{"ab\u0300\u0316cd", 1, ""},
+	{"ab\u0300\u0316", true, 1, transform.ErrEndOfSpan}, // TODO: we could skip 'b' as well.
+	{"ab\u0300\u0316cd", true, 1, transform.ErrEndOfSpan},
 	// Hangul
-	{"같은", 0, ""},
+	{"같은", true, 0, transform.ErrEndOfSpan},
 }
 
-var quickSpanNFCTests = []PositionTest{
+var quickSpanNFCTests = []spanTest{
 	// okay composed
-	{"\u00C0", 2, ""},
-	{"abc\u00C0", 5, ""},
+	{"\u00C0", true, 2, nil},
+	{"abc\u00C0", true, 5, nil},
 	// correctly ordered combining characters
-	{"ab\u0300", 1, ""},
-	{"ab\u0300cd", 1, ""},
-	{"ab\u0316\u0300", 1, ""},
-	{"ab\u0316\u0300cd", 1, ""},
-	{"\u00C0\u035D", 4, ""},
+	// TODO: b may combine with modifiers, which is why this fails. We could
+	// make a more precise test that that actually checks whether last
+	// characters combines. Probably not worth it.
+	{"ab\u0300", true, 1, transform.ErrEndOfSpan},
+	{"ab\u0300cd", true, 1, transform.ErrEndOfSpan},
+	{"ab\u0316\u0300", true, 1, transform.ErrEndOfSpan},
+	{"ab\u0316\u0300cd", true, 1, transform.ErrEndOfSpan},
+	{"\u00C0\u035D", true, 4, nil},
 	// we do not special case leading combining characters
-	{"\u0300cd", 0, ""},
-	{"\u0300", 0, ""},
-	{"\u0316\u0300", 0, ""},
-	{"\u0316\u0300cd", 0, ""},
+	{"\u0300cd", true, 0, transform.ErrEndOfSpan},
+	{"\u0300", true, 0, transform.ErrEndOfSpan},
+	{"\u0316\u0300", true, 0, transform.ErrEndOfSpan},
+	{"\u0316\u0300cd", true, 0, transform.ErrEndOfSpan},
 	// incorrectly ordered combining characters
-	{"ab\u0300\u0316", 1, ""},
-	{"ab\u0300\u0316cd", 1, ""},
+	{"ab\u0300\u0316", true, 1, transform.ErrEndOfSpan},
+	{"ab\u0300\u0316cd", true, 1, transform.ErrEndOfSpan},
 	// Hangul
-	{"같은", 6, ""},
+	{"같은", true, 6, nil},
+	{"같은", false, 3, transform.ErrShortSrc},
 	// We return the start of the violating segment in case of overflow.
-	{grave(30) + "\uff9e", 0, ""},
-	{grave(30), 0, ""},
+	{grave(30) + "\uff9e", true, 0, transform.ErrEndOfSpan},
+	{grave(30), true, 0, transform.ErrEndOfSpan},
 }
 
-func doQuickSpan(rb *reorderBuffer, s string) (int, []byte) {
-	return rb.f.form.QuickSpan([]byte(s)), nil
+func runSpanTests(t *testing.T, name string, f Form, testCases []spanTest) {
+	for i, tc := range testCases {
+		s := fmt.Sprintf("Bytes/%s/%d=%+q/atEOF=%v", name, i, pc(tc.input), tc.atEOF)
+		ok := testtext.Run(t, s, func(t *testing.T) {
+			n, err := f.Span([]byte(tc.input), tc.atEOF)
+			if n != tc.n || err != tc.err {
+				t.Errorf("\n got %d, %v;\nwant %d, %v", n, err, tc.n, tc.err)
+			}
+		})
+		if !ok {
+			continue // Don't do the String variant if the Bytes variant failed.
+		}
+		s = fmt.Sprintf("String/%s/%d=%+q/atEOF=%v", name, i, pc(tc.input), tc.atEOF)
+		testtext.Run(t, s, func(t *testing.T) {
+			n, err := f.SpanString(tc.input, tc.atEOF)
+			if n != tc.n || err != tc.err {
+				t.Errorf("\n got %d, %v;\nwant %d, %v", n, err, tc.n, tc.err)
+			}
+		})
+	}
 }
 
-func doQuickSpanString(rb *reorderBuffer, s string) (int, []byte) {
-	return rb.f.form.QuickSpanString(s), nil
-}
-
-func TestQuickSpan(t *testing.T) {
-	runPosTests(t, "TestQuickSpanNFD1", NFD, doQuickSpan, quickSpanTests)
-	runPosTests(t, "TestQuickSpanNFD2", NFD, doQuickSpan, quickSpanNFDTests)
-	runPosTests(t, "TestQuickSpanNFC1", NFC, doQuickSpan, quickSpanTests)
-	runPosTests(t, "TestQuickSpanNFC2", NFC, doQuickSpan, quickSpanNFCTests)
-
-	runPosTests(t, "TestQuickSpanStringNFD1", NFD, doQuickSpanString, quickSpanTests)
-	runPosTests(t, "TestQuickSpanStringNFD2", NFD, doQuickSpanString, quickSpanNFDTests)
-	runPosTests(t, "TestQuickSpanStringNFC1", NFC, doQuickSpanString, quickSpanTests)
-	runPosTests(t, "TestQuickSpanStringNFC2", NFC, doQuickSpanString, quickSpanNFCTests)
+func TestSpan(t *testing.T) {
+	runSpanTests(t, "NFD", NFD, quickSpanTests)
+	runSpanTests(t, "NFD", NFD, quickSpanNFDTests)
+	runSpanTests(t, "NFC", NFC, quickSpanTests)
+	runSpanTests(t, "NFC", NFC, quickSpanNFCTests)
 }
 
 var isNormalTests = []PositionTest{
@@ -845,6 +876,25 @@ func TestString(t *testing.T) {
 		outs := string(out) + s
 		return []byte(f.String(outs))
 	})
+}
+
+func TestLinking(t *testing.T) {
+	const prog = `
+	package main
+	import "fmt"
+	import "golang.org/x/text/unicode/norm"
+	func main() { fmt.Println(norm.%s) }
+	`
+	baseline, errB := testtext.CodeSize(fmt.Sprintf(prog, "MaxSegmentSize"))
+	withTables, errT := testtext.CodeSize(fmt.Sprintf(prog, `NFC.String("")`))
+	if errB != nil || errT != nil {
+		t.Skipf("code size failed: %v and %v", errB, errT)
+	}
+	// Tables are at least 50K
+	if d := withTables - baseline; d < 50*1024 {
+		t.Errorf("tables appear not to be dropped: %d - %d = %d",
+			withTables, baseline, d)
+	}
 }
 
 func appendBench(f Form, in []byte) func() {

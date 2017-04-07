@@ -7,7 +7,7 @@ package: main
 import:
   - package: golang.org/x/image
   - package: github.com/Sirupsen/logrus
-    version: 6c28e16200e55c2549705ac24ea58976c07f18ac
+    version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
   - package: github.com/codegangsta/cli
     version: f7ebb761e83e21225d1d8954fde853bf8edd46c4
   - package: github.com/disintegration/imaging
@@ -17,11 +17,11 @@ import:
   - package: github.com/garyburd/redigo
     version: cca3df8fa0670249a3f746bcc062c69aeba0517c
   - package: github.com/getsentry/raven-go
-    version: 3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7
+    version: b68337dbf03e7fbb53d9fd9b63fd09b28e8f13f7
   - package: github.com/gin-gonic/contrib
     version: 547e518040cfb96576b507d2f26779ab9c6fc829
   - package: github.com/gin-gonic/gin
-    version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
+    version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
   - package: github.com/thoas/stats
     version: 152b5d051953fdb6e45f14b6826962aadc032324
   - package: github.com/imdario/mergo

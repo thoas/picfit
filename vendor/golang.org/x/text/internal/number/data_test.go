@@ -12,7 +12,7 @@ type pluralTest struct {
 }
 
 var ordinalTests = []pluralTest{ // 59 elements
-	0:  {locales: "af am ar bg bs ce cs da de dsb el es et eu fa fi fy gl he hr hsb id in is iw ja km kn ko ky lt lv ml mn my nb nl pa pl prg pt root ru sh si sk sl sr sw ta te th tr ur uz zh zu", form: 0x0, integer: []string{"0~15", "100", "1000", "10000", "100000", "1000000"}, decimal: []string(nil)},
+	0:  {locales: "af am ar bg bs ce cs da de dsb el es et eu fa fi fy gl he hr hsb id in is iw ja km kn ko ky lt lv ml mn my nb nl pa pl prg pt root ru sh si sk sl sr sw ta te th tr ur uz yue zh zu", form: 0x0, integer: []string{"0~15", "100", "1000", "10000", "100000", "1000000"}, decimal: []string(nil)},
 	1:  {locales: "sv", form: 0x2, integer: []string{"1", "2", "21", "22", "31", "32", "41", "42", "51", "52", "61", "62", "71", "72", "81", "82", "101", "1001"}, decimal: []string(nil)},
 	2:  {locales: "sv", form: 0x0, integer: []string{"0", "3~17", "100", "1000", "10000", "100000", "1000000"}, decimal: []string(nil)},
 	3:  {locales: "fil fr ga hy lo mo ms ro tl vi", form: 0x2, integer: []string{"1"}, decimal: []string(nil)},
@@ -74,7 +74,7 @@ var ordinalTests = []pluralTest{ // 59 elements
 } // Size: 4272 bytes
 
 var cardinalTests = []pluralTest{ // 115 elements
-	0:   {locales: "bm bo dz id ig ii in ja jbo jv jw kde kea km ko lkt lo ms my nqo root sah ses sg th to vi wo yo zh", form: 0x0, integer: []string{"0~15", "100", "1000", "10000", "100000", "1000000"}, decimal: []string{"0.0~1.5", "10.0", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
+	0:   {locales: "bm bo dz id ig ii in ja jbo jv jw kde kea km ko lkt lo ms my nqo root sah ses sg th to vi wo yo yue zh", form: 0x0, integer: []string{"0~15", "100", "1000", "10000", "100000", "1000000"}, decimal: []string{"0.0~1.5", "10.0", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
 	1:   {locales: "am as bn fa gu hi kn mr zu", form: 0x2, integer: []string{"0", "1"}, decimal: []string{"0.0~1.0", "0.00~0.04"}},
 	2:   {locales: "am as bn fa gu hi kn mr zu", form: 0x0, integer: []string{"2~17", "100", "1000", "10000", "100000", "1000000"}, decimal: []string{"1.1~2.6", "10.0", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
 	3:   {locales: "ff fr hy kab", form: 0x2, integer: []string{"0", "1"}, decimal: []string{"0.0~1.5"}},
@@ -177,12 +177,12 @@ var cardinalTests = []pluralTest{ // 115 elements
 	100: {locales: "gv", form: 0x4, integer: []string{"0", "20", "40", "60", "80", "100", "120", "140", "1000", "10000", "100000", "1000000"}, decimal: []string(nil)},
 	101: {locales: "gv", form: 0x5, integer: []string(nil), decimal: []string{"0.0~1.5", "10.0", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
 	102: {locales: "gv", form: 0x0, integer: []string{"3~10", "13~19", "23", "103", "1003"}, decimal: []string(nil)},
-	103: {locales: "ar", form: 0x1, integer: []string{"0"}, decimal: []string{"0.0", "0.00", "0.000", "0.0000"}},
-	104: {locales: "ar", form: 0x2, integer: []string{"1"}, decimal: []string{"1.0", "1.00", "1.000", "1.0000"}},
-	105: {locales: "ar", form: 0x3, integer: []string{"2"}, decimal: []string{"2.0", "2.00", "2.000", "2.0000"}},
-	106: {locales: "ar", form: 0x4, integer: []string{"3~10", "103~110", "1003"}, decimal: []string{"3.0", "4.0", "5.0", "6.0", "7.0", "8.0", "9.0", "10.0", "103.0", "1003.0"}},
-	107: {locales: "ar", form: 0x5, integer: []string{"11~26", "111", "1011"}, decimal: []string{"11.0", "12.0", "13.0", "14.0", "15.0", "16.0", "17.0", "18.0", "111.0", "1011.0"}},
-	108: {locales: "ar", form: 0x0, integer: []string{"100~102", "200~202", "300~302", "400~402", "500~502", "600", "1000", "10000", "100000", "1000000"}, decimal: []string{"0.1~0.9", "1.1~1.7", "10.1", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
+	103: {locales: "ar ars", form: 0x1, integer: []string{"0"}, decimal: []string{"0.0", "0.00", "0.000", "0.0000"}},
+	104: {locales: "ar ars", form: 0x2, integer: []string{"1"}, decimal: []string{"1.0", "1.00", "1.000", "1.0000"}},
+	105: {locales: "ar ars", form: 0x3, integer: []string{"2"}, decimal: []string{"2.0", "2.00", "2.000", "2.0000"}},
+	106: {locales: "ar ars", form: 0x4, integer: []string{"3~10", "103~110", "1003"}, decimal: []string{"3.0", "4.0", "5.0", "6.0", "7.0", "8.0", "9.0", "10.0", "103.0", "1003.0"}},
+	107: {locales: "ar ars", form: 0x5, integer: []string{"11~26", "111", "1011"}, decimal: []string{"11.0", "12.0", "13.0", "14.0", "15.0", "16.0", "17.0", "18.0", "111.0", "1011.0"}},
+	108: {locales: "ar ars", form: 0x0, integer: []string{"100~102", "200~202", "300~302", "400~402", "500~502", "600", "1000", "10000", "100000", "1000000"}, decimal: []string{"0.1~0.9", "1.1~1.7", "10.1", "100.0", "1000.0", "10000.0", "100000.0", "1000000.0"}},
 	109: {locales: "cy", form: 0x1, integer: []string{"0"}, decimal: []string{"0.0", "0.00", "0.000", "0.0000"}},
 	110: {locales: "cy", form: 0x2, integer: []string{"1"}, decimal: []string{"1.0", "1.00", "1.000", "1.0000"}},
 	111: {locales: "cy", form: 0x3, integer: []string{"2"}, decimal: []string{"2.0", "2.00", "2.000", "2.0000"}},

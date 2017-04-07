@@ -5,9 +5,11 @@
 package precis
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"golang.org/x/text/internal/testtext"
 	"golang.org/x/text/secure/bidirule"
 )
 
@@ -17,7 +19,7 @@ type testCase struct {
 	err    error
 }
 
-var testCases = []struct {
+var enforceTestCases = []struct {
 	name  string
 	p     *Profile
 	cases []testCase
@@ -160,6 +162,7 @@ var testCases = []struct {
 		{"foo", "foo", nil},
 		{"Foo Bar", "Foo Bar", nil},
 		{"foo bar", "foo bar", nil},
+		{"\u03A3", "\u03A3", nil},
 		{"\u03C3", "\u03C3", nil},
 		// Greek final sigma is left as is (do not fold!)
 		{"\u03C2", "\u03C2", nil},
@@ -192,43 +195,42 @@ var testCases = []struct {
 		// {UsernameCaseMapped, "", "", errDisallowedRune},
 		{"juliet@example.com", "juliet@example.com", nil},
 		{"fussball", "fussball", nil},
-		{"fu\u00DFball", "fussball", nil},
+		{"fu\u00DFball", "fu\u00DFball", nil},
 		{"\u03C0", "\u03C0", nil},
 		{"\u03A3", "\u03C3", nil},
 		{"\u03C3", "\u03C3", nil},
-		{"\u03C2", "\u03C3", nil},
+		// Greek final sigma is left as is (do not fold!)
+		{"\u03C2", "\u03C2", nil},
 		{"\u0049", "\u0069", nil},
 		{"\u0049", "\u0069", nil},
 		{"\u03D2", "", errDisallowedRune},
 		{"\u03B0", "\u03B0", nil},
-		{"foo bar", "", bidirule.ErrInvalid},
-		{"♚", "", bidirule.ErrInvalid},
-		{"\u007E", "", bidirule.ErrInvalid}, // disallowed by bidi rule
+		{"foo bar", "", errDisallowedRune},
+		{"♚", "", errDisallowedRune},
+		{"\u007E", "~", nil},
 		{"a", "a", nil},
-		{"!", "", bidirule.ErrInvalid}, // disallowed by bidi rule
-		{"²", "", bidirule.ErrInvalid},
-		{"\t", "", bidirule.ErrInvalid},
-		{"\n", "", bidirule.ErrInvalid},
-		{"\u26D6", "", bidirule.ErrInvalid},
-		{"\u26FF", "", bidirule.ErrInvalid},
-		{"\uFB00", "ff", nil}, // Side effect of case folding.
-		{"\u1680", "", bidirule.ErrInvalid},
-		{" ", "", bidirule.ErrInvalid},
-		{"  ", "", bidirule.ErrInvalid},
+		{"!", "!", nil},
+		{"²", "", errDisallowedRune},
+		{"\t", "", errDisallowedRune},
+		{"\n", "", errDisallowedRune},
+		{"\u26D6", "", errDisallowedRune},
+		{"\u26FF", "", errDisallowedRune},
+		{"\uFB00", "", errDisallowedRune},
+		{"\u1680", "", errDisallowedRune},
+		{" ", "", errDisallowedRune},
+		{"  ", "", errDisallowedRune},
 		{"\u01C5", "", errDisallowedRune},
-		{"\u16EE", "", errDisallowedRune},   // Nl RUNIC ARLAUG SYMBOL
-		{"\u0488", "", bidirule.ErrInvalid}, // Me COMBINING CYRILLIC HUNDRED THOUSANDS SIGN
-		{"\u212B", "\u00e5", nil},           // Angstrom sign, NFC -> U+00E5
-		{"A\u030A", "å", nil},               // A + ring
-		{"\u00C5", "å", nil},                // A with ring
-		{"\u00E7", "ç", nil},                // c cedille
-		{"\u0063\u0327", "ç", nil},          // c + cedille
+		{"\u16EE", "", errDisallowedRune}, // Nl RUNIC ARLAUG SYMBOL
+		{"\u0488", "", errDisallowedRune}, // Me COMBINING CYRILLIC HUNDRED THOUSANDS SIGN
+		{"\u212B", "\u00e5", nil},         // Angstrom sign, NFC -> U+00E5
+		{"A\u030A", "å", nil},             // A + ring
+		{"\u00C5", "å", nil},              // A with ring
+		{"\u00E7", "ç", nil},              // c cedille
+		{"\u0063\u0327", "ç", nil},        // c + cedille
 		{"\u0158", "ř", nil},
 		{"\u0052\u030C", "ř", nil},
 
 		{"\u1E61", "\u1E61", nil}, // LATIN SMALL LETTER S WITH DOT ABOVE
-		// U+1e9B: case folded.
-		{"ẛ", "\u1E61", nil}, // LATIN SMALL LETTER LONG S WITH DOT ABOVE
 
 		// Confusable characters ARE allowed and should NOT be mapped.
 		{"\u0410", "\u0430", nil}, // CYRILLIC CAPITAL LETTER A
@@ -246,6 +248,17 @@ var testCases = []struct {
 		{"\u212B", "\u00c5", nil},    // Angstrom sign, NFC -> U+00E5
 		{"ẛ", "", errDisallowedRune}, // LATIN SMALL LETTER LONG S WITH DOT ABOVE
 	}},
+}
+
+func doTests(t *testing.T, fn func(t *testing.T, p *Profile, tc testCase)) {
+	for _, g := range enforceTestCases {
+		for i, tc := range g.cases {
+			name := fmt.Sprintf("%s:%d:%+q", g.name, i, tc.input)
+			testtext.Run(t, name, func(t *testing.T) {
+				fn(t, g.p, tc)
+			})
+		}
+	}
 }
 
 func TestString(t *testing.T) {
@@ -277,4 +290,31 @@ func TestAppend(t *testing.T) {
 			t.Errorf("got %+q (err: %v); want %+q (err: %v)", string(e), err, tc.output, tc.err)
 		}
 	})
+}
+
+func TestStringMallocs(t *testing.T) {
+	if n := testtext.AllocsPerRun(100, func() { UsernameCaseMapped.String("helloworld") }); n > 0 {
+		// TODO: reduce this to 0.
+		t.Skipf("got %f allocs, want 0", n)
+	}
+}
+
+func TestAppendMallocs(t *testing.T) {
+	str := []byte("helloworld")
+	out := make([]byte, 0, len(str))
+	if n := testtext.AllocsPerRun(100, func() { UsernameCaseMapped.Append(out, str) }); n > 0 {
+		t.Errorf("got %f allocs, want 0", n)
+	}
+}
+
+func TestTransformMallocs(t *testing.T) {
+	str := []byte("helloworld")
+	out := make([]byte, 0, len(str))
+	tr := UsernameCaseMapped.NewTransformer()
+	if n := testtext.AllocsPerRun(100, func() {
+		tr.Reset()
+		tr.Transform(out, str, true)
+	}); n > 0 {
+		t.Errorf("got %f allocs, want 0", n)
+	}
 }
