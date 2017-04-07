@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -113,3 +114,8 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 		"index.html": &_bintree_t{data_index_html, map[string]*_bintree_t{}},
 	}},
 }}
+
+// AssetInfo returns file info of given path
+func AssetInfo(path string) (os.FileInfo, error) {
+	return os.Stat(path)
+}

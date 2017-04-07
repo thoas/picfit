@@ -17,27 +17,27 @@ func performRequest(r http.Handler, method, path string) *httptest.ResponseRecor
 }
 
 func TestBadConfig(t *testing.T) {
-	assert.Panics(t, func() { New(Options{}) })
+	assert.Panics(t, func() { New(Config{}) })
 	assert.Panics(t, func() {
-		New(Options{
+		New(Config{
 			AllowAllOrigins: true,
 			AllowedOrigins:  []string{"http://google.com"},
 		})
 	})
 	assert.Panics(t, func() {
-		New(Options{
+		New(Config{
 			AllowAllOrigins: true,
 			AllowOriginFunc: func(origin string) bool { return false },
 		})
 	})
 	assert.Panics(t, func() {
-		New(Options{
+		New(Config{
 			AllowedOrigins:  []string{"http://google.com"},
 			AllowOriginFunc: func(origin string) bool { return false },
 		})
 	})
 	assert.Panics(t, func() {
-		New(Options{
+		New(Config{
 			AllowedOrigins: []string{"google.com"},
 		})
 	})
@@ -47,7 +47,7 @@ func TestDeny0(t *testing.T) {
 	called := false
 
 	router := gin.Default()
-	router.Use(New(Options{
+	router.Use(New(Config{
 		AllowedOrigins: []string{"http://example.com"},
 	}))
 	router.GET("/", func(c *gin.Context) {
@@ -67,7 +67,7 @@ func TestDenyAbortOnError(t *testing.T) {
 	called := false
 
 	router := gin.Default()
-	router.Use(New(Options{
+	router.Use(New(Config{
 		AbortOnError:   true,
 		AllowedOrigins: []string{"http://example.com"},
 	}))

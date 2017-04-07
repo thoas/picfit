@@ -37,7 +37,7 @@ func TestGzip(t *testing.T) {
 	assert.Equal(t, w.Code, 200)
 	assert.Equal(t, w.Header().Get("Content-Encoding"), "gzip")
 	assert.Equal(t, w.Header().Get("Vary"), "Accept-Encoding")
-	assert.Equal(t, w.Header().Get("Content-Length"), "")
+	assert.Equal(t, w.Header().Get("Content-Length"), "0")
 	assert.NotEqual(t, w.Body.Len(), 19)
 
 	gr, err := gzip.NewReader(w.Body)

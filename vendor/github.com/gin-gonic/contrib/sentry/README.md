@@ -1,5 +1,10 @@
 # sentry
+
 Middleware to integrate with [sentry](https://getsentry.com/) crash reporting.  Middleware version of `raven.RecoveryHandler()`.
+
+## EOL-warning
+
+**This package has been abandoned on 2017-01-13. Please use [gin-contrib/sentry](https://github.com/gin-contrib/sentry) instead.**
 
 ## Example
 ```go

@@ -30,7 +30,7 @@ func Gzip(level int) gin.HandlerFunc {
 		c.Header("Vary", "Accept-Encoding")
 		c.Writer = &gzipWriter{c.Writer, gz}
 		defer func() {
-			c.Header("Content-Length", "")
+			c.Header("Content-Length", "0")
 			gz.Close()
 		}()
 		c.Next()
@@ -40,6 +40,10 @@ func Gzip(level int) gin.HandlerFunc {
 type gzipWriter struct {
 	gin.ResponseWriter
 	writer *gzip.Writer
+}
+
+func (g *gzipWriter) WriteString(s string) (int, error) {
+	return g.writer.Write([]byte(s))
 }
 
 func (g *gzipWriter) Write(data []byte) (int, error) {

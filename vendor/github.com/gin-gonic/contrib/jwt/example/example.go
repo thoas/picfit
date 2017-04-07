@@ -1,10 +1,11 @@
 package main
 
 import (
+	"time"
+
 	jwt_lib "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/contrib/jwt"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 var (
@@ -20,8 +21,10 @@ func main() {
 		// Create the token
 		token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
 		// Set some claims
-		token.Claims["ID"] = "Christopher"
-		token.Claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+		token.Claims = jwt_lib.MapClaims{
+			"Id":  "Christopher",
+			"exp": time.Now().Add(time.Hour * 1).Unix(),
+		}
 		// Sign and get the complete encoded token as a string
 		tokenString, err := token.SignedString([]byte(mysupersecretpassword))
 		if err != nil {

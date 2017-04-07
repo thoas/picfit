@@ -1,6 +1,8 @@
+## EOL-warning
+
+**This package has been abandoned on 2016-12-13. Please use [gin-contrib/multitemplate](https://github.com/gin-contrib/multitemplate) instead.**
+
 This is a custom HTML render to support multi templates, ie. more than one `*template.Template`.
-
-
 
 #Simple example
 

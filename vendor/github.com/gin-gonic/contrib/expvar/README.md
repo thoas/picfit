@@ -1,4 +1,9 @@
-#expvar for gin
+# expvar for gin
+
+## EOL-warning
+
+**This package has been abandoned on 2016-12-15. Please use [gin-contrib/expvar](https://github.com/gin-contrib/expvar) instead.**
+
 ```go
 package main
 

@@ -1,5 +1,10 @@
 # sessions
+
 Gin middleware for session management with multi-backend support (currently cookie, Redis). 
+
+## EOL-warning
+
+**This package has been abandoned on 2016-12-07. Please use [gin-contrib/sessions](https://github.com/gin-contrib/sessions) instead.**
 
 ## Examples
 

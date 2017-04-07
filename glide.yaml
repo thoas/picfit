@@ -19,7 +19,7 @@ import:
   - package: github.com/getsentry/raven-go
     version: b68337dbf03e7fbb53d9fd9b63fd09b28e8f13f7
   - package: github.com/gin-gonic/contrib
-    version: 547e518040cfb96576b507d2f26779ab9c6fc829
+    version: ffa12cf90b52a4af3ae604f6452e61f8218a517c
   - package: github.com/gin-gonic/gin
     version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
   - package: github.com/thoas/stats

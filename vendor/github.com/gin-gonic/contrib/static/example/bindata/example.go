@@ -1,11 +1,12 @@
 package main
 
 import (
+	"net/http"
+	"strings"
+
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strings"
 )
 
 type binaryFileSystem struct {
@@ -28,7 +29,7 @@ func (b *binaryFileSystem) Exists(prefix string, filepath string) bool {
 }
 
 func BinaryFileSystem(root string) *binaryFileSystem {
-	fs := &assetfs.AssetFS{Asset, AssetDir, root}
+	fs := &assetfs.AssetFS{Asset, AssetDir, AssetInfo, root}
 	return &binaryFileSystem{
 		fs,
 	}
