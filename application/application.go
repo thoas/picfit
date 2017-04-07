@@ -58,8 +58,16 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 		DefaultQuality: cfg.Options.Quality,
 	}
 
+	log := logrus.New()
+
+	if cfg.Debug {
+		log.Level = logrus.DebugLevel
+	} else {
+		log.Level = logrus.ErrorLevel
+	}
+
 	ctx = engine.NewContext(ctx, e)
-	ctx = logger.NewContext(ctx, logrus.New())
+	ctx = logger.NewContext(ctx, log)
 
 	return ctx, nil
 }
