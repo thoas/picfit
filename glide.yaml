@@ -11,7 +11,7 @@ import:
   - package: github.com/codegangsta/cli
     version: f7ebb761e83e21225d1d8954fde853bf8edd46c4
   - package: github.com/disintegration/imaging
-    version: 7cbe056568779e3d987cd1b5e3dbe12c4f79f1ff
+    version: ac27d1805a555e1754fa177216ee07f4e63c30b5
   - package: github.com/franela/goreq
     version: 6d074b8384a4b5359484d95e88e7566020bc4335
   - package: github.com/garyburd/redigo
