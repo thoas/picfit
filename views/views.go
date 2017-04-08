@@ -36,7 +36,7 @@ func UploadView(c *gin.Context) {
 		return
 	}
 
-	file, err := multipartPayload.Upload(storage.DestinationFromContext(c))
+	file, err := multipartPayload.Upload(storage.SourceFromContext(c))
 
 	if err != nil {
 		errs.Handle(err, c.Writer)
