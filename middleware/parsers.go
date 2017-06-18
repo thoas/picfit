@@ -37,7 +37,7 @@ func ParametersParser() gin.HandlerFunc {
 
 			c.Set("parameters", parameters)
 		} else {
-			if c.Query("url") == "" {
+			if c.Query("url") == "" && c.Query("path") == "" {
 				c.String(http.StatusBadRequest, "Request should contains parameters or query string")
 				c.Abort()
 				return
