@@ -295,7 +295,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
 		if exists {
-			file, err = image.FromURL(u.(*url.URL))
+			file, err = image.FromURL(u.(*url.URL), cfg.Options.DefaultUserAgent)
 		} else {
 			// URL provided we use http protocol to retrieve it
 			s := storage.SourceFromContext(c)

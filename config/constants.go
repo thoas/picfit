@@ -6,6 +6,9 @@ const DefaultFormat = "png"
 // DefaultQuality is the default quality for processed images
 const DefaultQuality = 95
 
+// DefaultUserAgent is the default user-agent header to fetch images from URL with
+const DefaultUserAgent = ""
+
 // DefaultPort is the default port of the application server
 const DefaultPort = 3001
 
