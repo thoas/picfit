@@ -8,8 +8,8 @@ import (
 
 // Shard is a struct to allow shard location when files are uploaded
 type Shard struct {
-	Depth int
-	Width int
+	Depth    int
+	Width    int
 	RestOnly bool
 }
 
@@ -21,12 +21,13 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	EnableUpload  bool `mapstructure:"enable_upload"`
-	EnableDelete  bool `mapstructure:"enable_delete"`
-	DefaultFormat string
-	Format        string
-	Quality       int
-	AllowedSizes  []AllowedSize `mapstructure:"allowed_sizes"`
+	EnableUpload     bool `mapstructure:"enable_upload"`
+	EnableDelete     bool `mapstructure:"enable_delete"`
+	DefaultFormat    string
+	Format           string
+	Quality          int
+	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
+	MimetypeDetector string        `mapstructure:"mimetype_detector"`
 }
 
 // KVStore is a struct to represent a key/value store (redis, cache)
@@ -83,19 +84,20 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		Options: &Options{
-			EnableDelete:  false,
-			EnableUpload:  false,
-			DefaultFormat: DefaultFormat,
-			Quality:       DefaultQuality,
-			Format:        "",
+			EnableDelete:     false,
+			EnableUpload:     false,
+			DefaultFormat:    DefaultFormat,
+			Quality:          DefaultQuality,
+			Format:           "",
+			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
 		KVStore: &KVStore{
 			Type: "dummy",
 		},
 		Shard: &Shard{
-			Width: DefaultShardWidth,
-			Depth: DefaultShardDepth,
+			Width:    DefaultShardWidth,
+			Depth:    DefaultShardDepth,
 			RestOnly: DefaultShardRestOnly,
 		},
 	}
