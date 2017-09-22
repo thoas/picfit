@@ -293,6 +293,10 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 		index := len(filepath) - len(img.Format())
 
 		filepath = filepath[:index] + format
+
+		if contentType, ok := ContentTypes[format]; ok {
+			img.Headers["Content-Type"] = contentType
+		}
 	}
 
 	file := &imagefile.ImageFile{
