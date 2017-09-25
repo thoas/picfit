@@ -2,16 +2,15 @@ package middleware
 
 import (
 	"fmt"
-	"mime"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/middleware/context"
 	"github.com/thoas/picfit/util"
 )
 
@@ -94,7 +93,9 @@ func URLParser() gin.HandlerFunc {
 				return
 			}
 
-			mimetype := mime.TypeByExtension(filepath.Ext(value))
+			cfg := context.Config(c)
+
+			mimetype, _ := image.GetMimetypeDetector(cfg.Options)(url)
 
 			_, ok := image.Extensions[mimetype]
 
@@ -105,6 +106,7 @@ func URLParser() gin.HandlerFunc {
 			}
 
 			c.Set("url", url)
+			c.Set("mimetype", mimetype)
 		}
 
 		c.Next()

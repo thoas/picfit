@@ -28,6 +28,7 @@ type Options struct {
 	Quality          int
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
+	MimetypeDetector string        `mapstructure:"mimetype_detector"`
 }
 
 // KVStore is a struct to represent a key/value store (redis, cache)
@@ -90,6 +91,7 @@ func DefaultConfig() *Config {
 			Quality:          DefaultQuality,
 			Format:           "",
 			DefaultUserAgent: DefaultUserAgent,
+			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
 		KVStore: &KVStore{

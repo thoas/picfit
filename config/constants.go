@@ -9,6 +9,9 @@ const DefaultQuality = 95
 // DefaultUserAgent is the default user-agent header to fetch images from URL with
 const DefaultUserAgent = ""
 
+// DefaultMimeDetector method to use
+const DefaultMimetypeDetector = "extension"
+
 // DefaultPort is the default port of the application server
 const DefaultPort = 3001
 
