@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
 )
@@ -16,7 +16,7 @@ func main() {
 	app.Author = "thoas"
 	app.Email = "florent.messa@gmail.com"
 	app.Usage = "Display, manipulate, transform and cache your images"
-	app.Version = application.Version
+	app.Version = constants.Version
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "config, c",
@@ -31,7 +31,7 @@ func main() {
 			ShortName: "v",
 			Usage:     "Retrieve the version number",
 			Action: func(c *cli.Context) {
-				fmt.Printf("picfit %s\n", application.Version)
+				fmt.Printf("picfit %s\n", constants.Version)
 			},
 		},
 		{

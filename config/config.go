@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/spf13/viper"
+	"github.com/thoas/picfit/constants"
 )
 
 // Shard is a struct to allow shard location when files are uploaded
@@ -90,7 +91,7 @@ func DefaultConfig() *Config {
 			DefaultFormat:    DefaultFormat,
 			Quality:          DefaultQuality,
 			Format:           "",
-			DefaultUserAgent: DefaultUserAgent,
+			DefaultUserAgent: DefaultUserAgent + "/" + constants.Version,
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
