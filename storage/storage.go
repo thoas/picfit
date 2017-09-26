@@ -62,7 +62,7 @@ func NewStorageFromConfig(cfg *config.Storage) (gostorages.Storage, error) {
 			return nil, err
 		}
 
-		return &HTTPStorage{storage}, nil
+		return &HTTPStorage{storage, ""}, nil
 	case "s3":
 		acl, ok := gostorages.ACLs[cfg.ACL]
 
@@ -96,7 +96,7 @@ func NewStorageFromConfig(cfg *config.Storage) (gostorages.Storage, error) {
 			return nil, err
 		}
 
-		return &HTTPStorage{storage}, nil
+		return &HTTPStorage{storage, ""}, nil
 	}
 
 	return nil, fmt.Errorf("storage %s does not exist", cfg.Type)

@@ -6,6 +6,10 @@ const DefaultFormat = "png"
 // DefaultQuality is the default quality for processed images
 const DefaultQuality = 95
 
+// DefaultUserAgent is the default user-agent header to fetch images from URL with.
+// n.b. application version later appended to this.
+const DefaultUserAgent = "picfit"
+
 // DefaultMimeDetector method to use
 const DefaultMimetypeDetector = "extension"
 

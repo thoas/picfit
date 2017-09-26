@@ -9,8 +9,8 @@ import (
 )
 
 // FromURL retrieves an ImageFile from an url
-func FromURL(u *url.URL) (*ImageFile, error) {
-	storage := &storage.HTTPStorage{}
+func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
+	storage := &storage.HTTPStorage{UserAgent: userAgent}
 
 	content, err := storage.OpenFromURL(u)
 

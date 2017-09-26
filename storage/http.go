@@ -15,6 +15,7 @@ import (
 // HTTPStorage wraps a storage
 type HTTPStorage struct {
 	gostorages.Storage
+	UserAgent string
 }
 
 // HeaderKeys represents the list of headers
@@ -45,7 +46,10 @@ func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 
 // OpenFromURL retrieves bytes from an url
 func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
-	content, err := goreq.Request{Uri: u.String()}.Do()
+	content, err := goreq.Request{
+		Uri:       u.String(),
+		UserAgent: s.UserAgent,
+	}.Do()
 
 	if err != nil {
 		return nil, err
@@ -69,8 +73,9 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 	var headers = make(map[string]string)
 
 	content, err := goreq.Request{
-		Uri:    u.String(),
-		Method: "GET",
+		Uri:       u.String(),
+		Method:    "GET",
+		UserAgent: s.UserAgent,
 	}.Do()
 
 	if err != nil {
