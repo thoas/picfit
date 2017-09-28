@@ -26,8 +26,8 @@
   revision = "ba1b36c82c5e05c4f912a88eab0dcd91a171688f"
 
 [[constraint]]
-  name = "github.com/codegangsta/cli"
-  revision = "f7ebb761e83e21225d1d8954fde853bf8edd46c4"
+  name = "github.com/urfave/cli"
+  revision = "ac249472b7de27a9e8990819566d9be95ab5b816"
 
 [[constraint]]
   name = "github.com/disintegration/imaging"

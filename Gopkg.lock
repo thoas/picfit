@@ -19,11 +19,6 @@
   version = "2017.01.23"
 
 [[projects]]
-  name = "github.com/codegangsta/cli"
-  packages = ["."]
-  revision = "f7ebb761e83e21225d1d8954fde853bf8edd46c4"
-
-[[projects]]
   name = "github.com/disintegration/imaging"
   packages = ["."]
   revision = "ac27d1805a555e1754fa177216ee07f4e63c30b5"
@@ -179,6 +174,11 @@
   revision = "152b5d051953fdb6e45f14b6826962aadc032324"
 
 [[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "ac249472b7de27a9e8990819566d9be95ab5b816"
+
+[[projects]]
   branch = "master"
   name = "github.com/vaughan0/go-ini"
   packages = ["."]
@@ -224,6 +224,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1379f7b374750264824df5cca8865810af11ada137eb6391eebe14322f0baa1d"
+  inputs-digest = "93e71358343d308022ca157158ac540e12a4520aa97d006a8508e088f8304dac"
   solver-name = "gps-cdcl"
   solver-version = 1
