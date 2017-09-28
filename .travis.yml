@@ -4,5 +4,5 @@ before_install:
 services:
   - redis-server
 go:
-  - 1.8
+  - 1.9
 script: make test
