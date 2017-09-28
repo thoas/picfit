@@ -15,8 +15,11 @@ import (
 // HealthcheckView displays an ok response for healthcheck
 func HealthcheckView(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "Ok",
-		"version": constants.Version,
+		"status":     "Ok",
+		"version":    constants.Version,
+		"revision":   constants.Revision,
+		"build_time": constants.BuildTime,
+		"compiler":   constants.Compiler,
 	})
 }
 

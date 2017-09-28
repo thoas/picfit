@@ -10,18 +10,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-// compilation variables.
-var (
-	branch   string
-	sha      string
-	now      string
-	compiler string
-)
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "picfit"
-	app.Version = fmt.Sprintf("%s [git:%s:%s]\ncompiled using %s at %s", constants.Version, branch, sha, compiler, now)
+	app.Version = fmt.Sprintf("%s [git:%s:%s]\ncompiled using %s at %s", constants.Version, constants.Branch, constants.Revision, constants.Compiler, constants.BuildTime)
 	app.Author = "thoas"
 	app.Email = "florent.messa@gmail.com"
 	app.Usage = "Display, manipulate, transform and cache your images"
