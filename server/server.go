@@ -37,11 +37,14 @@ func Load(path string) error {
 // Router returns a gin Engine
 func Router(ctx netContext.Context) (*gin.Engine, error) {
 	router := gin.New()
-	router.Use(gin.Recovery())
 
 	cfg := config.FromContext(ctx)
 
 	if cfg.Debug {
+		router.Use(gin.Recovery())
+	}
+
+	if cfg.Logger.GetLevel() == "debug" {
 		router.Use(gin.Logger())
 	}
 
