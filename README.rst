@@ -686,6 +686,23 @@ it in your config:
       }
     }
 
+Stats
+-----
+
+The stats middleware is disabled by default, you can enable it your config.
+
+It will store various information about your web application (response time, status code count, etc.) 
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_stats": true
+      }
+    }
+
 Allowed sizes
 -------------
 
