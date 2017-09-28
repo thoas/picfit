@@ -13,12 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
-	"github.com/thoas/picfit/engine"
-	"github.com/thoas/picfit/kvstore"
-	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/middleware"
 	"github.com/thoas/picfit/middleware/context"
-	"github.com/thoas/picfit/storage"
 	"github.com/thoas/picfit/views"
 	"github.com/thoas/stats"
 )
@@ -54,8 +50,6 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		"get":      views.GetView,
 	}
 
-	kv := kvstore.FromContext(ctx)
-
 	if cfg.Sentry != nil {
 		client, err := raven.NewClient(cfg.Sentry.DSN, cfg.Sentry.Tags)
 
@@ -66,12 +60,7 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		router.Use(sentry.Recovery(client, true))
 	}
 
-	router.Use(context.SetLogger(logger.FromContext(ctx)))
-	router.Use(context.SetKVStore(kv))
-	router.Use(context.SetSourceStorage(storage.SourceFromContext(ctx)))
-	router.Use(context.SetDestinationStorage(storage.DestinationFromContext(ctx)))
-	router.Use(context.SetEngine(engine.FromContext(ctx)))
-	router.Use(context.SetConfig(cfg))
+	router.Use(context.SetContext(ctx))
 
 	if cfg.AllowedOrigins != nil && cfg.AllowedMethods != nil {
 		allowedOrigins := cfg.AllowedOrigins
