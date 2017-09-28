@@ -59,12 +59,11 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	}
 
 	log := logrus.New()
-
-	if cfg.Debug {
-		log.Level = logrus.DebugLevel
-	} else {
-		log.Level = logrus.ErrorLevel
+	level, err := logrus.ParseLevel(cfg.Logger.GetLevel())
+	if err != nil {
+		return nil, err
 	}
+	log.Level = level
 
 	ctx = engine.NewContext(ctx, e)
 	ctx = logger.NewContext(ctx, log)

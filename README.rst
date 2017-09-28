@@ -703,6 +703,29 @@ It will store various information about your web application (response time, sta
       }
     }
 
+Logging
+-------
+
+By default the logger level is `debug`, you can change it in your config:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "logger": {
+        "level": "info"
+      }
+    }
+
+Levels available are:
+
+* debug
+* info
+* error
+* warning
+* fatal
+
 Allowed sizes
 -------------
 

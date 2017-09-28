@@ -10,8 +10,11 @@ const DefaultQuality = 95
 // n.b. application version later appended to this.
 const DefaultUserAgent = "picfit"
 
-// DefaultMimeDetector method to use
+// DefaultMimetypeDetector method to use
 const DefaultMimetypeDetector = "extension"
+
+// DefaultLoggerLevel is the default logger level
+const DefaultLoggerLevel = "debug"
 
 // DefaultPort is the default port of the application server
 const DefaultPort = 3001

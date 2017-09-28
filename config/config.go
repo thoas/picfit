@@ -81,6 +81,21 @@ type Config struct {
 	AllowedHeaders []string `mapstructure:"allowed_headers"`
 	Storage        *Storages
 	KVStore        *KVStore
+	Logger         Logger
+}
+
+// Logger is a struct to configure logger
+type Logger struct {
+	Level string
+}
+
+// GetLevel returns the level of the logger
+func (l *Logger) GetLevel() string {
+	if l.Level == "" {
+		return DefaultLoggerLevel
+	}
+
+	return l.Level
 }
 
 // DefaultConfig returns a default config instance
