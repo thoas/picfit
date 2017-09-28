@@ -24,6 +24,7 @@ type AllowedSize struct {
 type Options struct {
 	EnableUpload     bool `mapstructure:"enable_upload"`
 	EnableDelete     bool `mapstructure:"enable_delete"`
+	EnableStats      bool `mapstructure:"enable_stats"`
 	DefaultFormat    string
 	Format           string
 	Quality          int

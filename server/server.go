@@ -93,19 +93,23 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		}))
 	}
 
-	s := stats.New()
+	router.GET("/healthcheck", views.HealthcheckView)
 
-	router.Use(func() gin.HandlerFunc {
-		return func(c *gin.Context) {
-			beginning, recorder := s.Begin(c.Writer)
-			c.Next()
-			s.End(beginning, recorder)
-		}
-	}())
+	if cfg.Options.EnableStats {
+		s := stats.New()
 
-	router.GET("/stats", func(c *gin.Context) {
-		c.JSON(http.StatusOK, s.Data())
-	})
+		router.Use(func() gin.HandlerFunc {
+			return func(c *gin.Context) {
+				beginning, recorder := s.Begin(c.Writer)
+				c.Next()
+				s.End(beginning, recorder)
+			}
+		}())
+
+		router.GET("/stats", func(c *gin.Context) {
+			c.JSON(http.StatusOK, s.Data())
+		})
+	}
 
 	for name, view := range methods {
 		views := []gin.HandlerFunc{

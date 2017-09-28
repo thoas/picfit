@@ -11,6 +11,13 @@ import (
 	"github.com/thoas/picfit/storage"
 )
 
+// HealthcheckView displays an ok response for healthcheck
+func HealthcheckView(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Ok",
+	})
+}
+
 // DisplayView displays and image using resizing parameters
 func DisplayView(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, true, true)
