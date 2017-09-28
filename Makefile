@@ -3,6 +3,8 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
 
 BIN_DIR = $(ROOT_DIR)/bin
+CONFIG=`pwd`/config.json
+BIN = $(BIN_DIR)/picfit
 SSL_DIR = $(ROOT_DIR)/ssl
 APP_DIR = /go/src/github.com/thoas/picfit
 
@@ -10,6 +12,12 @@ test: unit
 
 vendorize:
 	find vendor/ -type f -not -path "*/.git*" -exec git add {} \;
+
+run-server:
+	@PICFIT_CONFIG_PATH=$(CONFIG) $(BIN)
+
+serve:
+	@modd
 
 unit:
 	@(go list ./... | grep -v "vendor/" | xargs -n1 go test -v -cover)
