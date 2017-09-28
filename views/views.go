@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mholt/binding"
 	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/errs"
 	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/storage"
@@ -14,7 +15,8 @@ import (
 // HealthcheckView displays an ok response for healthcheck
 func HealthcheckView(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Ok",
+		"status":  "Ok",
+		"version": constants.Version,
 	})
 }
 
