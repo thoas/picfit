@@ -1,0 +1,90 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  revision = "ba1b36c82c5e05c4f912a88eab0dcd91a171688f"
+
+[[constraint]]
+  name = "github.com/codegangsta/cli"
+  revision = "f7ebb761e83e21225d1d8954fde853bf8edd46c4"
+
+[[constraint]]
+  name = "github.com/disintegration/imaging"
+  revision = "ac27d1805a555e1754fa177216ee07f4e63c30b5"
+
+[[constraint]]
+  name = "github.com/franela/goreq"
+  revision = "6d074b8384a4b5359484d95e88e7566020bc4335"
+
+[[constraint]]
+  name = "github.com/getsentry/raven-go"
+  revision = "b68337dbf03e7fbb53d9fd9b63fd09b28e8f13f7"
+
+[[constraint]]
+  name = "github.com/gin-gonic/contrib"
+  revision = "ffa12cf90b52a4af3ae604f6452e61f8218a517c"
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+  revision = "e2212d40c62a98b388a5eb48ecbdcf88534688ba"
+
+[[constraint]]
+  name = "github.com/imdario/mergo"
+  revision = "6ce7536fed6623eff47b95768f858a0f8d1ac57b"
+
+[[constraint]]
+  name = "github.com/mholt/binding"
+  revision = "89411c4ffb61f0ebef45d8bdb830103b358ef9fa"
+
+[[constraint]]
+  name = "github.com/mitchellh/goamz"
+  revision = "e99a7300be9605de0c4b6366988e1df883fabfe3"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/rubenfonseca/fastimage"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  revision = "346299ea79e446ebdddb834371ceba2e5926b732"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  revision = "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+
+[[constraint]]
+  name = "github.com/thoas/gokvstores"
+  revision = "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
+
+[[constraint]]
+  name = "github.com/thoas/gostorages"
+  revision = "a193818eb9acc5104bf1d73319da30b3c21e9a04"
+
+[[constraint]]
+  name = "github.com/thoas/stats"
+  revision = "152b5d051953fdb6e45f14b6826962aadc032324"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/image"
