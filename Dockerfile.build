@@ -1,4 +1,4 @@
-FROM golang:1.9
+FROM golang:1.9.2
 
 ADD . /go/src/github.com/thoas/picfit
 
