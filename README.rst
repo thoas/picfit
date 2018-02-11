@@ -762,16 +762,6 @@ already installed you can do ::
 
     $ pip install ansible
 
-If you want to run the installed version from vagrant ::
-
-    $ vagrant up
-
-Then connect to vagrant ::
-
-    $ vagrant ssh
-
-The config is located to ``/etc/picfit/config.json`` on the vagrant box.
-
 Roadmap
 =======
 
