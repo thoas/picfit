@@ -1,5 +1,5 @@
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
+VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/constants/constants.go)
 
 branch = $(shell git rev-parse --abbrev-ref HEAD)
 commit = $(shell git log --pretty=format:'%h' -n 1)
@@ -54,7 +54,7 @@ docker-build-static: build-static
 
 .PNONY: all test format
 
-docker-build:
+docker-prebuild:
 	@(echo "-> Preparing builder...")
 	@(docker build -t picfit-builder -f Dockerfile.build .)
 	@(mkdir -p $(BIN_DIR))

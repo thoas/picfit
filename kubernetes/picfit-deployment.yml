@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: picfit
+  labels:
+    app: picfit
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: picfit
+    spec:
+      volumes:
+        - name: picfit-volume
+          configMap:
+            name: picfit-config
+      containers:
+      - name: picfit
+        image: gcr.io/ulule-mailer/picfit:0.5.0
+        imagePullPolicy: Always
+        env:
+        - name: PICFIT_CONFIG_PATH
+          value: "/etc/picfit/config.json"
+        volumeMounts:
+        - name: picfit-volume
+          mountPath: /etc/picfit
+        ports:
+        - name: http-server
+          containerPort: 3001
