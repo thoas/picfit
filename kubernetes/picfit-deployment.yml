@@ -17,7 +17,7 @@ spec:
             name: picfit-config
       containers:
       - name: picfit
-        image: gcr.io/ulule-mailer/picfit:0.5.0
+        image: gcr.io/ulule-mailer/picfit:${VERSION_NUMBER}
         imagePullPolicy: Always
         env:
         - name: PICFIT_CONFIG_PATH
