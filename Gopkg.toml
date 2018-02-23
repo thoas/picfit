@@ -80,10 +80,6 @@
   revision = "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
 
 [[constraint]]
-  name = "github.com/thoas/gostorages"
-  revision = "a193818eb9acc5104bf1d73319da30b3c21e9a04"
-
-[[constraint]]
   name = "github.com/thoas/stats"
   revision = "152b5d051953fdb6e45f14b6826962aadc032324"
 
