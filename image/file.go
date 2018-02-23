@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/thoas/gostorages"
+	"github.com/ulule/gostorages"
 )
 
 type ImageFile struct {

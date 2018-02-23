@@ -8,7 +8,9 @@ import (
 	"context"
 
 	"github.com/Sirupsen/logrus"
+
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"

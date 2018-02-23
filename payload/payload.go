@@ -7,7 +7,9 @@ import (
 	"net/http"
 
 	"github.com/mholt/binding"
-	"github.com/thoas/gostorages"
+
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/image"
 )
 

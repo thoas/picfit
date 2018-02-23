@@ -8,6 +8,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 func mapForm(ptr interface{}, form map[string][]string) error {
@@ -52,6 +53,12 @@ func mapForm(ptr interface{}, form map[string][]string) error {
 			}
 			val.Field(i).Set(slice)
 		} else {
+			if _, isTime := structField.Interface().(time.Time); isTime {
+				if err := setTimeField(inputValue[0], typeField, structField); err != nil {
+					return err
+				}
+				continue
+			}
 			if err := setWithProperType(typeField.Type.Kind(), inputValue[0], structField); err != nil {
 				return err
 			}
@@ -140,11 +147,35 @@ func setFloatField(val string, bitSize int, field reflect.Value) error {
 	return err
 }
 
-// Don't pass in pointers to bind to. Can lead to bugs. See:
-// https://github.com/codegangsta/martini-contrib/issues/40
-// https://github.com/codegangsta/martini-contrib/pull/34#issuecomment-29683659
-func ensureNotPointer(obj interface{}) {
-	if reflect.TypeOf(obj).Kind() == reflect.Ptr {
-		panic("Pointers are not accepted as binding models")
+func setTimeField(val string, structField reflect.StructField, value reflect.Value) error {
+	timeFormat := structField.Tag.Get("time_format")
+	if timeFormat == "" {
+		return errors.New("Blank time format")
 	}
+
+	if val == "" {
+		value.Set(reflect.ValueOf(time.Time{}))
+		return nil
+	}
+
+	l := time.Local
+	if isUTC, _ := strconv.ParseBool(structField.Tag.Get("time_utc")); isUTC {
+		l = time.UTC
+	}
+
+	if locTag := structField.Tag.Get("time_location"); locTag != "" {
+		loc, err := time.LoadLocation(locTag)
+		if err != nil {
+			return err
+		}
+		l = loc
+	}
+
+	t, err := time.ParseInLocation(timeFormat, val, l)
+	if err != nil {
+		return err
+	}
+
+	value.Set(reflect.ValueOf(t))
+	return nil
 }

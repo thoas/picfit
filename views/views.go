@@ -43,16 +43,16 @@ func DisplayView(c *gin.Context) {
 // UploadView uploads an image to the destination storage
 func UploadView(c *gin.Context) {
 	multipartPayload := new(payload.MultipartPayload)
-	errors := binding.Bind(c.Request, multipartPayload)
-	if errors.Handle(c.Writer) {
+	errs := binding.Bind(c.Request, multipartPayload)
+	if errs != nil {
+		c.String(http.StatusBadRequest, errs.Error())
 		return
 	}
 
 	file, err := multipartPayload.Upload(storage.DestinationFromContext(c))
 
 	if err != nil {
-		errs.Handle(err, c.Writer)
-
+		c.String(http.StatusBadRequest, errs.Error())
 		return
 	}
 

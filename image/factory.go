@@ -4,7 +4,8 @@ import (
 	"io/ioutil"
 	"net/url"
 
-	"github.com/thoas/gostorages"
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/storage"
 )
 

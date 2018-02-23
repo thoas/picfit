@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/franela/goreq"
-	"github.com/thoas/gostorages"
+
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/errs"
 )
 
@@ -119,4 +121,8 @@ func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 	}
 
 	return time.Parse(gostorages.LastModifiedFormat, lastModified)
+}
+
+func (s *HTTPStorage) IsNotExist(err error) bool {
+	return false
 }

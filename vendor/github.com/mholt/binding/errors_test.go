@@ -1,10 +1,17 @@
 package binding
 
 import (
+	"encoding/json"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var _ error = &fieldsError{}
+var _ error = Errors{}
+var _ error = *new(Error)
+var _ Error = &fieldsError{}
+var _ json.Marshaler = fieldsError{}
 
 func TestErrorAdd(t *testing.T) {
 

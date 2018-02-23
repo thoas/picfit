@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rubenfonseca/fastimage"
+
 	"github.com/thoas/picfit/config"
 )
 

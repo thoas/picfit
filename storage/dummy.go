@@ -3,7 +3,7 @@ package storage
 import (
 	"time"
 
-	"github.com/thoas/gostorages"
+	"github.com/ulule/gostorages"
 )
 
 type DummyStorage struct {
@@ -42,5 +42,9 @@ func (s *DummyStorage) URL(filename string) string {
 }
 
 func (s *DummyStorage) HasBaseURL() bool {
+	return false
+}
+
+func (s *DummyStorage) IsNotExist(err error) bool {
 	return false
 }

@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
-	"github.com/thoas/gostorages"
+
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/config"
 )
 
