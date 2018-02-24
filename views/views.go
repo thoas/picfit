@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/mholt/binding"
+
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/errs"

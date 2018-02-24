@@ -76,10 +76,6 @@
   revision = "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 
 [[constraint]]
-  name = "github.com/thoas/gokvstores"
-  revision = "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
-
-[[constraint]]
   name = "github.com/thoas/stats"
   revision = "152b5d051953fdb6e45f14b6826962aadc032324"
 
@@ -90,3 +86,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/ulule/gostorages"
+
+[[constraint]]
+  name = "github.com/ulule/gokvstores"
+  revision = "06854a16f68d91c55ae6269a655bc7324169e607"
+
+[[constraint]]
+  name = "github.com/cstockton/go-conv"
+  revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"

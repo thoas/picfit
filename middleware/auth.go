@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/signature"
 )

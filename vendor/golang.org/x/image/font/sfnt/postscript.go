@@ -531,7 +531,10 @@ func (d *psPrivateDictData) initialize() {
 type psType2CharstringsData struct {
 	f          *Font
 	b          *Buffer
-	x, y       int32
+	x          int32
+	y          int32
+	firstX     int32
+	firstY     int32
 	hintBits   int32
 	seenWidth  bool
 	ended      bool
@@ -548,6 +551,64 @@ func (d *psType2CharstringsData) initialize(f *Font, b *Buffer, glyphIndex Glyph
 		b:          b,
 		glyphIndex: glyphIndex,
 	}
+}
+
+func (d *psType2CharstringsData) closePath() {
+	if d.x != d.firstX || d.y != d.firstY {
+		d.b.segments = append(d.b.segments, Segment{
+			Op: SegmentOpLineTo,
+			Args: [3]fixed.Point26_6{{
+				X: fixed.Int26_6(d.firstX),
+				Y: fixed.Int26_6(d.firstY),
+			}},
+		})
+	}
+}
+
+func (d *psType2CharstringsData) moveTo(dx, dy int32) {
+	d.closePath()
+	d.x += dx
+	d.y += dy
+	d.b.segments = append(d.b.segments, Segment{
+		Op: SegmentOpMoveTo,
+		Args: [3]fixed.Point26_6{{
+			X: fixed.Int26_6(d.x),
+			Y: fixed.Int26_6(d.y),
+		}},
+	})
+	d.firstX = d.x
+	d.firstY = d.y
+}
+
+func (d *psType2CharstringsData) lineTo(dx, dy int32) {
+	d.x += dx
+	d.y += dy
+	d.b.segments = append(d.b.segments, Segment{
+		Op: SegmentOpLineTo,
+		Args: [3]fixed.Point26_6{{
+			X: fixed.Int26_6(d.x),
+			Y: fixed.Int26_6(d.y),
+		}},
+	})
+}
+
+func (d *psType2CharstringsData) cubeTo(dxa, dya, dxb, dyb, dxc, dyc int32) {
+	d.x += dxa
+	d.y += dya
+	xa := fixed.Int26_6(d.x)
+	ya := fixed.Int26_6(d.y)
+	d.x += dxb
+	d.y += dyb
+	xb := fixed.Int26_6(d.x)
+	yb := fixed.Int26_6(d.y)
+	d.x += dxc
+	d.y += dyc
+	xc := fixed.Int26_6(d.x)
+	yc := fixed.Int26_6(d.y)
+	d.b.segments = append(d.b.segments, Segment{
+		Op:   SegmentOpCubeTo,
+		Args: [3]fixed.Point26_6{{X: xa, Y: ya}, {X: xb, Y: yb}, {X: xc, Y: yc}},
+	})
 }
 
 // psInterpreter is a PostScript interpreter.
@@ -908,7 +969,8 @@ var psOperators = [...][2][]psOperator{
 		31: {-1, "hvcurveto", t2CHvcurveto},
 	}, {
 		// 2-byte operators. The first byte is the escape byte.
-		0: {}, // Reserved.
+		34: {+7, "hflex", t2CHflex},
+		36: {+9, "hflex1", t2CHflex1},
 		// TODO: more operators.
 	}},
 }
@@ -996,52 +1058,12 @@ func t2CMask(p *psInterpreter) error {
 	return nil
 }
 
-func t2CAppendMoveto(p *psInterpreter) {
-	p.type2Charstrings.b.segments = append(p.type2Charstrings.b.segments, Segment{
-		Op: SegmentOpMoveTo,
-		Args: [3]fixed.Point26_6{{
-			X: fixed.Int26_6(p.type2Charstrings.x),
-			Y: fixed.Int26_6(p.type2Charstrings.y),
-		}},
-	})
-}
-
-func t2CAppendLineto(p *psInterpreter) {
-	p.type2Charstrings.b.segments = append(p.type2Charstrings.b.segments, Segment{
-		Op: SegmentOpLineTo,
-		Args: [3]fixed.Point26_6{{
-			X: fixed.Int26_6(p.type2Charstrings.x),
-			Y: fixed.Int26_6(p.type2Charstrings.y),
-		}},
-	})
-}
-
-func t2CAppendCubeto(p *psInterpreter, dxa, dya, dxb, dyb, dxc, dyc int32) {
-	p.type2Charstrings.x += dxa
-	p.type2Charstrings.y += dya
-	xa := fixed.Int26_6(p.type2Charstrings.x)
-	ya := fixed.Int26_6(p.type2Charstrings.y)
-	p.type2Charstrings.x += dxb
-	p.type2Charstrings.y += dyb
-	xb := fixed.Int26_6(p.type2Charstrings.x)
-	yb := fixed.Int26_6(p.type2Charstrings.y)
-	p.type2Charstrings.x += dxc
-	p.type2Charstrings.y += dyc
-	xc := fixed.Int26_6(p.type2Charstrings.x)
-	yc := fixed.Int26_6(p.type2Charstrings.y)
-	p.type2Charstrings.b.segments = append(p.type2Charstrings.b.segments, Segment{
-		Op:   SegmentOpCubeTo,
-		Args: [3]fixed.Point26_6{{X: xa, Y: ya}, {X: xb, Y: yb}, {X: xc, Y: yc}},
-	})
-}
-
 func t2CHmoveto(p *psInterpreter) error {
 	t2CReadWidth(p, 1)
 	if p.argStack.top != 1 {
 		return errInvalidCFFTable
 	}
-	p.type2Charstrings.x += p.argStack.a[0]
-	t2CAppendMoveto(p)
+	p.type2Charstrings.moveTo(p.argStack.a[0], 0)
 	return nil
 }
 
@@ -1050,8 +1072,7 @@ func t2CVmoveto(p *psInterpreter) error {
 	if p.argStack.top != 1 {
 		return errInvalidCFFTable
 	}
-	p.type2Charstrings.y += p.argStack.a[0]
-	t2CAppendMoveto(p)
+	p.type2Charstrings.moveTo(0, p.argStack.a[0])
 	return nil
 }
 
@@ -1060,9 +1081,7 @@ func t2CRmoveto(p *psInterpreter) error {
 	if p.argStack.top != 2 {
 		return errInvalidCFFTable
 	}
-	p.type2Charstrings.x += p.argStack.a[0]
-	p.type2Charstrings.y += p.argStack.a[1]
-	t2CAppendMoveto(p)
+	p.type2Charstrings.moveTo(p.argStack.a[0], p.argStack.a[1])
 	return nil
 }
 
@@ -1074,12 +1093,11 @@ func t2CLineto(p *psInterpreter, vertical bool) error {
 		return errInvalidCFFTable
 	}
 	for i := int32(0); i < p.argStack.top; i, vertical = i+1, !vertical {
+		dx, dy := p.argStack.a[i], int32(0)
 		if vertical {
-			p.type2Charstrings.y += p.argStack.a[i]
-		} else {
-			p.type2Charstrings.x += p.argStack.a[i]
+			dx, dy = dy, dx
 		}
-		t2CAppendLineto(p)
+		p.type2Charstrings.lineTo(dx, dy)
 	}
 	return nil
 }
@@ -1089,9 +1107,7 @@ func t2CRlineto(p *psInterpreter) error {
 		return errInvalidCFFTable
 	}
 	for i := int32(0); i < p.argStack.top; i += 2 {
-		p.type2Charstrings.x += p.argStack.a[i+0]
-		p.type2Charstrings.y += p.argStack.a[i+1]
-		t2CAppendLineto(p)
+		p.type2Charstrings.lineTo(p.argStack.a[i], p.argStack.a[i+1])
 	}
 	return nil
 }
@@ -1110,7 +1126,7 @@ func t2CRcurveline(p *psInterpreter) error {
 	}
 	i := int32(0)
 	for iMax := p.argStack.top - 2; i < iMax; i += 6 {
-		t2CAppendCubeto(p,
+		p.type2Charstrings.cubeTo(
 			p.argStack.a[i+0],
 			p.argStack.a[i+1],
 			p.argStack.a[i+2],
@@ -1119,9 +1135,7 @@ func t2CRcurveline(p *psInterpreter) error {
 			p.argStack.a[i+5],
 		)
 	}
-	p.type2Charstrings.x += p.argStack.a[i+0]
-	p.type2Charstrings.y += p.argStack.a[i+1]
-	t2CAppendLineto(p)
+	p.type2Charstrings.lineTo(p.argStack.a[i], p.argStack.a[i+1])
 	return nil
 }
 
@@ -1131,11 +1145,9 @@ func t2CRlinecurve(p *psInterpreter) error {
 	}
 	i := int32(0)
 	for iMax := p.argStack.top - 6; i < iMax; i += 2 {
-		p.type2Charstrings.x += p.argStack.a[i+0]
-		p.type2Charstrings.y += p.argStack.a[i+1]
-		t2CAppendLineto(p)
+		p.type2Charstrings.lineTo(p.argStack.a[i], p.argStack.a[i+1])
 	}
-	t2CAppendCubeto(p,
+	p.type2Charstrings.cubeTo(
 		p.argStack.a[i+0],
 		p.argStack.a[i+1],
 		p.argStack.a[i+2],
@@ -1239,7 +1251,7 @@ func t2CCurveto4(p *psInterpreter, swap bool, vertical bool, i int32) (j int32) 
 		dxc, dyc = dyc, dxc
 	}
 
-	t2CAppendCubeto(p, dxa, dya, dxb, dyb, dxc, dyc)
+	p.type2Charstrings.cubeTo(dxa, dya, dxb, dyb, dxc, dyc)
 	return i
 }
 
@@ -1248,7 +1260,7 @@ func t2CRrcurveto(p *psInterpreter) error {
 		return errInvalidCFFTable
 	}
 	for i := int32(0); i != p.argStack.top; i += 6 {
-		t2CAppendCubeto(p,
+		p.type2Charstrings.cubeTo(
 			p.argStack.a[i+0],
 			p.argStack.a[i+1],
 			p.argStack.a[i+2],
@@ -1257,6 +1269,44 @@ func t2CRrcurveto(p *psInterpreter) error {
 			p.argStack.a[i+5],
 		)
 	}
+	return nil
+}
+
+// For the flex operators, we ignore the flex depth and always produce cubic
+// segments, not linear segments. It's not obvious why the Type 2 Charstring
+// format cares about switching behavior based on a metric in pixels, not in
+// ideal font units. The Go vector rasterizer has no problems with almost
+// linear cubic segments.
+
+func t2CHflex(p *psInterpreter) error {
+	p.type2Charstrings.cubeTo(
+		p.argStack.a[0], 0,
+		p.argStack.a[1], +p.argStack.a[2],
+		p.argStack.a[3], 0,
+	)
+	p.type2Charstrings.cubeTo(
+		p.argStack.a[4], 0,
+		p.argStack.a[5], -p.argStack.a[2],
+		p.argStack.a[6], 0,
+	)
+	return nil
+}
+
+func t2CHflex1(p *psInterpreter) error {
+	dy1 := p.argStack.a[1]
+	dy2 := p.argStack.a[3]
+	dy5 := p.argStack.a[7]
+	dy6 := -dy1 - dy2 - dy5
+	p.type2Charstrings.cubeTo(
+		p.argStack.a[0], dy1,
+		p.argStack.a[2], dy2,
+		p.argStack.a[4], 0,
+	)
+	p.type2Charstrings.cubeTo(
+		p.argStack.a[5], 0,
+		p.argStack.a[6], dy5,
+		p.argStack.a[8], dy6,
+	)
 	return nil
 }
 
@@ -1358,6 +1408,7 @@ func t2CEndchar(p *psInterpreter) error {
 		}
 		return errInvalidCFFTable
 	}
+	p.type2Charstrings.closePath()
 	p.type2Charstrings.ended = true
 	return nil
 }

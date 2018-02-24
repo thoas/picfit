@@ -19,14 +19,17 @@ End User License Agreement (EULA) and a CAB format decoder. These tests assume
 that such fonts have already been installed. You may need to specify the
 directories for these fonts:
 
-go test golang.org/x/image/font/sfnt -args -proprietary -adobeDir=$HOME/fonts/adobe -appleDir=$HOME/fonts/apple -microsoftDir=$HOME/fonts/microsoft
+go test golang.org/x/image/font/sfnt -args -proprietary \
+	-adobeDir=$HOME/fonts/adobe \
+	-appleDir=$HOME/fonts/apple \
+	-dejavuDir=$HOME/fonts/dejavu \
+	-microsoftDir=$HOME/fonts/microsoft \
+	-notoDir=$HOME/fonts/noto
 
 To only run those tests for the Microsoft fonts:
 
 go test golang.org/x/image/font/sfnt -test.run=ProprietaryMicrosoft -args -proprietary etc
 */
-
-// TODO: add Google fonts (Droid? Noto?)? Emoji fonts?
 
 // TODO: enable Apple/Microsoft tests by default on Darwin/Windows?
 
@@ -72,31 +75,53 @@ var (
 		"directory name for the Apple proprietary fonts",
 	)
 
+	dejavuDir = flag.String(
+		"dejavuDir",
+		// Get the fonts from https://dejavu-fonts.github.io/
+		"",
+		"directory name for the DejaVu proprietary fonts",
+	)
+
 	microsoftDir = flag.String(
 		"microsoftDir",
 		"/usr/share/fonts/truetype/msttcorefonts",
 		"directory name for the Microsoft proprietary fonts",
 	)
+
+	notoDir = flag.String(
+		"notoDir",
+		// Get the fonts from https://www.google.com/get/noto/
+		"",
+		"directory name for the Noto proprietary fonts",
+	)
 )
 
-func TestProprietaryAdobeSourceCodeProOTF(t *testing.T) {
+func TestProprietaryAdobeSourceCodeProRegularOTF(t *testing.T) {
 	testProprietary(t, "adobe", "SourceCodePro-Regular.otf", 1500, -1)
 }
 
-func TestProprietaryAdobeSourceCodeProTTF(t *testing.T) {
+func TestProprietaryAdobeSourceCodeProRegularTTF(t *testing.T) {
 	testProprietary(t, "adobe", "SourceCodePro-Regular.ttf", 1500, -1)
 }
 
-func TestProprietaryAdobeSourceHanSansSC(t *testing.T) {
+func TestProprietaryAdobeSourceHanSansSCRegularOTF(t *testing.T) {
 	testProprietary(t, "adobe", "SourceHanSansSC-Regular.otf", 65535, -1)
 }
 
-func TestProprietaryAdobeSourceSansProOTF(t *testing.T) {
-	testProprietary(t, "adobe", "SourceSansPro-Regular.otf", 1800, -1)
+func TestProprietaryAdobeSourceSansProBlackOTF(t *testing.T) {
+	testProprietary(t, "adobe", "SourceSansPro-Black.otf", 1900, -1)
 }
 
-func TestProprietaryAdobeSourceSansProTTF(t *testing.T) {
-	testProprietary(t, "adobe", "SourceSansPro-Regular.ttf", 1800, -1)
+func TestProprietaryAdobeSourceSansProBlackTTF(t *testing.T) {
+	testProprietary(t, "adobe", "SourceSansPro-Black.ttf", 1900, -1)
+}
+
+func TestProprietaryAdobeSourceSansProRegularOTF(t *testing.T) {
+	testProprietary(t, "adobe", "SourceSansPro-Regular.otf", 1900, -1)
+}
+
+func TestProprietaryAdobeSourceSansProRegularTTF(t *testing.T) {
+	testProprietary(t, "adobe", "SourceSansPro-Regular.ttf", 1900, -1)
 }
 
 func TestProprietaryAppleAppleSymbols(t *testing.T) {
@@ -111,12 +136,48 @@ func TestProprietaryAppleGeezaPro1(t *testing.T) {
 	testProprietary(t, "apple", "GeezaPro.ttc?1", 1700, -1)
 }
 
+func TestProprietaryAppleHelvetica0(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?0", 2100, -1)
+}
+
+func TestProprietaryAppleHelvetica1(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?1", 2100, -1)
+}
+
+func TestProprietaryAppleHelvetica2(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?2", 2100, -1)
+}
+
+func TestProprietaryAppleHelvetica3(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?3", 2100, -1)
+}
+
+func TestProprietaryAppleHelvetica4(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?4", 1300, -1)
+}
+
+func TestProprietaryAppleHelvetica5(t *testing.T) {
+	testProprietary(t, "apple", "Helvetica.dfont?5", 1300, -1)
+}
+
 func TestProprietaryAppleHiragino0(t *testing.T) {
 	testProprietary(t, "apple", "ヒラギノ角ゴシック W0.ttc?0", 9000, -1)
 }
 
 func TestProprietaryAppleHiragino1(t *testing.T) {
 	testProprietary(t, "apple", "ヒラギノ角ゴシック W0.ttc?1", 9000, -1)
+}
+
+func TestProprietaryDejaVuSansExtraLight(t *testing.T) {
+	testProprietary(t, "dejavu", "DejaVuSans-ExtraLight.ttf", 2000, -1)
+}
+
+func TestProprietaryDejaVuSansMono(t *testing.T) {
+	testProprietary(t, "dejavu", "DejaVuSansMono.ttf", 3300, -1)
+}
+
+func TestProprietaryDejaVuSerif(t *testing.T) {
+	testProprietary(t, "dejavu", "DejaVuSerif.ttf", 3500, -1)
 }
 
 func TestProprietaryMicrosoftArial(t *testing.T) {
@@ -137,6 +198,14 @@ func TestProprietaryMicrosoftTimesNewRoman(t *testing.T) {
 
 func TestProprietaryMicrosoftWebdings(t *testing.T) {
 	testProprietary(t, "microsoft", "Webdings.ttf", 200, -1)
+}
+
+func TestProprietaryNotoColorEmoji(t *testing.T) {
+	testProprietary(t, "noto", "NotoColorEmoji.ttf", 2300, -1)
+}
+
+func TestProprietaryNotoSansRegular(t *testing.T) {
+	testProprietary(t, "noto", "NotoSans-Regular.ttf", 2400, -1)
 }
 
 // testProprietary tests that we can load every glyph in the named font.
@@ -168,8 +237,12 @@ func testProprietary(t *testing.T, proprietor, filename string, minNumGlyphs, fi
 		dir = *adobeDir
 	case "apple":
 		dir = *appleDir
+	case "dejavu":
+		dir = *dejavuDir
 	case "microsoft":
 		dir = *microsoftDir
+	case "noto":
+		dir = *notoDir
 	default:
 		panic("unreachable")
 	}
@@ -238,7 +311,7 @@ func testProprietary(t *testing.T, proprietor, filename string, minNumGlyphs, fi
 		iMax = firstUnsupportedGlyph
 	}
 	for i, numErrors := 0, 0; i < iMax; i++ {
-		if _, err := f.LoadGlyph(&buf, GlyphIndex(i), ppem, nil); err != nil {
+		if _, err := f.LoadGlyph(&buf, GlyphIndex(i), ppem, nil); err != nil && err != ErrColoredGlyph {
 			t.Errorf("LoadGlyph(%d): %v", i, err)
 			numErrors++
 		}
@@ -320,8 +393,8 @@ kernLoop:
 // or 1 for a single font. It is not necessarily an exhaustive list of all
 // proprietary fonts tested.
 var proprietaryNumFonts = map[string]int{
+	"apple/Helvetica.dfont?0":    6,
 	"apple/ヒラギノ角ゴシック W0.ttc?0": 2,
-	"apple/ヒラギノ角ゴシック W0.ttc?1": 2,
 	"microsoft/Arial.ttf?0":      1,
 }
 
@@ -336,20 +409,35 @@ var proprietaryVersions = map[string]string{
 	"adobe/SourceCodePro-Regular.otf":   "Version 2.030;PS 1.0;hotconv 16.6.51;makeotf.lib2.5.65220",
 	"adobe/SourceCodePro-Regular.ttf":   "Version 2.030;PS 1.000;hotconv 16.6.51;makeotf.lib2.5.65220",
 	"adobe/SourceHanSansSC-Regular.otf": "Version 1.004;PS 1.004;hotconv 1.0.82;makeotf.lib2.5.63406",
+	"adobe/SourceSansPro-Black.otf":     "Version 2.020;PS 2.0;hotconv 1.0.86;makeotf.lib2.5.63406",
+	"adobe/SourceSansPro-Black.ttf":     "Version 2.020;PS 2.000;hotconv 1.0.86;makeotf.lib2.5.63406",
 	"adobe/SourceSansPro-Regular.otf":   "Version 2.020;PS 2.0;hotconv 1.0.86;makeotf.lib2.5.63406",
 	"adobe/SourceSansPro-Regular.ttf":   "Version 2.020;PS 2.000;hotconv 1.0.86;makeotf.lib2.5.63406",
 
 	"apple/Apple Symbols.ttf":    "12.0d3e10",
 	"apple/GeezaPro.ttc?0":       "12.0d1e3",
 	"apple/GeezaPro.ttc?1":       "12.0d1e3",
+	"apple/Helvetica.dfont?0":    "12.0d1e3",
+	"apple/Helvetica.dfont?1":    "12.0d1e3",
+	"apple/Helvetica.dfont?2":    "12.0d1e3",
+	"apple/Helvetica.dfont?3":    "12.0d1e3",
+	"apple/Helvetica.dfont?4":    "12.0d1e3",
+	"apple/Helvetica.dfont?5":    "12.0d1e3",
 	"apple/ヒラギノ角ゴシック W0.ttc?0": "11.0d7e1",
 	"apple/ヒラギノ角ゴシック W0.ttc?1": "11.0d7e1",
+
+	"dejavu/DejaVuSans-ExtraLight.ttf": "Version 2.37",
+	"dejavu/DejaVuSansMono.ttf":        "Version 2.37",
+	"dejavu/DejaVuSerif.ttf":           "Version 2.37",
 
 	"microsoft/Arial.ttf":           "Version 2.82",
 	"microsoft/Arial.ttf?0":         "Version 2.82",
 	"microsoft/Comic_Sans_MS.ttf":   "Version 2.10",
 	"microsoft/Times_New_Roman.ttf": "Version 2.82",
 	"microsoft/Webdings.ttf":        "Version 1.03",
+
+	"noto/NotoColorEmoji.ttf":   "Version 1.33",
+	"noto/NotoSans-Regular.ttf": "Version 1.06",
 }
 
 // proprietaryFullNames holds the expected full name of each proprietary font
@@ -358,20 +446,35 @@ var proprietaryFullNames = map[string]string{
 	"adobe/SourceCodePro-Regular.otf":   "Source Code Pro",
 	"adobe/SourceCodePro-Regular.ttf":   "Source Code Pro",
 	"adobe/SourceHanSansSC-Regular.otf": "Source Han Sans SC Regular",
+	"adobe/SourceSansPro-Black.otf":     "Source Sans Pro Black",
+	"adobe/SourceSansPro-Black.ttf":     "Source Sans Pro Black",
 	"adobe/SourceSansPro-Regular.otf":   "Source Sans Pro",
 	"adobe/SourceSansPro-Regular.ttf":   "Source Sans Pro",
 
 	"apple/Apple Symbols.ttf":    "Apple Symbols",
 	"apple/GeezaPro.ttc?0":       "Geeza Pro Regular",
 	"apple/GeezaPro.ttc?1":       "Geeza Pro Bold",
+	"apple/Helvetica.dfont?0":    "Helvetica",
+	"apple/Helvetica.dfont?1":    "Helvetica Bold",
+	"apple/Helvetica.dfont?2":    "Helvetica Oblique",
+	"apple/Helvetica.dfont?3":    "Helvetica Bold Oblique",
+	"apple/Helvetica.dfont?4":    "Helvetica Light",
+	"apple/Helvetica.dfont?5":    "Helvetica Light Oblique",
 	"apple/ヒラギノ角ゴシック W0.ttc?0": "Hiragino Sans W0",
 	"apple/ヒラギノ角ゴシック W0.ttc?1": ".Hiragino Kaku Gothic Interface W0",
+
+	"dejavu/DejaVuSans-ExtraLight.ttf": "DejaVu Sans ExtraLight",
+	"dejavu/DejaVuSansMono.ttf":        "DejaVu Sans Mono",
+	"dejavu/DejaVuSerif.ttf":           "DejaVu Serif",
 
 	"microsoft/Arial.ttf":           "Arial",
 	"microsoft/Arial.ttf?0":         "Arial",
 	"microsoft/Comic_Sans_MS.ttf":   "Comic Sans MS",
 	"microsoft/Times_New_Roman.ttf": "Times New Roman",
 	"microsoft/Webdings.ttf":        "Webdings",
+
+	"noto/NotoColorEmoji.ttf":   "Noto Color Emoji",
+	"noto/NotoSans-Regular.ttf": "Noto Sans",
 }
 
 // proprietaryGlyphIndexTestCases hold a sample of each font's rune to glyph
@@ -420,6 +523,22 @@ var proprietaryGlyphIndexTestCases = map[string]map[rune]GlyphIndex{
 		'\u03a3': 592,  // U+03A3 GREEK CAPITAL LETTER SIGMA
 		'\u0435': 999,  // U+0435 CYRILLIC SMALL LETTER IE
 		'\u2030': 1728, // U+2030 PER MILLE SIGN
+	},
+
+	"apple/Helvetica.dfont?0": {
+		'\u0041':     36,   // U+0041 LATIN CAPITAL LETTER A
+		'\u00f1':     120,  // U+00F1 LATIN SMALL LETTER N WITH TILDE
+		'\u0401':     473,  // U+0401 CYRILLIC CAPITAL LETTER IO
+		'\u200d':     611,  // U+200D ZERO WIDTH JOINER
+		'\u20ab':     1743, // U+20AB DONG SIGN
+		'\u2229':     0,    // U+2229 INTERSECTION
+		'\u04e9':     1208, // U+04E9 CYRILLIC SMALL LETTER BARRED O
+		'\U0001f100': 0,    // U+0001F100 DIGIT ZERO FULL STOP
+	},
+
+	"dejavu/DejaVuSerif.ttf": {
+		'\u0041': 36,   // U+0041 LATIN CAPITAL LETTER A
+		'\u1e00': 1418, // U+1E00 LATIN CAPITAL LETTER A WITH RING BELOW
 	},
 
 	"microsoft/Arial.ttf": {
@@ -493,6 +612,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// 106 callsubr # 106 + bias = 213
 			// :	# Arg stack is [].
 			// :	43 -658 rmoveto
+			lineTo(130, 221),
 			moveTo(161, -13),
 			// :	37 29 28 41 return
 			// :	# Arg stack is [37 29 28 41].
@@ -520,11 +640,61 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			lineTo(857, 614),
 			lineTo(857, 693),
 			// -797 -589 rmoveto
+			lineTo(144, 693),
 			moveTo(60, 104),
 			// -81 881 81 vlineto
 			lineTo(60, 23),
 			lineTo(941, 23),
 			lineTo(941, 104),
+			// endchar
+			lineTo(60, 104),
+		},
+	},
+
+	"adobe/SourceSansPro-Black.otf": {
+		'¤': { // U+00A4 CURRENCY SIGN
+			// -45 147 99 168 98 hstem
+			// 44 152 148 152 vstem
+			// 102 76 rmoveto
+			moveTo(102, 76),
+			// 71 71 rlineto
+			lineTo(173, 147),
+			// 31 -13 33 -6 33 32 34 6 31 hflex1
+			cubeTo(204, 134, 237, 128, 270, 128),
+			cubeTo(302, 128, 336, 134, 367, 147),
+			// 71 -71 85 85 -61 60 rlineto
+			lineTo(438, 76),
+			lineTo(523, 161),
+			lineTo(462, 221),
+			// 21 30 13 36 43 vvcurveto
+			cubeTo(483, 251, 496, 287, 496, 330),
+			// 42 -12 36 -21 29 vhcurveto
+			cubeTo(496, 372, 484, 408, 463, 437),
+			// 60 60 -85 85 -70 -70 rlineto
+			lineTo(523, 497),
+			lineTo(438, 582),
+			lineTo(368, 512),
+			// -31 13 -34 7 -33 -33 -34 -7 -31 hflex1
+			cubeTo(337, 525, 303, 532, 270, 532),
+			cubeTo(237, 532, 203, 525, 172, 512),
+			// -70 70 -85 -85 59 -60 rlineto
+			lineTo(102, 582),
+			lineTo(17, 497),
+			lineTo(76, 437),
+			// -20 -29 -12 -36 -42 vvcurveto
+			cubeTo(56, 408, 44, 372, 44, 330),
+			// -43 12 -36 21 -30 vhcurveto
+			cubeTo(44, 287, 56, 251, 77, 221),
+			// -60 -60 rlineto
+			lineTo(17, 161),
+			// 253 85 rmoveto
+			lineTo(102, 76),
+			moveTo(270, 246),
+			// -42 -32 32 52 52 32 32 42 42 32 -32 -52 -52 -32 -32 -42 hvcurveto
+			cubeTo(228, 246, 196, 278, 196, 330),
+			cubeTo(196, 382, 228, 414, 270, 414),
+			cubeTo(312, 414, 344, 382, 344, 330),
+			cubeTo(344, 278, 312, 246, 270, 246),
 			// endchar
 		},
 	},
@@ -545,6 +715,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// 1 -53 -34 -44 -57 -25 rrcurveto
 			cubeTo(138, -53, 104, -97, 47, -122),
 			// endchar
+			lineTo(67, -170),
 		},
 
 		'Q': {
@@ -615,6 +786,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// 113 91 15 callgsubr # 15 + bias = 122
 			// :	# Arg stack is [113 91].
 			// :	rmoveto
+			lineTo(82, 0),
 			moveTo(195, 577),
 			// :	69 29 58 77 3 hvcurveto
 			cubeTo(264, 577, 293, 635, 296, 712),
@@ -681,12 +853,14 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// -92 115 -60 callgsubr # -60 + bias = 47
 			// :	# Arg stack is [-92 115].
 			// :	rmoveto
+			lineTo(82, 0),
 			moveTo(-10, 601),
 			// :	266 57 -266 hlineto
 			lineTo(256, 601),
 			lineTo(256, 658),
 			lineTo(-10, 658),
 			// :	endchar
+			lineTo(-10, 601),
 		},
 
 		'ĭ': { // U+012D LATIN SMALL LETTER I WITH BREVE
@@ -717,6 +891,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// 42 85 143 callsubr # 143 + bias = 250
 			// :	# Arg stack is [42 85].
 			// :	rmoveto
+			lineTo(82, 0),
 			moveTo(124, 571),
 			// :	-84 callsubr # -84 + bias = 23
 			// :	:	# Arg stack is [].
@@ -765,6 +940,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// -96 hlineto
 			lineTo(209, 656),
 			// endchar
+			lineTo(0, 0),
 		},
 
 		'Ḫ': { // U+1E2A LATIN CAPITAL LETTER H WITH BREVE BELOW
@@ -812,6 +988,7 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// 235 -887 143 callsubr # 143 + bias = 250
 			// :	# Arg stack is [235 -887].
 			// :	rmoveto
+			lineTo(90, 0),
 			moveTo(325, -231),
 			// :	-84 callsubr # -84 + bias = 23
 			// :	:	# Arg stack is [].
@@ -836,6 +1013,57 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			// :	return
 			// :	# Arg stack is [].
 			// endchar
+		},
+	},
+
+	"apple/Helvetica.dfont?0": {
+		'i': {
+			// - contour #0
+			moveTo(132, 1066),
+			lineTo(315, 1066),
+			lineTo(315, 0),
+			lineTo(132, 0),
+			lineTo(132, 1066),
+			// - contour #1
+			moveTo(132, 1469),
+			lineTo(315, 1469),
+			lineTo(315, 1265),
+			lineTo(132, 1265),
+			lineTo(132, 1469),
+		},
+	},
+
+	"apple/Helvetica.dfont?1": {
+		'i': {
+			// - contour #0
+			moveTo(426, 1220),
+			lineTo(137, 1220),
+			lineTo(137, 1483),
+			lineTo(426, 1483),
+			lineTo(426, 1220),
+			// - contour #1
+			moveTo(137, 1090),
+			lineTo(426, 1090),
+			lineTo(426, 0),
+			lineTo(137, 0),
+			lineTo(137, 1090),
+		},
+	},
+
+	"dejavu/DejaVuSans-ExtraLight.ttf": {
+		'i': {
+			// - contour #0
+			moveTo(230, 1120),
+			lineTo(322, 1120),
+			lineTo(322, 0),
+			lineTo(230, 0),
+			lineTo(230, 1120),
+			// - contour #1
+			moveTo(230, 1556),
+			lineTo(322, 1556),
+			lineTo(322, 1430),
+			lineTo(230, 1430),
+			lineTo(230, 1556),
 		},
 	},
 
@@ -1006,6 +1234,27 @@ var proprietaryGlyphTestCases = map[string]map[rune][]Segment{
 			transform(-1<<14, 0, 0, +1<<14, 653, 0, quadTo(482, -217, 560, -384)),
 		},
 	},
+
+	"noto/NotoSans-Regular.ttf": {
+		'i': {
+			// - contour #0
+			moveTo(354, 0),
+			lineTo(174, 0),
+			lineTo(174, 1098),
+			lineTo(354, 1098),
+			lineTo(354, 0),
+			// - contour #1
+			moveTo(160, 1395),
+			quadTo(160, 1455, 190, 1482),
+			quadTo(221, 1509, 266, 1509),
+			quadTo(308, 1509, 339, 1482),
+			quadTo(371, 1455, 371, 1395),
+			quadTo(371, 1336, 339, 1308),
+			quadTo(308, 1280, 266, 1280),
+			quadTo(221, 1280, 190, 1308),
+			quadTo(160, 1336, 160, 1395),
+		},
+	},
 }
 
 type kernTestCase struct {
@@ -1018,6 +1267,18 @@ type kernTestCase struct {
 // proprietaryKernTestCases hold a sample of each font's kerning pairs. The
 // numerical values can be verified by running the ttx tool.
 var proprietaryKernTestCases = map[string][]kernTestCase{
+	"dejavu/DejaVuSans-ExtraLight.ttf": {
+		{2048, font.HintingNone, [2]rune{'A', 'A'}, 57},
+		{2048, font.HintingNone, [2]rune{'W', 'A'}, -112},
+		// U+00C1 LATIN CAPITAL LETTER A WITH ACUTE
+		// U+01FA LATIN CAPITAL LETTER A WITH RING ABOVE AND ACUTE
+		// U+1E82 LATIN CAPITAL LETTER W WITH ACUTE
+		{2048, font.HintingNone, [2]rune{'\u00c1', 'A'}, 57},
+		// TODO: enable these next two test cases, when we support multiple
+		// kern subtables.
+		// {2048, font.HintingNone, [2]rune{'\u01fa', 'A'}, 57},
+		// {2048, font.HintingNone, [2]rune{'\u1e82', 'A'}, -112},
+	},
 	"microsoft/Arial.ttf": {
 		{2048, font.HintingNone, [2]rune{'A', 'V'}, -152},
 		// U+03B8 GREEK SMALL LETTER THETA

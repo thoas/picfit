@@ -1,4 +1,4 @@
-// Copyright 2013 The Go Authors.  All rights reserved.
+// Copyright 2013 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -28,15 +28,15 @@ var registries = []struct {
 	parse func(io.Writer, io.Reader) error
 }{
 	{
-		"http://www.iana.org/assignments/dscp-registry/dscp-registry.xml",
+		"https://www.iana.org/assignments/dscp-registry/dscp-registry.xml",
 		parseDSCPRegistry,
 	},
 	{
-		"http://www.iana.org/assignments/ipv4-tos-byte/ipv4-tos-byte.xml",
+		"https://www.iana.org/assignments/ipv4-tos-byte/ipv4-tos-byte.xml",
 		parseTOSTCByte,
 	},
 	{
-		"http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml",
+		"https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml",
 		parseProtocolNumbers,
 	},
 }

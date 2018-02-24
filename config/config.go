@@ -4,7 +4,9 @@ import (
 	"bytes"
 
 	"github.com/spf13/viper"
+
 	"github.com/thoas/picfit/constants"
+	"github.com/thoas/picfit/kvstore"
 )
 
 // Shard is a struct to allow shard location when files are uploaded
@@ -31,17 +33,6 @@ type Options struct {
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
-}
-
-// KVStore is a struct to represent a key/value store (redis, cache)
-type KVStore struct {
-	Type       string
-	Host       string
-	Port       int
-	Password   string
-	Db         int
-	Prefix     string
-	MaxEntries int
 }
 
 // Storage is a struct to represent a Storage (fs, s3)
@@ -80,7 +71,7 @@ type Config struct {
 	AllowedMethods []string `mapstructure:"allowed_methods"`
 	AllowedHeaders []string `mapstructure:"allowed_headers"`
 	Storage        *Storages
-	KVStore        *KVStore
+	KVStore        *kvstore.Config
 	Logger         Logger
 }
 
@@ -111,7 +102,7 @@ func DefaultConfig() *Config {
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
-		KVStore: &KVStore{
+		KVStore: &kvstore.Config{
 			Type: "dummy",
 		},
 		Shard: &Shard{

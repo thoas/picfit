@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
