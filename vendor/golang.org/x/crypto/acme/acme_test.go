@@ -74,7 +74,7 @@ func TestDiscover(t *testing.T) {
 		revoke = "https://example.com/acme/revoke-cert"
 	)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("content-type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, `{
 			"new-reg": %q,
 			"new-authz": %q,
@@ -107,7 +107,7 @@ func TestRegister(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -173,7 +173,7 @@ func TestUpdateReg(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -234,7 +234,7 @@ func TestGetReg(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -290,7 +290,7 @@ func TestGetReg(t *testing.T) {
 func TestAuthorize(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -371,7 +371,7 @@ func TestAuthorize(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id1", c.URI)
 	}
 	if c.Token != "token1" {
-		t.Errorf("c.Token = %q; want token1", c.Type)
+		t.Errorf("c.Token = %q; want token1", c.Token)
 	}
 
 	c = auth.Challenges[1]
@@ -382,7 +382,7 @@ func TestAuthorize(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id2", c.URI)
 	}
 	if c.Token != "token2" {
-		t.Errorf("c.Token = %q; want token2", c.Type)
+		t.Errorf("c.Token = %q; want token2", c.Token)
 	}
 
 	combs := [][]int{{0}, {1}}
@@ -394,7 +394,7 @@ func TestAuthorize(t *testing.T) {
 func TestAuthorizeValid(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "nonce")
+			w.Header().Set("Replay-Nonce", "nonce")
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -464,7 +464,7 @@ func TestGetAuthorization(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id1", c.URI)
 	}
 	if c.Token != "token1" {
-		t.Errorf("c.Token = %q; want token1", c.Type)
+		t.Errorf("c.Token = %q; want token1", c.Token)
 	}
 
 	c = auth.Challenges[1]
@@ -475,7 +475,7 @@ func TestGetAuthorization(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id2", c.URI)
 	}
 	if c.Token != "token2" {
-		t.Errorf("c.Token = %q; want token2", c.Type)
+		t.Errorf("c.Token = %q; want token2", c.Token)
 	}
 
 	combs := [][]int{{0}, {1}}
@@ -488,7 +488,7 @@ func TestWaitAuthorization(t *testing.T) {
 	var count int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count++
-		w.Header().Set("retry-after", "0")
+		w.Header().Set("Retry-After", "0")
 		if count > 1 {
 			fmt.Fprintf(w, `{"status":"valid"}`)
 			return
@@ -543,12 +543,15 @@ func TestWaitAuthorizationInvalid(t *testing.T) {
 		if err == nil {
 			t.Error("err is nil")
 		}
+		if _, ok := err.(*AuthorizationError); !ok {
+			t.Errorf("err is %T; want *AuthorizationError", err)
+		}
 	}
 }
 
 func TestWaitAuthorizationCancel(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("retry-after", "60")
+		w.Header().Set("Retry-After", "60")
 		fmt.Fprintf(w, `{"status":"pending"}`)
 	}))
 	defer ts.Close()
@@ -576,7 +579,7 @@ func TestWaitAuthorizationCancel(t *testing.T) {
 func TestRevokeAuthorization(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "nonce")
+			w.Header().Set("Replay-Nonce", "nonce")
 			return
 		}
 		switch r.URL.Path {
@@ -642,14 +645,14 @@ func TestPollChallenge(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id1", chall.URI)
 	}
 	if chall.Token != "token1" {
-		t.Errorf("c.Token = %q; want token1", chall.Type)
+		t.Errorf("c.Token = %q; want token1", chall.Token)
 	}
 }
 
 func TestAcceptChallenge(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -704,7 +707,7 @@ func TestAcceptChallenge(t *testing.T) {
 		t.Errorf("c.URI = %q; want https://ca.tld/acme/challenge/publickey/id1", c.URI)
 	}
 	if c.Token != "token1" {
-		t.Errorf("c.Token = %q; want token1", c.Type)
+		t.Errorf("c.Token = %q; want token1", c.Token)
 	}
 }
 
@@ -715,7 +718,7 @@ func TestNewCert(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "test-nonce")
+			w.Header().Set("Replay-Nonce", "test-nonce")
 			return
 		}
 		if r.Method != "POST" {
@@ -798,7 +801,7 @@ func TestFetchCert(t *testing.T) {
 		count++
 		if count < 3 {
 			up := fmt.Sprintf("<%s>;rel=up", ts.URL)
-			w.Header().Set("link", up)
+			w.Header().Set("Link", up)
 		}
 		w.Write([]byte{count})
 	}))
@@ -817,7 +820,7 @@ func TestFetchCertRetry(t *testing.T) {
 	var count int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if count < 1 {
-			w.Header().Set("retry-after", "0")
+			w.Header().Set("Retry-After", "0")
 			w.WriteHeader(http.StatusAccepted)
 			count++
 			return
@@ -837,7 +840,7 @@ func TestFetchCertRetry(t *testing.T) {
 
 func TestFetchCertCancel(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("retry-after", "0")
+		w.Header().Set("Retry-After", "0")
 		w.WriteHeader(http.StatusAccepted)
 	}))
 	defer ts.Close()
@@ -864,7 +867,7 @@ func TestFetchCertDepth(t *testing.T) {
 			t.Errorf("count = %d; want at most %d", count, maxChainLen+1)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.Header().Set("link", fmt.Sprintf("<%s>;rel=up", ts.URL))
+		w.Header().Set("Link", fmt.Sprintf("<%s>;rel=up", ts.URL))
 		w.Write([]byte{count})
 	}))
 	defer ts.Close()
@@ -878,7 +881,7 @@ func TestFetchCertBreadth(t *testing.T) {
 	var ts *httptest.Server
 	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for i := 0; i < maxChainLen+1; i++ {
-			w.Header().Add("link", fmt.Sprintf("<%s>;rel=up", ts.URL))
+			w.Header().Add("Link", fmt.Sprintf("<%s>;rel=up", ts.URL))
 		}
 		w.Write([]byte{1})
 	}))
@@ -904,7 +907,7 @@ func TestFetchCertSize(t *testing.T) {
 func TestRevokeCert(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "HEAD" {
-			w.Header().Set("replay-nonce", "nonce")
+			w.Header().Set("Replay-Nonce", "nonce")
 			return
 		}
 
@@ -943,7 +946,7 @@ func TestNonce_add(t *testing.T) {
 	c.addNonce(http.Header{"Replay-Nonce": {}})
 	c.addNonce(http.Header{"Replay-Nonce": {"nonce"}})
 
-	nonces := map[string]struct{}{"nonce": struct{}{}}
+	nonces := map[string]struct{}{"nonce": {}}
 	if !reflect.DeepEqual(c.nonces, nonces) {
 		t.Errorf("c.nonces = %q; want %q", c.nonces, nonces)
 	}
@@ -974,13 +977,14 @@ func TestNonce_fetch(t *testing.T) {
 		if r.Method != "HEAD" {
 			t.Errorf("%d: r.Method = %q; want HEAD", i, r.Method)
 		}
-		w.Header().Set("replay-nonce", tests[i].nonce)
+		w.Header().Set("Replay-Nonce", tests[i].nonce)
 		w.WriteHeader(tests[i].code)
 	}))
 	defer ts.Close()
 	for ; i < len(tests); i++ {
 		test := tests[i]
-		n, err := fetchNonce(context.Background(), http.DefaultClient, ts.URL)
+		c := &Client{}
+		n, err := c.fetchNonce(context.Background(), ts.URL)
 		if n != test.nonce {
 			t.Errorf("%d: n=%q; want %q", i, n, test.nonce)
 		}
@@ -998,7 +1002,8 @@ func TestNonce_fetchError(t *testing.T) {
 		w.WriteHeader(http.StatusTooManyRequests)
 	}))
 	defer ts.Close()
-	_, err := fetchNonce(context.Background(), http.DefaultClient, ts.URL)
+	c := &Client{}
+	_, err := c.fetchNonce(context.Background(), ts.URL)
 	e, ok := err.(*Error)
 	if !ok {
 		t.Fatalf("err is %T; want *Error", err)
@@ -1013,7 +1018,7 @@ func TestNonce_postJWS(t *testing.T) {
 	seen := make(map[string]bool)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count++
-		w.Header().Set("replay-nonce", fmt.Sprintf("nonce%d", count))
+		w.Header().Set("Replay-Nonce", fmt.Sprintf("nonce%d", count))
 		if r.Method == "HEAD" {
 			// We expect the client do a HEAD request
 			// but only to fetch the first nonce.
@@ -1060,6 +1065,44 @@ func TestNonce_postJWS(t *testing.T) {
 		if _, exist := client.nonces[k]; exist {
 			t.Errorf("used nonce %q in client.nonces", k)
 		}
+	}
+}
+
+func TestRetryPostJWS(t *testing.T) {
+	var count int
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count++
+		w.Header().Set("Replay-Nonce", fmt.Sprintf("nonce%d", count))
+		if r.Method == "HEAD" {
+			// We expect the client to do 2 head requests to fetch
+			// nonces, one to start and another after getting badNonce
+			return
+		}
+
+		head, err := decodeJWSHead(r)
+		if err != nil {
+			t.Errorf("decodeJWSHead: %v", err)
+		} else if head.Nonce == "" {
+			t.Error("head.Nonce is empty")
+		} else if head.Nonce == "nonce1" {
+			// return a badNonce error to force the call to retry
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"type":"urn:ietf:params:acme:error:badNonce"}`))
+			return
+		}
+		// Make client.Authorize happy; we're not testing its result.
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"status":"valid"}`))
+	}))
+	defer ts.Close()
+
+	client := Client{Key: testKey, dir: &Directory{AuthzURL: ts.URL}}
+	// This call will fail with badNonce, causing a retry
+	if _, err := client.Authorize(context.Background(), "example.com"); err != nil {
+		t.Errorf("client.Authorize 1: %v", err)
+	}
+	if count != 4 {
+		t.Errorf("total requests count: %d; want 4", count)
 	}
 }
 
@@ -1143,6 +1186,9 @@ func TestTLSSNI01ChallengeCert(t *testing.T) {
 	if cert.DNSNames[0] != name {
 		t.Errorf("cert.DNSNames[0] != name: %q vs %q", cert.DNSNames[0], name)
 	}
+	if cn := cert.Subject.CommonName; cn != san {
+		t.Errorf("cert.Subject.CommonName = %q; want %q", cn, san)
+	}
 }
 
 func TestTLSSNI02ChallengeCert(t *testing.T) {
@@ -1175,6 +1221,9 @@ func TestTLSSNI02ChallengeCert(t *testing.T) {
 	i := sort.SearchStrings(cert.DNSNames, name)
 	if i >= len(cert.DNSNames) || cert.DNSNames[i] != name {
 		t.Errorf("%v doesn't have %q", cert.DNSNames, name)
+	}
+	if cn := cert.Subject.CommonName; cn != sanA {
+		t.Errorf("CommonName = %q; want %q", cn, sanA)
 	}
 }
 

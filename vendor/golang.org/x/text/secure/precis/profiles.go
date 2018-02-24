@@ -13,10 +13,18 @@ import (
 )
 
 var (
-	Nickname              *Profile = nickname          // Implements the Nickname profile specified in RFC 7700.
-	UsernameCaseMapped    *Profile = usernameCaseMap   // Implements the UsernameCaseMapped profile specified in RFC 7613.
-	UsernameCasePreserved *Profile = usernameNoCaseMap // Implements the UsernameCasePreserved profile specified in RFC 7613.
-	OpaqueString          *Profile = opaquestring      // Implements the OpaqueString profile defined in RFC 7613 for passwords and other secure labels.
+	// Implements the Nickname profile specified in RFC 8266.
+	Nickname *Profile = nickname
+
+	// Implements the UsernameCaseMapped profile specified in RFC 8265.
+	UsernameCaseMapped *Profile = usernameCaseMap
+
+	// Implements the UsernameCasePreserved profile specified in RFC 8265.
+	UsernameCasePreserved *Profile = usernameNoCaseMap
+
+	// Implements the OpaqueString profile defined in RFC 8265 for passwords and
+	// other secure labels.
+	OpaqueString *Profile = opaquestring
 )
 
 var (
@@ -28,6 +36,7 @@ var (
 			IgnoreCase,
 			Norm(norm.NFKC),
 			DisallowEmpty,
+			repeat,
 		),
 		class: freeform,
 	}

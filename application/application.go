@@ -8,10 +8,10 @@ import (
 	"context"
 
 	"github.com/Sirupsen/logrus"
+	conv "github.com/cstockton/go-conv"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/errs"
@@ -46,7 +46,7 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx = storage.NewSourceContext(ctx, sourceStorage)
 	ctx = storage.NewDestinationContext(ctx, destinationStorage)
 
-	keystore, err := kvstore.NewKVStoreFromConfig(cfg)
+	keystore, err := kvstore.New(cfg.KVStore)
 
 	if err != nil {
 		return nil, err
@@ -91,8 +91,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	cfg := config.FromContext(ctx)
 
 	k := kvstore.FromContext(ctx)
-	con := k.Connection()
-	defer con.Close()
 
 	err := i.Save()
 
@@ -113,7 +111,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 		storeKey = prefix + storeKey
 	}
 
-	err = con.Set(storeKey, i.Filepath)
+	err = k.Set(storeKey, i.Filepath)
 
 	if err != nil {
 		l.Fatal(err)
@@ -133,7 +131,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = con.SetAdd(parentKey, storeKey)
+		err = k.AppendSlice(parentKey, storeKey)
 
 		if err != nil {
 			l.Fatal(err)
@@ -149,8 +147,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 // Delete removes a file from kvstore and storage
 func Delete(ctx context.Context, filepath string) error {
 	k := kvstore.FromContext(ctx)
-	con := k.Connection()
-	defer con.Close()
 
 	l := logger.FromContext(ctx)
 
@@ -180,14 +176,22 @@ func Delete(ctx context.Context, filepath string) error {
 
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
-	if !con.Exists(childrenKey) {
+	exists, err := k.Exists(childrenKey)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
 		l.Infof("Children key %s does not exist for parent %s", childrenKey, parentKey)
 
 		return errs.ErrKeyNotExists
 	}
 
 	// Get the list of items to cleanup.
-	children := con.SetMembers(childrenKey)
+	children, err := k.GetSlice(childrenKey)
+	if err != nil {
+		return err
+	}
 
 	if children == nil {
 		l.Infof("No children to delete for %s", parentKey)
@@ -198,16 +202,19 @@ func Delete(ctx context.Context, filepath string) error {
 	store := storage.DestinationFromContext(ctx)
 
 	for _, s := range children {
-		key, err := gokvstores.String(s)
-
+		key, err := conv.String(s)
 		if err != nil {
 			return err
 		}
 
 		// Now, every child is a hash which points to a key/value pair in
 		// KVStore which in turn points to a file in dst storage.
-		dstfile, err := gokvstores.String(con.Get(key))
+		dstfileRaw, err := k.Get(key)
+		if err != nil {
+			return err
+		}
 
+		dstfile, err := conv.String(dstfileRaw)
 		if err != nil {
 			return err
 		}
@@ -219,7 +226,7 @@ func Delete(ctx context.Context, filepath string) error {
 			return err
 		}
 
-		err = con.Delete(key)
+		err = k.Delete(key)
 
 		if err != nil {
 			return err
@@ -231,7 +238,7 @@ func Delete(ctx context.Context, filepath string) error {
 	// Delete them right away, we don't care about them anymore.
 	l.Infof("Deleting children set %s", childrenKey)
 
-	err = con.Delete(childrenKey)
+	err = k.Delete(childrenKey)
 
 	if err != nil {
 		return err
@@ -245,13 +252,10 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	key := c.MustGet("key").(string)
 
 	k := kvstore.FromContext(c)
-	con := k.Connection()
 
 	cfg := config.FromContext(c)
 
 	l := logger.FromContext(c)
-
-	defer con.Close()
 
 	destStorage := storage.DestinationFromContext(c)
 
@@ -272,7 +276,15 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	}
 
 	// Image from the KVStore found
-	stored, err := gokvstores.String(con.Get(storeKey))
+	imageKey, err := k.Get(storeKey)
+	if err != nil {
+		return nil, err
+	}
+
+	stored, err := conv.String(imageKey)
+	if err != nil {
+		return nil, err
+	}
 
 	file.Filepath = stored
 

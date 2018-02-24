@@ -3,7 +3,7 @@ package kvstore
 import (
 	"context"
 
-	"github.com/thoas/gokvstores"
+	"github.com/ulule/gokvstores"
 )
 
 const key = "kvstore"
