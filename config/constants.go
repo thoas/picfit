@@ -13,9 +13,6 @@ const DefaultUserAgent = "picfit"
 // DefaultMimetypeDetector method to use
 const DefaultMimetypeDetector = "extension"
 
-// DefaultLoggerLevel is the default logger level
-const DefaultLoggerLevel = "debug"
-
 // DefaultPort is the default port of the application server
 const DefaultPort = 3001
 

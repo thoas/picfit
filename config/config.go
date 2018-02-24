@@ -2,11 +2,14 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/spf13/viper"
 
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/kvstore"
+	"github.com/thoas/picfit/logger"
+	"github.com/thoas/picfit/storage"
 )
 
 // Shard is a struct to allow shard location when files are uploaded
@@ -35,24 +38,6 @@ type Options struct {
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
 }
 
-// Storage is a struct to represent a Storage (fs, s3)
-type Storage struct {
-	Type            string
-	Location        string
-	BaseURL         string `mapstructure:"base_url"`
-	Region          string
-	ACL             string
-	AccessKeyID     string `mapstructure:"access_key_id"`
-	BucketName      string `mapstructure:"bucket_name"`
-	SecretAccessKey string `mapstructure:"secret_access_key"`
-}
-
-// Storages is a struct to represent a section of storage (src, fst)
-type Storages struct {
-	Src *Storage
-	Dst *Storage
-}
-
 // Sentry is a struct to configure sentry using a dsn
 type Sentry struct {
 	DSN  string
@@ -70,23 +55,9 @@ type Config struct {
 	AllowedOrigins []string `mapstructure:"allowed_origins"`
 	AllowedMethods []string `mapstructure:"allowed_methods"`
 	AllowedHeaders []string `mapstructure:"allowed_headers"`
-	Storage        *Storages
+	Storage        *storage.Config
 	KVStore        *kvstore.Config
-	Logger         Logger
-}
-
-// Logger is a struct to configure logger
-type Logger struct {
-	Level string
-}
-
-// GetLevel returns the level of the logger
-func (l *Logger) GetLevel() string {
-	if l.Level == "" {
-		return DefaultLoggerLevel
-	}
-
-	return l.Level
+	Logger         logger.Config
 }
 
 // DefaultConfig returns a default config instance
@@ -98,7 +69,7 @@ func DefaultConfig() *Config {
 			DefaultFormat:    DefaultFormat,
 			Quality:          DefaultQuality,
 			Format:           "",
-			DefaultUserAgent: DefaultUserAgent + "/" + constants.Version,
+			DefaultUserAgent: fmt.Sprint(DefaultUserAgent, "/", constants.Version),
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,

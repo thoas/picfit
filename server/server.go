@@ -118,7 +118,7 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 
 		router.GET(fmt.Sprintf("/%s", name), views...)
 
-		if cfg.Storage != nil && cfg.Storage.Src != nil {
+		if cfg.Storage != nil && cfg.Storage.Source != nil {
 			router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
 		}
 	}

@@ -37,7 +37,7 @@ func LoadFromConfigContent(content string) (context.Context, error) {
 func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
-	sourceStorage, destinationStorage, err := storage.NewStoragesFromConfig(cfg)
+	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
 
 	if err != nil {
 		return nil, err
