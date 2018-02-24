@@ -20,9 +20,9 @@ import (
 
 	"golang.org/x/net/context"
 
+	conv "github.com/cstockton/go-conv"
 	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
-	"github.com/thoas/gokvstores"
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/kvstore"
@@ -440,10 +440,12 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	  "kvstore": {
 		"prefix": "picfit:",
 		"type": "redis",
-		"host": "127.0.0.1",
-		"db": 0,
-		"password": "",
-		"port": 6379
+		"redis": {
+			"host": "127.0.0.1",
+			"db": 0,
+			"password": "",
+			"port": 6379
+		}
 	  },
 	  "storage": {
 		"src": {
@@ -469,9 +471,6 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	store := kvstore.FromContext(ctx)
 
-	connection := store.Connection()
-	defer connection.Close()
-
 	location := "http://example.com/display/resize/100x100/avatar.png"
 
 	request, _ := http.NewRequest("GET", location, nil)
@@ -492,9 +491,15 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	key := cfg.KVStore.Prefix + etag
 
-	assert.True(t, connection.Exists(key))
+	exists, err := store.Exists(key)
+	assert.Nil(t, err)
+	assert.True(t, exists)
 
-	filepath, _ := gokvstores.String(connection.Get(key))
+	raw, err := store.Get(key)
+	assert.Nil(t, err)
+
+	filepath, err := conv.String(raw)
+	assert.Nil(t, err)
 
 	parts := strings.Split(filepath, "/")
 
@@ -552,10 +557,12 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	  "kvstore": {
 		"prefix": "picfit:",
 		"type": "redis",
-		"host": "127.0.0.1",
-		"db": 0,
-		"password": "",
-		"port": 6379
+		"redis": {
+			"host": "127.0.0.1",
+			"db": 0,
+			"password": "",
+			"port": 6379
+		}
 	  },
 	  "storage": {
 		"src": {
@@ -570,8 +577,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	ctx, err := application.LoadFromConfigContent(content)
 	assert.Nil(t, err)
 
-	connection := kvstore.FromContext(ctx).Connection()
-	defer connection.Close()
+	store := kvstore.FromContext(ctx)
 
 	sourceStorage := storage.SourceFromContext(ctx)
 
@@ -604,9 +610,15 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	key := config.FromContext(ctx).KVStore.Prefix + etag
 
-	assert.True(t, connection.Exists(key))
+	exists, err := store.Exists(key)
+	assert.Nil(t, err)
+	assert.True(t, exists)
 
-	filepath, _ := gokvstores.String(connection.Get(key))
+	raw, err := store.Get(key)
+	assert.Nil(t, err)
+
+	filepath, err := conv.String(raw)
+	assert.Nil(t, err)
 
 	parts := strings.Split(filepath, "/")
 

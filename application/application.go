@@ -132,9 +132,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
 		err = k.AppendSlice(parentKey, storeKey)
-
 		if err != nil {
-			l.Fatal(err)
 			return err
 		}
 
@@ -281,14 +279,14 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 		return nil, err
 	}
 
-	stored, err := conv.String(imageKey)
-	if err != nil {
-		return nil, err
-	}
+	if imageKey != nil {
+		stored, err := conv.String(imageKey)
+		if err != nil {
+			return nil, err
+		}
 
-	file.Filepath = stored
+		file.Filepath = stored
 
-	if stored != "" {
 		l.Infof("Key %s found in kvstore: %s", storeKey, stored)
 
 		if load {
@@ -344,7 +342,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 
 	file.Headers["ETag"] = key
 
-	if stored == "" {
+	if imageKey == nil {
 		if async == true {
 			go Store(c, filepath, file)
 		} else {

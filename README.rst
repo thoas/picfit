@@ -133,10 +133,12 @@ Store images on Amazon S3, keys in Redis and shard filename
     {
       "kvstore": {
         "type": "redis",
-        "host": "127.0.0.1",
-        "port": 6379,
-        "password": "",
-        "db": 0
+        "redis": {
+          "host": "127.0.0.1",
+          "port": 6379,
+          "password": "",
+          "db": 0
+        }
       },
       "port": 3001,
       "storage": {
@@ -213,10 +215,12 @@ Load images from file system and store them in Amazon S3, keys on Redis
     {
       "kvstore": {
         "type": "redis",
-        "host": "127.0.0.1",
-        "port": 6379,
-        "password": "",
-        "db": 0
+        "redis": {
+          "host": "127.0.0.1",
+          "port": 6379,
+          "password": "",
+          "db": 0
+        }
       },
       "port": 3001,
       "storage": {
@@ -255,11 +259,13 @@ Load images from storage backend base url, store them in Amazon S3, keys prefixe
     {
       "kvstore": {
         "type": "redis",
-        "host": "127.0.0.1",
-        "port": 6379,
-        "password": "",
-        "prefix": "dummy:",
-        "db": 0
+        "redis": {
+          "host": "127.0.0.1",
+          "port": 6379,
+          "password": "",
+          "db": 0
+        },
+        "prefix": "dummy:"
       },
       "port": 3001,
       "storage": {

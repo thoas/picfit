@@ -88,8 +88,8 @@
   name = "github.com/ulule/gostorages"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/ulule/gokvstores"
+  revision = "06854a16f68d91c55ae6269a655bc7324169e607"
 
 [[constraint]]
   name = "github.com/cstockton/go-conv"

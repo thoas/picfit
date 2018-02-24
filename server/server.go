@@ -8,9 +8,11 @@ import (
 	netContext "context"
 
 	"github.com/getsentry/raven-go"
+
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/middleware"

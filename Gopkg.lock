@@ -215,10 +215,9 @@
   version = "v1.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/ulule/gokvstores"
   packages = ["."]
-  revision = "29c8500276dbe765dab52a065f8292c68ee7d8ce"
+  revision = "06854a16f68d91c55ae6269a655bc7324169e607"
 
 [[projects]]
   branch = "master"
@@ -318,6 +317,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "158e05ceedea8b57877c745ce0cc320694caf07da9a6e7a4ebf869f2443fc5eb"
+  inputs-digest = "8ef739a0e53de2f87f5e2a3b3a1f9e13c71cff785c0a87b8fcc21103e148c748"
   solver-name = "gps-cdcl"
   solver-version = 1

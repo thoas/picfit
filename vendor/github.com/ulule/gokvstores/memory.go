@@ -103,6 +103,10 @@ func (c *MemoryStore) AppendSlice(key string, values ...interface{}) error {
 		return err
 	}
 
+	if items == nil {
+		return c.SetSlice(key, values)
+	}
+
 	for _, item := range values {
 		items = append(items, item)
 	}

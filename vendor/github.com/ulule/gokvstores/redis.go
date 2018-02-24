@@ -86,6 +86,10 @@ func (r *RedisStore) Get(key string) (interface{}, error) {
 	cmd := redis.NewCmd("get", key)
 
 	if err := r.client.Process(cmd); err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 
