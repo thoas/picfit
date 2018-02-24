@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/thoas/picfit/constants"
+	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/storage"
@@ -27,12 +28,9 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	EnableUpload     bool `mapstructure:"enable_upload"`
-	EnableDelete     bool `mapstructure:"enable_delete"`
-	EnableStats      bool `mapstructure:"enable_stats"`
-	DefaultFormat    string
-	Format           string
-	Quality          int
+	EnableUpload     bool          `mapstructure:"enable_upload"`
+	EnableDelete     bool          `mapstructure:"enable_delete"`
+	EnableStats      bool          `mapstructure:"enable_stats"`
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
@@ -47,6 +45,7 @@ type Sentry struct {
 // Config is a struct to load configuration flags
 type Config struct {
 	Debug          bool
+	Engine         *engine.Config
 	Sentry         *Sentry
 	SecretKey      string `mapstructure:"secret_key"`
 	Shard          *Shard
@@ -63,12 +62,14 @@ type Config struct {
 // DefaultConfig returns a default config instance
 func DefaultConfig() *Config {
 	return &Config{
+		Engine: &engine.Config{
+			DefaultFormat: DefaultFormat,
+			Quality:       DefaultQuality,
+			Format:        "",
+		},
 		Options: &Options{
 			EnableDelete:     false,
 			EnableUpload:     false,
-			DefaultFormat:    DefaultFormat,
-			Quality:          DefaultQuality,
-			Format:           "",
 			DefaultUserAgent: fmt.Sprint(DefaultUserAgent, "/", constants.Version),
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
@@ -118,12 +119,8 @@ func load(content string, isPath bool) (*Config, error) {
 		return nil, err
 	}
 
-	if config.Options.Quality == 0 {
-		config.Options.Quality = defaultConfig.Options.Quality
-	}
-
-	if config.Options.DefaultFormat == "" {
-		config.Options.DefaultFormat = defaultConfig.Options.DefaultFormat
+	if config.Engine == nil {
+		config.Engine = defaultConfig.Engine
 	}
 
 	return config, nil

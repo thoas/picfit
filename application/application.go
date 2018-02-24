@@ -7,7 +7,6 @@ import (
 
 	"context"
 
-	"github.com/Sirupsen/logrus"
 	conv "github.com/cstockton/go-conv"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +37,6 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
 	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
-
 	if err != nil {
 		return nil, err
 	}
@@ -47,27 +45,19 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx = storage.NewDestinationContext(ctx, destinationStorage)
 
 	keystore, err := kvstore.New(cfg.KVStore)
-
 	if err != nil {
 		return nil, err
 	}
 
 	ctx = kvstore.NewContext(ctx, keystore)
 
-	e := &engine.GoImageEngine{
-		DefaultFormat:  cfg.Options.DefaultFormat,
-		Format:         cfg.Options.Format,
-		DefaultQuality: cfg.Options.Quality,
-	}
+	e := engine.New(*cfg.Engine)
+	ctx = engine.NewContext(ctx, e)
 
-	log := logrus.New()
-	level, err := logrus.ParseLevel(cfg.Logger.GetLevel())
+	log, err := logger.New(cfg.Logger)
 	if err != nil {
 		return nil, err
 	}
-	log.Level = level
-
-	ctx = engine.NewContext(ctx, e)
 	ctx = logger.NewContext(ctx, log)
 
 	return ctx, nil
@@ -95,7 +85,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	err := i.Save()
 
 	if err != nil {
-		l.Fatal(err)
 		return err
 	}
 
@@ -114,8 +103,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	err = k.Set(storeKey, i.Filepath)
 
 	if err != nil {
-		l.Fatal(err)
-
 		return err
 	}
 

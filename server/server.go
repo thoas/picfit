@@ -110,7 +110,7 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
 			middleware.Security(),
-			middleware.URLParser(),
+			middleware.URLParser(cfg.Options.MimetypeDetector),
 			middleware.OperationParser(),
 			middleware.RestrictSizes(),
 			view,

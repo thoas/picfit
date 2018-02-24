@@ -630,8 +630,8 @@ for example:
       "allowed_methods": ["GET", "HEAD"]
     }
 
-Options
-=======
+Image engine
+============
 
 Quality
 -------
@@ -644,7 +644,7 @@ globally without adding it at each request:
 .. code-block:: json
 
     {
-      "options": {
+      "engine": {
         "quality": 70
       }
     }
@@ -663,7 +663,7 @@ The format can be forced globally without adding it at each request:
 .. code-block:: json
 
     {
-      "options": {
+      "engine": {
         "format": "png"
       }
     }
@@ -675,6 +675,9 @@ By default the format will be chosen in this order:
 * The ``fmt`` parameter if exists in query string
 * The original image format
 * The default format provided in the `application <https://github.com/thoas/picfit/blob/master/application/constants.go#L6>`_
+
+Options
+=======
 
 Upload
 ------
