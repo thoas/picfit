@@ -15,7 +15,7 @@ type Server struct {
 func New(ctx context.Context) (*Server, error) {
 	cfg := config.FromContext(ctx)
 
-	httpServer, err := NewHTTPServer(cfg)
+	httpServer, err := NewHTTPServer(cfg, WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

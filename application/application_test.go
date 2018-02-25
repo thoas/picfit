@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,14 +19,16 @@ import (
 	"time"
 
 	conv "github.com/cstockton/go-conv"
+
 	"github.com/disintegration/imaging"
+
 	"github.com/stretchr/testify/assert"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/picfit/storage"
-	"golang.org/x/net/context"
 )
 
 func TestSignatureApplicationNotAuthorized(t *testing.T) {
