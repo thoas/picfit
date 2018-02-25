@@ -109,10 +109,10 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 		views := []gin.HandlerFunc{
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
-			middleware.Security(),
+			middleware.Security(cfg.SecretKey),
 			middleware.URLParser(cfg.Options.MimetypeDetector),
 			middleware.OperationParser(),
-			middleware.RestrictSizes(),
+			middleware.RestrictSizes(cfg.Options.AllowedSizes),
 			view,
 		}
 
@@ -136,13 +136,13 @@ func Router(ctx netContext.Context) (*gin.Engine, error) {
 
 // Run loads a new server
 func Run(ctx netContext.Context) error {
-	engine, err := Router(ctx)
+	router, err := Router(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	engine.Run(fmt.Sprintf(":%s", strconv.Itoa(config.FromContext(ctx).Port)))
+	router.Run(fmt.Sprintf(":%s", strconv.Itoa(config.FromContext(ctx).Port)))
 
 	return nil
 }
