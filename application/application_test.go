@@ -24,7 +24,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
@@ -424,15 +423,11 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		cfg := config.FromContext(ctx)
-
-		key := cfg.KVStore.Prefix + etag
-
-		exists, err := store.Exists(key)
+		exists, err := store.Exists(etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := store.Get(key)
+		raw, err := store.Get(etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
@@ -544,13 +539,11 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		key := config.FromContext(ctx).KVStore.Prefix + etag
-
-		exists, err := store.Exists(key)
+		exists, err := store.Exists(etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := store.Get(key)
+		raw, err := store.Get(etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
