@@ -65,7 +65,7 @@ Configuration should be stored in a readable file and in JSON format.
 
 - **redis** - Store generated keys in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
 - **cache** - Store generated keys in an in-memory cache
-- **redis-cluster** - Store generated keys in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_,
+- **redis-cluster** - Store generated keys in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_
 
 ``[STORAGE]`` can be:
 
