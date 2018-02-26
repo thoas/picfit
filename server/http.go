@@ -17,7 +17,7 @@ import (
 )
 
 type HTTPServer struct {
-	engine *gin.Engine
+	*gin.Engine
 	config config.Config
 }
 
@@ -131,18 +131,14 @@ func (s *HTTPServer) Init(opts Options) error {
 		router.DELETE("/*path", handlers.Delete)
 	}
 
-	s.engine = router
+	s.Engine = router
 
 	return nil
 }
 
-func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.engine.ServeHTTP(w, req)
-}
-
 // Run loads a new http server
 func (s *HTTPServer) Run() error {
-	s.engine.Run(fmt.Sprintf(":%s", strconv.Itoa(s.config.Port)))
+	s.Engine.Run(fmt.Sprintf(":%s", strconv.Itoa(s.config.Port)))
 
 	return nil
 }
