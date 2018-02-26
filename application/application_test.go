@@ -2,10 +2,10 @@ package application_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -18,68 +18,18 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
-
 	conv "github.com/cstockton/go-conv"
+
 	"github.com/disintegration/imaging"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/thoas/picfit/application"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/picfit/storage"
 )
-
-type Dimension struct {
-	Width  int
-	Height int
-}
-
-type TestRequest struct {
-	URL         string
-	Dimensions  *Dimension
-	ContentType string
-}
-
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func RandString(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
-
-func newDummyApplication() context.Context {
-	ctx, _ := application.LoadFromConfig(config.DefaultConfig())
-
-	return ctx
-}
-
-func newHTTPServer() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Method == "GET" {
-			f, err := os.Open(path.Join("testdata", r.URL.Path))
-			defer f.Close()
-
-			if err != nil {
-				w.WriteHeader(500)
-			} else {
-				bytes, _ := ioutil.ReadAll(f)
-
-				contentType := mime.TypeByExtension(path.Ext(r.URL.Path))
-
-				w.WriteHeader(200)
-
-				w.Header().Set("Content-Type", contentType)
-				w.Write(bytes)
-			}
-		}
-	}))
-}
 
 func TestSignatureApplicationNotAuthorized(t *testing.T) {
 	ts := newHTTPServer()
@@ -92,27 +42,24 @@ func TestSignatureApplicationNotAuthorized(t *testing.T) {
 	  "secret_key": "dummy"
 	}`
 
-	ctx, err := application.LoadFromConfigContent(content)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		u, _ := url.Parse(ts.URL + "/avatar.png")
 
-	assert.Nil(t, err)
+		params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
 
-	u, _ := url.Parse(ts.URL + "/avatar.png")
+		location := fmt.Sprintf("http://example.com/display?%s", params)
 
-	params := fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
+		request, _ := http.NewRequest("GET", location, nil)
 
-	location := fmt.Sprintf("http://example.com/display?%s", params)
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	request, _ := http.NewRequest("GET", location, nil)
+		res := httptest.NewRecorder()
 
-	router, err := server.Router(ctx)
+		server.ServeHTTP(res, request)
 
-	assert.Nil(t, err)
-
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, request)
-
-	assert.Equal(t, 401, res.Code)
+		assert.Equal(t, 401, res.Code)
+	}, WithConfig(content))
 }
 
 func TestSignatureApplicationAuthorized(t *testing.T) {
@@ -126,33 +73,31 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 	  "secret_key": "dummy"
 	}`
 
-	ctx, err := application.LoadFromConfigContent(content)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		u, _ := url.Parse(ts.URL + "/avatar.png")
 
-	assert.Nil(t, err)
+		params := fmt.Sprintf("h=100&op=resize&url=%s&w=100", u.String())
 
-	u, _ := url.Parse(ts.URL + "/avatar.png")
+		values, err := url.ParseQuery(params)
 
-	params := fmt.Sprintf("h=100&op=resize&url=%s&w=100", u.String())
+		assert.Nil(t, err)
 
-	values, err := url.ParseQuery(params)
+		sig := signature.Sign("dummy", values.Encode())
 
-	assert.Nil(t, err)
+		location := fmt.Sprintf("http://example.com/display?%s&sig=%s", params, sig)
 
-	sig := signature.Sign("dummy", values.Encode())
+		request, _ := http.NewRequest("GET", location, nil)
 
-	location := fmt.Sprintf("http://example.com/display?%s&sig=%s", params, sig)
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	request, _ := http.NewRequest("GET", location, nil)
+		res := httptest.NewRecorder()
 
-	router, err := server.Router(ctx)
+		server.ServeHTTP(res, request)
 
-	assert.Nil(t, err)
+		assert.Equal(t, 200, res.Code)
+	}, WithConfig(content))
 
-	res := httptest.NewRecorder()
-
-	router.ServeHTTP(res, request)
-
-	assert.Equal(t, 200, res.Code)
 }
 
 func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
@@ -170,43 +115,42 @@ func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
 	  }
 	}`
 
-	ctx, err := application.LoadFromConfigContent(content)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	assert.Nil(t, err)
+		u, _ := url.Parse(ts.URL + "/avatar.png")
 
-	u, _ := url.Parse(ts.URL + "/avatar.png")
+		// unallowed size
+		params := fmt.Sprintf("url=%s&w=50&h=50&op=resize", u.String())
 
-	router, err := server.Router(ctx)
+		location := fmt.Sprintf("http://example.com/display?%s", params)
 
-	// unallowed size
-	params := fmt.Sprintf("url=%s&w=50&h=50&op=resize", u.String())
+		request, _ := http.NewRequest("GET", location, nil)
 
-	location := fmt.Sprintf("http://example.com/display?%s", params)
+		assert.Nil(t, err)
 
-	request, _ := http.NewRequest("GET", location, nil)
+		res := httptest.NewRecorder()
 
-	assert.Nil(t, err)
+		server.ServeHTTP(res, request)
 
-	res := httptest.NewRecorder()
+		assert.Equal(t, 403, res.Code)
 
-	router.ServeHTTP(res, request)
+		// allowed size
+		params = fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
 
-	assert.Equal(t, 403, res.Code)
+		location = fmt.Sprintf("http://example.com/display?%s", params)
 
-	// allowed size
-	params = fmt.Sprintf("url=%s&w=100&h=100&op=resize", u.String())
+		request, _ = http.NewRequest("GET", location, nil)
 
-	location = fmt.Sprintf("http://example.com/display?%s", params)
+		assert.Nil(t, err)
 
-	request, _ = http.NewRequest("GET", location, nil)
+		res = httptest.NewRecorder()
 
-	assert.Nil(t, err)
+		server.ServeHTTP(res, request)
 
-	res = httptest.NewRecorder()
-
-	router.ServeHTTP(res, request)
-
-	assert.Equal(t, 200, res.Code)
+		assert.Equal(t, 200, res.Code)
+	}, WithConfig(content))
 }
 
 func TestUploadHandler(t *testing.T) {
@@ -229,61 +173,59 @@ func TestUploadHandler(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	ctx, err := application.LoadFromConfigContent(content)
-	assert.Nil(t, err)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	f, err := os.Open("testdata/avatar.png")
-	assert.Nil(t, err)
-	defer f.Close()
+		f, err := os.Open("testdata/avatar.png")
+		assert.Nil(t, err)
+		defer f.Close()
 
-	body := new(bytes.Buffer)
-	w := multipart.NewWriter(body)
+		body := new(bytes.Buffer)
+		w := multipart.NewWriter(body)
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	stats, err := f.Stat()
+		stats, err := f.Stat()
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	fileContent, err := ioutil.ReadAll(f)
+		fileContent, err := ioutil.ReadAll(f)
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	writer, err := w.CreateFormFile("data", "avatar.png")
+		writer, err := w.CreateFormFile("data", "avatar.png")
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	writer.Write(fileContent)
+		writer.Write(fileContent)
 
-	if err := w.Close(); err != nil {
-		t.Fatal(err)
-	}
+		if err := w.Close(); err != nil {
+			t.Fatal(err)
+		}
 
-	req, err := http.NewRequest("POST", "http://www.example.com/upload", body)
+		req, err := http.NewRequest("POST", "http://www.example.com/upload", body)
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	req.Header.Add("Content-Type", w.FormDataContentType())
+		req.Header.Add("Content-Type", w.FormDataContentType())
 
-	res := httptest.NewRecorder()
+		res := httptest.NewRecorder()
 
-	router, err := server.Router(ctx)
+		server.ServeHTTP(res, req)
 
-	assert.Nil(t, err)
+		assert.Equal(t, 200, res.Code)
 
-	router.ServeHTTP(res, req)
+		sourceStorage := storage.SourceFromContext(ctx)
 
-	assert.Equal(t, 200, res.Code)
+		assert.True(t, sourceStorage.Exists("avatar.png"))
 
-	sourceStorage := storage.SourceFromContext(ctx)
+		file, err := sourceStorage.Open("avatar.png")
 
-	assert.True(t, sourceStorage.Exists("avatar.png"))
-
-	file, err := sourceStorage.Open("avatar.png")
-
-	assert.Nil(t, err)
-	assert.Equal(t, file.Size(), stats.Size())
-	assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
+		assert.Nil(t, err)
+		assert.Equal(t, file.Size(), stats.Size())
+		assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
+	}, WithConfig(content))
 }
 
 func TestDeleteHandler(t *testing.T) {
@@ -337,83 +279,81 @@ func TestDeleteHandler(t *testing.T) {
 	`
 
 	cfg = fmt.Sprintf(cfg, tmpSrcStorage, tmpDstStorage)
-	ctx, err := application.LoadFromConfigContent(cfg)
-	assert.Nil(t, err)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	router, err := server.Router(ctx)
+		// generate 5 resized image1.jpg
+		for i := 0; i < 5; i++ {
+			// use "get" instead of "display" here to force synchronized behaviour
+			url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image1.jpg", 100+i*10)
+			req, err := http.NewRequest("GET", url, nil)
+			assert.Nil(t, err)
 
-	assert.Nil(t, err)
+			res := httptest.NewRecorder()
+			server.ServeHTTP(res, req)
+			assert.Equal(t, res.Code, 200)
+		}
 
-	// generate 5 resized image1.jpg
-	for i := 0; i < 5; i++ {
-		// use "get" instead of "display" here to force synchronized behaviour
-		url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image1.jpg", 100+i*10)
-		req, err := http.NewRequest("GET", url, nil)
+		checkDirCount(tmpDstStorage, 5, "after resize requests")
+
+		// generate 2 resized image2.jpg
+		for i := 0; i < 2; i++ {
+			// use "get" instead of "display" here to force synchronized behaviour
+			url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image2.jpg", 100+i*10)
+			req, err := http.NewRequest("GET", url, nil)
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			server.ServeHTTP(res, req)
+			assert.Equal(t, res.Code, 200)
+		}
+
+		sourceStorage := storage.SourceFromContext(ctx)
+
+		checkDirCount(tmpSrcStorage, 5, "after resize requests")
+		checkDirCount(tmpDstStorage, 7, "after resize requests")
+		assert.True(t, sourceStorage.Exists("image1.jpg"))
+
+		// Delete image1.jpg and all of the derived images
+		req, err := http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
 		assert.Nil(t, err)
 
 		res := httptest.NewRecorder()
-		router.ServeHTTP(res, req)
+		server.ServeHTTP(res, req)
 		assert.Equal(t, res.Code, 200)
-	}
 
-	checkDirCount(tmpDstStorage, 5, "after resize requests")
+		checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
+		checkDirCount(tmpDstStorage, 2, "after 1st delete request")
+		assert.False(t, sourceStorage.Exists("image1.jpg"))
 
-	// generate 2 resized image2.jpg
-	for i := 0; i < 2; i++ {
-		// use "get" instead of "display" here to force synchronized behaviour
-		url := fmt.Sprintf("http://www.example.com/get/resize/100x%d/image2.jpg", 100+i*10)
-		req, err := http.NewRequest("GET", url, nil)
+		// Try to delete image1.jpg again
+		req, err = http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
 		assert.Nil(t, err)
 
-		res := httptest.NewRecorder()
-		router.ServeHTTP(res, req)
+		res = httptest.NewRecorder()
+		server.ServeHTTP(res, req)
+		assert.Equal(t, res.Code, 404)
+
+		checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
+		checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
+
+		assert.False(t, sourceStorage.Exists("image1.jpg"))
+
+		assert.True(t, sourceStorage.Exists("image2.jpg"))
+
+		// Delete image2.jpg and all of the derived images
+		req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
+		assert.Nil(t, err)
+
+		res = httptest.NewRecorder()
+		server.ServeHTTP(res, req)
 		assert.Equal(t, res.Code, 200)
-	}
 
-	sourceStorage := storage.SourceFromContext(ctx)
-
-	checkDirCount(tmpSrcStorage, 5, "after resize requests")
-	checkDirCount(tmpDstStorage, 7, "after resize requests")
-	assert.True(t, sourceStorage.Exists("image1.jpg"))
-
-	// Delete image1.jpg and all of the derived images
-	req, err := http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
-	assert.Nil(t, err)
-
-	res := httptest.NewRecorder()
-	router.ServeHTTP(res, req)
-	assert.Equal(t, res.Code, 200)
-
-	checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
-	checkDirCount(tmpDstStorage, 2, "after 1st delete request")
-	assert.False(t, sourceStorage.Exists("image1.jpg"))
-
-	// Try to delete image1.jpg again
-	req, err = http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
-	assert.Nil(t, err)
-
-	res = httptest.NewRecorder()
-	router.ServeHTTP(res, req)
-	assert.Equal(t, res.Code, 404)
-
-	checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
-	checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
-
-	assert.False(t, sourceStorage.Exists("image1.jpg"))
-
-	assert.True(t, sourceStorage.Exists("image2.jpg"))
-
-	// Delete image2.jpg and all of the derived images
-	req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
-	assert.Nil(t, err)
-
-	res = httptest.NewRecorder()
-	router.ServeHTTP(res, req)
-	assert.Equal(t, res.Code, 200)
-
-	checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
-	checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
-	assert.False(t, sourceStorage.Exists("image2.jpg"))
+		checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
+		checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
+		assert.False(t, sourceStorage.Exists("image2.jpg"))
+	}, WithConfig(cfg))
 }
 
 func TestStorageApplicationWithPath(t *testing.T) {
@@ -462,86 +402,85 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	ctx, err := application.LoadFromConfigContent(content)
-	assert.Nil(t, err)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	router, err := server.Router(ctx)
+		store := kvstore.FromContext(ctx)
 
-	assert.Nil(t, err)
+		location := "http://example.com/display/resize/100x100/avatar.png"
 
-	store := kvstore.FromContext(ctx)
+		request, _ := http.NewRequest("GET", location, nil)
 
-	location := "http://example.com/display/resize/100x100/avatar.png"
+		res := httptest.NewRecorder()
 
-	request, _ := http.NewRequest("GET", location, nil)
+		server.ServeHTTP(res, request)
 
-	res := httptest.NewRecorder()
+		assert.Equal(t, 200, res.Code)
 
-	router.ServeHTTP(res, request)
+		// We wait until the goroutine to save the file on disk is finished
+		timer1 := time.NewTimer(time.Second * 2)
+		<-timer1.C
 
-	assert.Equal(t, 200, res.Code)
+		etag := res.Header().Get("ETag")
 
-	// We wait until the goroutine to save the file on disk is finished
-	timer1 := time.NewTimer(time.Second * 2)
-	<-timer1.C
+		cfg := config.FromContext(ctx)
 
-	etag := res.Header().Get("ETag")
+		key := cfg.KVStore.Prefix + etag
 
-	cfg := config.FromContext(ctx)
+		exists, err := store.Exists(key)
+		assert.Nil(t, err)
+		assert.True(t, exists)
 
-	key := cfg.KVStore.Prefix + etag
+		raw, err := store.Get(key)
+		assert.Nil(t, err)
 
-	exists, err := store.Exists(key)
-	assert.Nil(t, err)
-	assert.True(t, exists)
+		filepath, err := conv.String(raw)
+		assert.Nil(t, err)
 
-	raw, err := store.Get(key)
-	assert.Nil(t, err)
+		parts := strings.Split(filepath, "/")
 
-	filepath, err := conv.String(raw)
-	assert.Nil(t, err)
+		assert.Equal(t, len(parts), 3)
+		assert.Equal(t, len(parts[0]), 1)
+		assert.Equal(t, len(parts[1]), 1)
 
-	parts := strings.Split(filepath, "/")
+		sourceStorage := storage.SourceFromContext(ctx)
 
-	assert.Equal(t, len(parts), 3)
-	assert.Equal(t, len(parts[0]), 1)
-	assert.Equal(t, len(parts[1]), 1)
+		assert.True(t, sourceStorage.Exists(filepath))
 
-	sourceStorage := storage.SourceFromContext(ctx)
+		location = "http://example.com/get/resize/100x100/avatar.png"
 
-	assert.True(t, sourceStorage.Exists(filepath))
+		request, _ = http.NewRequest("GET", location, nil)
 
-	location = "http://example.com/get/resize/100x100/avatar.png"
+		res = httptest.NewRecorder()
 
-	request, _ = http.NewRequest("GET", location, nil)
+		server.ServeHTTP(res, request)
 
-	res = httptest.NewRecorder()
+		assert.Equal(t, 200, res.Code)
+		assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
 
-	router.ServeHTTP(res, request)
+		var dat map[string]interface{}
 
-	assert.Equal(t, 200, res.Code)
-	assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
+		err = json.Unmarshal(res.Body.Bytes(), &dat)
 
-	var dat map[string]interface{}
+		assert.Nil(t, err)
 
-	err = json.Unmarshal(res.Body.Bytes(), &dat)
+		expected := "http://img.example.com/" + filepath
 
-	assert.Nil(t, err)
+		assert.Equal(t, expected, dat["url"].(string))
 
-	expected := "http://img.example.com/" + filepath
+		location = "http://example.com/redirect/resize/100x100/avatar.png"
 
-	assert.Equal(t, expected, dat["url"].(string))
+		request, _ = http.NewRequest("GET", location, nil)
 
-	location = "http://example.com/redirect/resize/100x100/avatar.png"
+		res = httptest.NewRecorder()
 
-	request, _ = http.NewRequest("GET", location, nil)
+		server.ServeHTTP(res, request)
 
-	res = httptest.NewRecorder()
+		assert.Equal(t, expected, res.Header().Get("Location"))
+		assert.Equal(t, 301, res.Code)
 
-	router.ServeHTTP(res, request)
-
-	assert.Equal(t, expected, res.Header().Get("Location"))
-	assert.Equal(t, 301, res.Code)
+	}, WithConfig(content))
 }
 
 func TestStorageApplicationWithURL(t *testing.T) {
@@ -574,57 +513,55 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	content = fmt.Sprintf(content, tmp)
 
-	ctx, err := application.LoadFromConfigContent(content)
-	assert.Nil(t, err)
+	Run(t, func(t *testing.T, ctx context.Context) {
+		server, err := server.New(ctx)
+		assert.Nil(t, err)
 
-	store := kvstore.FromContext(ctx)
+		store := kvstore.FromContext(ctx)
 
-	sourceStorage := storage.SourceFromContext(ctx)
+		sourceStorage := storage.SourceFromContext(ctx)
 
-	assert.NotNil(t, sourceStorage)
-	assert.Equal(t, sourceStorage, storage.DestinationFromContext(ctx))
+		assert.NotNil(t, sourceStorage)
+		assert.Equal(t, sourceStorage, storage.DestinationFromContext(ctx))
 
-	filename := "avatar.png"
+		filename := "avatar.png"
 
-	u, _ := url.Parse(ts.URL + "/" + filename)
+		u, _ := url.Parse(ts.URL + "/" + filename)
 
-	location := fmt.Sprintf("http://example.com/display?url=%s&w=100&h=100&op=resize", u.String())
+		location := fmt.Sprintf("http://example.com/display?url=%s&w=100&h=100&op=resize", u.String())
 
-	request, _ := http.NewRequest("GET", location, nil)
+		request, _ := http.NewRequest("GET", location, nil)
 
-	res := httptest.NewRecorder()
+		res := httptest.NewRecorder()
 
-	router, err := server.Router(ctx)
+		server.ServeHTTP(res, request)
 
-	assert.Nil(t, err)
+		assert.Equal(t, res.Code, 200)
 
-	router.ServeHTTP(res, request)
+		// We wait until the goroutine to save the file on disk is finished
+		timer1 := time.NewTimer(time.Second * 2)
+		<-timer1.C
 
-	assert.Equal(t, res.Code, 200)
+		etag := res.Header().Get("ETag")
 
-	// We wait until the goroutine to save the file on disk is finished
-	timer1 := time.NewTimer(time.Second * 2)
-	<-timer1.C
+		key := config.FromContext(ctx).KVStore.Prefix + etag
 
-	etag := res.Header().Get("ETag")
+		exists, err := store.Exists(key)
+		assert.Nil(t, err)
+		assert.True(t, exists)
 
-	key := config.FromContext(ctx).KVStore.Prefix + etag
+		raw, err := store.Get(key)
+		assert.Nil(t, err)
 
-	exists, err := store.Exists(key)
-	assert.Nil(t, err)
-	assert.True(t, exists)
+		filepath, err := conv.String(raw)
+		assert.Nil(t, err)
 
-	raw, err := store.Get(key)
-	assert.Nil(t, err)
+		parts := strings.Split(filepath, "/")
 
-	filepath, err := conv.String(raw)
-	assert.Nil(t, err)
+		assert.Equal(t, len(parts), 1)
 
-	parts := strings.Split(filepath, "/")
-
-	assert.Equal(t, len(parts), 1)
-
-	assert.True(t, sourceStorage.Exists(filepath))
+		assert.True(t, sourceStorage.Exists(filepath))
+	}, WithConfig(content))
 }
 
 func TestDummyApplicationErrors(t *testing.T) {
@@ -636,11 +573,10 @@ func TestDummyApplicationErrors(t *testing.T) {
 
 	res := httptest.NewRecorder()
 
-	router, err := server.Router(ctx)
-
+	server, err := server.New(ctx)
 	assert.Nil(t, err)
 
-	router.ServeHTTP(res, request)
+	server.ServeHTTP(res, request)
 	assert.Equal(t, 404, res.Code)
 }
 
@@ -650,6 +586,8 @@ func TestDummyApplication(t *testing.T) {
 	defer ts.CloseClientConnections()
 
 	ctx := newDummyApplication()
+	server, err := server.New(ctx)
+	assert.Nil(t, err)
 
 	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {
 		u, _ := url.Parse(ts.URL + "/" + filename)
@@ -688,16 +626,12 @@ func TestDummyApplication(t *testing.T) {
 			},
 		}
 
-		router, err := server.Router(ctx)
-
-		assert.Nil(t, err)
-
 		for _, test := range tests {
 			request, _ := http.NewRequest("GET", test.URL, nil)
 
 			res := httptest.NewRecorder()
 
-			router.ServeHTTP(res, request)
+			server.ServeHTTP(res, request)
 
 			img, err := imaging.Decode(res.Body)
 
