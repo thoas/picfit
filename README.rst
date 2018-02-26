@@ -65,6 +65,7 @@ Configuration should be stored in a readable file and in JSON format.
 
 - **redis** - Store generated keys in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
 - **cache** - Store generated keys in an in-memory cache
+- **redis-cluster** - Store generated keys in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_,
 
 ``[STORAGE]`` can be:
 
@@ -159,7 +160,7 @@ Store images on Amazon S3, keys in Redis and shard filename
       }
     }
 
-Keys will be stored on Redis_, (you better setup persistence_).
+Keys will be stored on Redis_, (you better need to setup persistence_).
 
 Image files will be loaded and stored on Amazon S3 at the location ``path/to/directory``
 in the bucket ``[BUCKET_NAME]``.
@@ -201,10 +202,10 @@ with restonly=false it would become ``0/6/06102586671300cd02ae90f1faa16897.jpg``
 
 It would be useful if you are using the file system storage backend.
 
-Load images from file system and store them in Amazon S3, keys on Redis
------------------------------------------------------------------------
+Load images from file system and store them in Amazon S3, keys on Redis cluster
+-------------------------------------------------------------------------------
 
-* key/value store provided by Redis
+* key/value store provided by Redis cluster
 * File system to load images
 * Amazon S3 storage to process images
 
@@ -214,12 +215,12 @@ Load images from file system and store them in Amazon S3, keys on Redis
 
     {
       "kvstore": {
-        "type": "redis",
+        "type": "redis-cluster",
         "redis": {
-          "host": "127.0.0.1",
-          "port": 6379,
+          "addrs": [
+            "127.0.0.1:6379"
+          ],
           "password": "",
-          "db": 0
         }
       },
       "port": 3001,
@@ -802,6 +803,7 @@ Thanks to these beautiful projects.
 
 .. _GOPATH: http://golang.org/doc/code.html#GOPATH
 .. _Redis: http://redis.io/
+.. _Redis cluster: https://redis.io/topics/cluster-tutorial
 .. _pilbox: https://github.com/agschwender/pilbox
 .. _varnish: https://www.varnish-cache.org/
 .. _persistence: http://redis.io/topics/persistence
