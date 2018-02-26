@@ -31,12 +31,20 @@ type GoImageEngine struct {
 
 type ImageTransformation func(img image.Image) *image.NRGBA
 
-var FlipTransformations = map[string]ImageTransformation{
+var formats = map[string]imaging.Format{
+	"jpeg": imaging.JPEG,
+	"jpg":  imaging.JPEG,
+	"png":  imaging.PNG,
+	"gif":  imaging.GIF,
+	"bmp":  imaging.BMP,
+}
+
+var flipTransformations = map[string]ImageTransformation{
 	"h": imaging.FlipH,
 	"v": imaging.FlipV,
 }
 
-var RotateTransformations = map[int]ImageTransformation{
+var rotateTransformations = map[int]ImageTransformation{
 	90:  imaging.Rotate90,
 	270: imaging.Rotate270,
 	180: imaging.Rotate180,
@@ -157,14 +165,16 @@ func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
 	return imaging.Decode(bytes.NewReader(img.Source))
 }
 
-func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, deg int, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
 	}
 
-	transform, ok := RotateTransformations[deg]
+	deg := options.Degree
+
+	transform, ok := rotateTransformations[deg]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
@@ -173,14 +183,16 @@ func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, deg int, options *Optio
 	return e.ToBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Flip(img *imagefile.ImageFile, pos string, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
 	}
 
-	transform, ok := FlipTransformations[pos]
+	pos := options.Position
+
+	transform, ok := flipTransformations[pos]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
@@ -303,7 +315,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 	options := &Options{
 		Quality: quality,
-		Format:  Formats[format],
+		Format:  formats[format],
 	}
 
 	switch operation {
@@ -318,7 +330,9 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 		}
 
-		content, err := e.Flip(img, pos, options)
+		options.Position = pos
+
+		content, err := e.Flip(img, options)
 
 		if err != nil {
 			return nil, err
@@ -334,7 +348,9 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, err
 		}
 
-		content, err := e.Rotate(img, deg, options)
+		options.Degree = deg
+
+		content, err := e.Rotate(img, options)
 
 		if err != nil {
 			return nil, err
