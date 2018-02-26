@@ -1,9 +1,9 @@
 package application_test
 
 import (
+	"context"
 	"io/ioutil"
 	"math/rand"
-	"mime"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,9 +11,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/config"
-	"golang.org/x/net/context"
+	"github.com/thoas/picfit/image"
 )
 
 type Dimension struct {
@@ -96,7 +97,7 @@ func newHTTPServer() *httptest.Server {
 			} else {
 				bytes, _ := ioutil.ReadAll(f)
 
-				contentType := mime.TypeByExtension(path.Ext(r.URL.Path))
+				contentType, _ := image.MimetypeDetectorExtension(r.URL)
 
 				w.WriteHeader(200)
 
