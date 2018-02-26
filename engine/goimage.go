@@ -31,6 +31,13 @@ type GoImageEngine struct {
 
 type ImageTransformation func(img image.Image) *image.NRGBA
 
+var defaultParams = map[string]string{
+	"upscale": "1",
+	"h":       "0",
+	"w":       "0",
+	"deg":     "90",
+}
+
 var formats = map[string]imaging.Format{
 	"jpeg": imaging.JPEG,
 	"jpg":  imaging.JPEG,
@@ -66,7 +73,7 @@ func imageSize(e image.Image) (int, int) {
 	return e.Bounds().Max.X, e.Bounds().Max.Y
 }
 
-func (e *GoImageEngine) Scale(img image.Image, options *Options, trans Transformation) image.Image {
+func scale(img image.Image, options *Options, trans Transformation) image.Image {
 	factor := scalingFactorImage(img, options.Width, options.Height)
 
 	if factor < 1 || options.Upscale {
@@ -109,7 +116,7 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options,
 	for i, frame := range g.Image {
 		bounds := frame.Bounds()
 		draw.Draw(im, bounds, frame, bounds.Min, draw.Over)
-		g.Image[i] = imageToPaletted(e.Scale(im, options, trans))
+		g.Image[i] = imageToPaletted(scale(im, options, trans))
 	}
 
 	srcW, srcH := imageSize(first)
@@ -158,7 +165,7 @@ func (e *GoImageEngine) Resize(img *imagefile.ImageFile, options *Options) ([]by
 }
 
 func (e *GoImageEngine) transform(img image.Image, options *Options, trans Transformation) ([]byte, error) {
-	return e.ToBytes(e.Scale(img, options, trans), options.Format, options.Quality)
+	return e.ToBytes(scale(img, options, trans), options.Format, options.Quality)
 }
 
 func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
@@ -242,14 +249,7 @@ func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte,
 }
 
 func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation, qs map[string]string) (*imagefile.ImageFile, error) {
-	params := map[string]string{
-		"upscale": "1",
-		"h":       "0",
-		"w":       "0",
-		"deg":     "90",
-	}
-
-	err := mergo.Merge(&qs, params)
+	err := mergo.Merge(&qs, defaultParams)
 
 	if err != nil {
 		return nil, err
