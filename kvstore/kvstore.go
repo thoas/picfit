@@ -25,17 +25,27 @@ func New(cfg *Config) (gokvstores.KVStore, error) {
 	case redisKVStoreType:
 		redis := cfg.Redis
 
-		return gokvstores.NewRedisClientStore(&gokvstores.RedisClientOptions{
+		s, err := gokvstores.NewRedisClientStore(&gokvstores.RedisClientOptions{
 			Addr:     redis.Addr(),
 			DB:       redis.DB,
 			Password: redis.Password,
 		}, time.Duration(redis.Expiration)*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		return &kvstoreWrapper{s, cfg.Prefix}, nil
 	case cacheKVStoreType:
 		cache := cfg.Cache
 
-		return gokvstores.NewMemoryStore(
+		s, err := gokvstores.NewMemoryStore(
 			time.Duration(cache.Expiration)*time.Second,
 			time.Duration(cache.CleanupInterval)*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		return &kvstoreWrapper{s, cfg.Prefix}, nil
 	}
 
 	return nil, fmt.Errorf("kvstore %s does not exist", cfg.Type)

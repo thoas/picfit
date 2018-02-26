@@ -68,15 +68,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 	l.Infof("Save thumbnail %s to storage", i.Filepath)
 
-	prefix := cfg.KVStore.Prefix
-
 	storeKey := i.Key
-
-	key := i.Key
-
-	if prefix != "" {
-		storeKey = prefix + storeKey
-	}
 
 	err = k.Set(storeKey, i.Filepath)
 
@@ -90,10 +82,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	if cfg.Options.EnableDelete {
 		parentKey := hash.Tokey(filepath)
 
-		if prefix != "" {
-			parentKey = prefix + parentKey
-		}
-
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
 		err = k.AppendSlice(parentKey, storeKey)
@@ -101,7 +89,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 			return err
 		}
 
-		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, key)
+		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, storeKey)
 	}
 
 	return nil
@@ -130,12 +118,6 @@ func Delete(ctx context.Context, filepath string) error {
 	}
 
 	parentKey := hash.Tokey(filepath)
-
-	prefix := config.FromContext(ctx).KVStore.Prefix
-
-	if prefix != "" {
-		parentKey = prefix + parentKey
-	}
 
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
@@ -230,13 +212,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	var err error
 	var filepath string
 
-	prefix := cfg.KVStore.Prefix
-
 	storeKey := key
-
-	if prefix != "" {
-		storeKey = prefix + key
-	}
 
 	// Image from the KVStore found
 	imageKey, err := k.Get(storeKey)

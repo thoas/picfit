@@ -133,9 +133,9 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options,
 	g.Config.Height = options.Height
 	g.Config.Width = options.Width
 
-	buf := &bytes.Buffer{}
+	buf := bytes.Buffer{}
 
-	err = gif.EncodeAll(buf, g)
+	err = gif.EncodeAll(&buf, g)
 
 	if err != nil {
 		return nil, err
