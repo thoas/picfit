@@ -1,15 +1,12 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
 
-	"context"
-
-	"github.com/Sirupsen/logrus"
 	conv "github.com/cstockton/go-conv"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/thoas/picfit/config"
@@ -22,23 +19,11 @@ import (
 	"github.com/thoas/picfit/storage"
 )
 
-// LoadFromConfigContent returns a net/context from content
-func LoadFromConfigContent(content string) (context.Context, error) {
-	cfg, err := config.LoadFromContent(content)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return LoadFromConfig(cfg)
-}
-
-// LoadFromConfig returns a net/context from a config.Config instance
-func LoadFromConfig(cfg *config.Config) (context.Context, error) {
+// Load returns a net/context from a config.Config instance
+func Load(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
-	sourceStorage, destinationStorage, err := storage.NewStoragesFromConfig(cfg)
-
+	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
@@ -47,41 +32,22 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx = storage.NewDestinationContext(ctx, destinationStorage)
 
 	keystore, err := kvstore.New(cfg.KVStore)
-
 	if err != nil {
 		return nil, err
 	}
 
 	ctx = kvstore.NewContext(ctx, keystore)
 
-	e := &engine.GoImageEngine{
-		DefaultFormat:  cfg.Options.DefaultFormat,
-		Format:         cfg.Options.Format,
-		DefaultQuality: cfg.Options.Quality,
-	}
+	e := engine.New(*cfg.Engine)
+	ctx = engine.NewContext(ctx, e)
 
-	log := logrus.New()
-	level, err := logrus.ParseLevel(cfg.Logger.GetLevel())
+	log, err := logger.New(cfg.Logger)
 	if err != nil {
 		return nil, err
 	}
-	log.Level = level
-
-	ctx = engine.NewContext(ctx, e)
 	ctx = logger.NewContext(ctx, log)
 
 	return ctx, nil
-}
-
-// Load creates a net/context from a file config path
-func Load(path string) (context.Context, error) {
-	cfg, err := config.Load(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return LoadFromConfig(cfg)
 }
 
 // Store stores an image file with the defined filepath
@@ -95,48 +61,31 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	err := i.Save()
 
 	if err != nil {
-		l.Fatal(err)
 		return err
 	}
 
 	l.Infof("Save thumbnail %s to storage", i.Filepath)
 
-	prefix := cfg.KVStore.Prefix
-
-	storeKey := i.Key
-
-	key := i.Key
-
-	if prefix != "" {
-		storeKey = prefix + storeKey
-	}
-
-	err = k.Set(storeKey, i.Filepath)
+	err = k.Set(i.Key, i.Filepath)
 
 	if err != nil {
-		l.Fatal(err)
-
 		return err
 	}
 
-	l.Infof("Save key %s => %s to kvstore", storeKey, i.Filepath)
+	l.Infof("Save key %s => %s to kvstore", i.Key, i.Filepath)
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
 		parentKey := hash.Tokey(filepath)
 
-		if prefix != "" {
-			parentKey = prefix + parentKey
-		}
-
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = k.AppendSlice(parentKey, storeKey)
+		err = k.AppendSlice(parentKey, i.Key)
 		if err != nil {
 			return err
 		}
 
-		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, key)
+		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, i.Key)
 	}
 
 	return nil
@@ -165,12 +114,6 @@ func Delete(ctx context.Context, filepath string) error {
 	}
 
 	parentKey := hash.Tokey(filepath)
-
-	prefix := config.FromContext(ctx).KVStore.Prefix
-
-	if prefix != "" {
-		parentKey = prefix + parentKey
-	}
 
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
@@ -265,13 +208,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	var err error
 	var filepath string
 
-	prefix := cfg.KVStore.Prefix
-
 	storeKey := key
-
-	if prefix != "" {
-		storeKey = prefix + key
-	}
 
 	// Image from the KVStore found
 	imageKey, err := k.Get(storeKey)
@@ -324,7 +261,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			return nil, err
 		}
 
-		op := c.MustGet("op").(*engine.Operation)
+		op := c.MustGet("op").(engine.Operation)
 
 		file, err = engine.FromContext(c).Transform(file, op, parameters)
 

@@ -1,38 +1,25 @@
 package engine
 
-type Operation struct {
-	Name string
+type Operation string
+
+func (o Operation) String() string {
+	return string(o)
 }
 
-var Resize = &Operation{
-	"resize",
-}
+const (
+	Resize    = Operation("resize")
+	Thumbnail = Operation("thumbnail")
+	Rotate    = Operation("rotate")
+	Flip      = Operation("flip")
+	Fit       = Operation("fit")
+	Noop      = Operation("noop")
+)
 
-var Thumbnail = &Operation{
-	"thumbnail",
-}
-
-var Rotate = &Operation{
-	"rotate",
-}
-
-var Flip = &Operation{
-	"flip",
-}
-
-var Fit = &Operation{
-	"fit",
-}
-
-var Noop = &Operation{
-	"noop",
-}
-
-var Operations = map[string]*Operation{
-	Resize.Name:    Resize,
-	Thumbnail.Name: Thumbnail,
-	Flip.Name:      Flip,
-	Rotate.Name:    Rotate,
-	Fit.Name:       Fit,
-	Noop.Name:      Noop,
+var Operations = map[string]Operation{
+	Resize.String():    Resize,
+	Thumbnail.String(): Thumbnail,
+	Flip.String():      Flip,
+	Rotate.String():    Rotate,
+	Fit.String():       Fit,
+	Noop.String():      Noop,
 }

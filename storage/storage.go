@@ -7,13 +7,19 @@ import (
 	"github.com/mitchellh/goamz/aws"
 
 	"github.com/ulule/gostorages"
-
-	"github.com/thoas/picfit/config"
 )
 
-// NewStoragesFromConfig return destination and source storages from config
-func NewStoragesFromConfig(cfg *config.Config) (gostorages.Storage, gostorages.Storage, error) {
-	if cfg.Storage == nil {
+const (
+	httpStoragePrefix = "http+"
+	httpS3StorageType = "http+s3"
+	httpFSStorageType = "http+fs"
+	fsStorageType     = "fs"
+	s3StorageType     = "s3"
+)
+
+// New return destination and source storages from config
+func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
+	if cfg == nil {
 		storage := &DummyStorage{}
 
 		return storage, storage, nil
@@ -23,19 +29,19 @@ func NewStoragesFromConfig(cfg *config.Config) (gostorages.Storage, gostorages.S
 	var destinationStorage gostorages.Storage
 	var err error
 
-	if cfg.Storage.Src != nil {
-		sourceStorage, err = NewStorageFromConfig(cfg.Storage.Src)
+	if cfg.Source != nil {
+		sourceStorage, err = newStorage(cfg.Source)
 
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	if cfg.Storage.Dst == nil {
+	if cfg.Destination == nil {
 		return sourceStorage, sourceStorage, nil
 	}
 
-	destinationStorage, err = NewStorageFromConfig(cfg.Storage.Dst)
+	destinationStorage, err = newStorage(cfg.Destination)
 
 	if err != nil {
 		return nil, nil, err
@@ -44,28 +50,27 @@ func NewStoragesFromConfig(cfg *config.Config) (gostorages.Storage, gostorages.S
 	return sourceStorage, destinationStorage, nil
 }
 
-// NewStorageFromConfig returns a Storage from config
-func NewStorageFromConfig(cfg *config.Storage) (gostorages.Storage, error) {
+func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 	if cfg == nil {
 		return &DummyStorage{}, nil
 	}
 
-	if strings.HasPrefix(cfg.Type, "http+") && cfg.BaseURL == "" {
+	if strings.HasPrefix(cfg.Type, httpStoragePrefix) && cfg.BaseURL == "" {
 		return nil, fmt.Errorf("HTTP Wrapper cannot be used without setting *base_url* in config")
 	}
 
 	switch cfg.Type {
-	case "http+s3":
-		cfg.Type = "s3"
+	case httpS3StorageType:
+		cfg.Type = s3StorageType
 
-		storage, err := NewStorageFromConfig(cfg)
+		storage, err := newStorage(cfg)
 
 		if err != nil {
 			return nil, err
 		}
 
 		return &HTTPStorage{storage, ""}, nil
-	case "s3":
+	case s3StorageType:
 		acl, ok := gostorages.ACLs[cfg.ACL]
 
 		if !ok {
@@ -87,12 +92,12 @@ func NewStorageFromConfig(cfg *config.Storage) (gostorages.Storage, error) {
 			acl,
 			cfg.BaseURL,
 		), nil
-	case "fs":
+	case fsStorageType:
 		return gostorages.NewFileSystemStorage(cfg.Location, cfg.BaseURL), nil
-	case "http+fs":
-		cfg.Type = "fs"
+	case httpFSStorageType:
+		cfg.Type = fsStorageType
 
-		storage, err := NewStorageFromConfig(cfg)
+		storage, err := newStorage(cfg)
 
 		if err != nil {
 			return nil, err

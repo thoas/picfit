@@ -86,7 +86,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		err := server.Load(config)
+		err := server.Run(config)
 
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)

@@ -1,4 +1,4 @@
-package views
+package handlers
 
 import (
 	"net/http"
@@ -14,8 +14,8 @@ import (
 	"github.com/thoas/picfit/storage"
 )
 
-// HealthcheckView displays an ok response for healthcheck
-func HealthcheckView(c *gin.Context) {
+// Healthcheck displays an ok response for healthcheck
+func Healthcheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "Ok",
 		"version":    constants.Version,
@@ -25,8 +25,8 @@ func HealthcheckView(c *gin.Context) {
 	})
 }
 
-// DisplayView displays and image using resizing parameters
-func DisplayView(c *gin.Context) {
+// Display displays and image using resizing parameters
+func Display(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, true, true)
 
 	if err != nil {
@@ -42,8 +42,8 @@ func DisplayView(c *gin.Context) {
 	c.Data(http.StatusOK, file.ContentType(), file.Content())
 }
 
-// UploadView uploads an image to the destination storage
-func UploadView(c *gin.Context) {
+// Upload uploads an image to the destination storage
+func Upload(c *gin.Context) {
 	multipartPayload := new(payload.MultipartPayload)
 	errs := binding.Bind(c.Request, multipartPayload)
 	if errs != nil {
@@ -65,8 +65,8 @@ func UploadView(c *gin.Context) {
 	})
 }
 
-// DeleteView deletes a file from storages
-func DeleteView(c *gin.Context) {
+// Delete deletes a file from storages
+func Delete(c *gin.Context) {
 	err := application.Delete(c, c.Param("path")[1:])
 
 	if err != nil {
@@ -78,8 +78,8 @@ func DeleteView(c *gin.Context) {
 	c.String(http.StatusOK, "Ok")
 }
 
-// GetView generates an image synchronously and return its information from storages
-func GetView(c *gin.Context) {
+// Get generates an image synchronously and return its information from storages
+func Get(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, false, false)
 
 	if err != nil {
@@ -95,8 +95,8 @@ func GetView(c *gin.Context) {
 	})
 }
 
-// RedirectView redirects to the image using base url from storage
-func RedirectView(c *gin.Context) {
+// Redirect redirects to the image using base url from storage
+func Redirect(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, false, false)
 
 	if err != nil {

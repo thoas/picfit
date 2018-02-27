@@ -2,11 +2,15 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/spf13/viper"
 
 	"github.com/thoas/picfit/constants"
+	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/kvstore"
+	"github.com/thoas/picfit/logger"
+	"github.com/thoas/picfit/storage"
 )
 
 // Shard is a struct to allow shard location when files are uploaded
@@ -24,33 +28,12 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	EnableUpload     bool `mapstructure:"enable_upload"`
-	EnableDelete     bool `mapstructure:"enable_delete"`
-	EnableStats      bool `mapstructure:"enable_stats"`
-	DefaultFormat    string
-	Format           string
-	Quality          int
+	EnableUpload     bool          `mapstructure:"enable_upload"`
+	EnableDelete     bool          `mapstructure:"enable_delete"`
+	EnableStats      bool          `mapstructure:"enable_stats"`
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
-}
-
-// Storage is a struct to represent a Storage (fs, s3)
-type Storage struct {
-	Type            string
-	Location        string
-	BaseURL         string `mapstructure:"base_url"`
-	Region          string
-	ACL             string
-	AccessKeyID     string `mapstructure:"access_key_id"`
-	BucketName      string `mapstructure:"bucket_name"`
-	SecretAccessKey string `mapstructure:"secret_access_key"`
-}
-
-// Storages is a struct to represent a section of storage (src, fst)
-type Storages struct {
-	Src *Storage
-	Dst *Storage
 }
 
 // Sentry is a struct to configure sentry using a dsn
@@ -62,6 +45,7 @@ type Sentry struct {
 // Config is a struct to load configuration flags
 type Config struct {
 	Debug          bool
+	Engine         *engine.Config
 	Sentry         *Sentry
 	SecretKey      string `mapstructure:"secret_key"`
 	Shard          *Shard
@@ -70,35 +54,23 @@ type Config struct {
 	AllowedOrigins []string `mapstructure:"allowed_origins"`
 	AllowedMethods []string `mapstructure:"allowed_methods"`
 	AllowedHeaders []string `mapstructure:"allowed_headers"`
-	Storage        *Storages
+	Storage        *storage.Config
 	KVStore        *kvstore.Config
-	Logger         Logger
-}
-
-// Logger is a struct to configure logger
-type Logger struct {
-	Level string
-}
-
-// GetLevel returns the level of the logger
-func (l *Logger) GetLevel() string {
-	if l.Level == "" {
-		return DefaultLoggerLevel
-	}
-
-	return l.Level
+	Logger         logger.Config
 }
 
 // DefaultConfig returns a default config instance
 func DefaultConfig() *Config {
 	return &Config{
+		Engine: &engine.Config{
+			DefaultFormat: DefaultFormat,
+			Quality:       DefaultQuality,
+			Format:        "",
+		},
 		Options: &Options{
 			EnableDelete:     false,
 			EnableUpload:     false,
-			DefaultFormat:    DefaultFormat,
-			Quality:          DefaultQuality,
-			Format:           "",
-			DefaultUserAgent: DefaultUserAgent + "/" + constants.Version,
+			DefaultUserAgent: fmt.Sprint(DefaultUserAgent, "/", constants.Version),
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
@@ -147,12 +119,8 @@ func load(content string, isPath bool) (*Config, error) {
 		return nil, err
 	}
 
-	if config.Options.Quality == 0 {
-		config.Options.Quality = defaultConfig.Options.Quality
-	}
-
-	if config.Options.DefaultFormat == "" {
-		config.Options.DefaultFormat = defaultConfig.Options.DefaultFormat
+	if config.Engine == nil {
+		config.Engine = defaultConfig.Engine
 	}
 
 	return config, nil

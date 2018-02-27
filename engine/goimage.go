@@ -14,8 +14,11 @@ import (
 	"strconv"
 
 	"github.com/disintegration/imaging"
+
 	"github.com/imdario/mergo"
+
 	imagefile "github.com/thoas/picfit/image"
+
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -28,12 +31,27 @@ type GoImageEngine struct {
 
 type ImageTransformation func(img image.Image) *image.NRGBA
 
-var FlipTransformations = map[string]ImageTransformation{
+var defaultParams = map[string]string{
+	"upscale": "1",
+	"h":       "0",
+	"w":       "0",
+	"deg":     "90",
+}
+
+var formats = map[string]imaging.Format{
+	"jpeg": imaging.JPEG,
+	"jpg":  imaging.JPEG,
+	"png":  imaging.PNG,
+	"gif":  imaging.GIF,
+	"bmp":  imaging.BMP,
+}
+
+var flipTransformations = map[string]ImageTransformation{
 	"h": imaging.FlipH,
 	"v": imaging.FlipV,
 }
 
-var RotateTransformations = map[int]ImageTransformation{
+var rotateTransformations = map[int]ImageTransformation{
 	90:  imaging.Rotate90,
 	270: imaging.Rotate270,
 	180: imaging.Rotate180,
@@ -55,11 +73,11 @@ func imageSize(e image.Image) (int, int) {
 	return e.Bounds().Max.X, e.Bounds().Max.Y
 }
 
-func (e *GoImageEngine) Scale(img image.Image, dstWidth int, dstHeight int, upscale bool, trans Transformation) image.Image {
-	factor := scalingFactorImage(img, dstWidth, dstHeight)
+func scale(img image.Image, options *Options, trans Transformation) image.Image {
+	factor := scalingFactorImage(img, options.Width, options.Height)
 
-	if factor < 1 || upscale {
-		return trans(img, dstWidth, dstHeight, imaging.Lanczos)
+	if factor < 1 || options.Upscale {
+		return trans(img, options.Width, options.Height, imaging.Lanczos)
 	}
 
 	return img
@@ -72,14 +90,14 @@ func imageToPaletted(img image.Image) *image.Paletted {
 	return pm
 }
 
-func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height int, options *Options, trans Transformation) ([]byte, error) {
+func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options, trans Transformation) ([]byte, error) {
 	first, err := gif.Decode(bytes.NewReader(img.Source))
 
 	if err != nil {
 		return nil, err
 	}
 
-	factor := scalingFactorImage(first, width, height)
+	factor := scalingFactorImage(first, options.Width, options.Height)
 
 	if factor > 1 && !options.Upscale {
 		return img.Source, nil
@@ -98,26 +116,26 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 	for i, frame := range g.Image {
 		bounds := frame.Bounds()
 		draw.Draw(im, bounds, frame, bounds.Min, draw.Over)
-		g.Image[i] = imageToPaletted(e.Scale(im, width, height, options.Upscale, trans))
+		g.Image[i] = imageToPaletted(scale(im, options, trans))
 	}
 
 	srcW, srcH := imageSize(first)
 
-	if width == 0 {
-		tmpW := float64(height) * float64(srcW) / float64(srcH)
-		width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	if options.Width == 0 {
+		tmpW := float64(options.Height) * float64(srcW) / float64(srcH)
+		options.Width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
 	}
-	if height == 0 {
-		tmpH := float64(width) * float64(srcH) / float64(srcW)
-		height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
+	if options.Height == 0 {
+		tmpH := float64(options.Width) * float64(srcH) / float64(srcW)
+		options.Height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
 	}
 
-	g.Config.Height = height
-	g.Config.Width = width
+	g.Config.Height = options.Height
+	g.Config.Width = options.Width
 
-	buf := &bytes.Buffer{}
+	buf := bytes.Buffer{}
 
-	err = gif.EncodeAll(buf, g)
+	err = gif.EncodeAll(&buf, g)
 
 	if err != nil {
 		return nil, err
@@ -126,9 +144,9 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, width int, height
 	return buf.Bytes(), nil
 }
 
-func (e *GoImageEngine) Resize(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
-		content, err := e.TransformGIF(img, width, height, options, imaging.Resize)
+		content, err := e.TransformGIF(img, options, imaging.Resize)
 
 		if err != nil {
 			return nil, err
@@ -143,25 +161,27 @@ func (e *GoImageEngine) Resize(img *imagefile.ImageFile, width int, height int, 
 		return nil, err
 	}
 
-	return e.resize(image, width, height, options)
+	return e.transform(image, options, imaging.Resize)
 }
 
-func (e *GoImageEngine) resize(img image.Image, width int, height int, options *Options) ([]byte, error) {
-	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Resize), options.Format, options.Quality)
+func (e *GoImageEngine) transform(img image.Image, options *Options, trans Transformation) ([]byte, error) {
+	return e.ToBytes(scale(img, options, trans), options.Format, options.Quality)
 }
 
 func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
 	return imaging.Decode(bytes.NewReader(img.Source))
 }
 
-func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, deg int, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
 	}
 
-	transform, ok := RotateTransformations[deg]
+	deg := options.Degree
+
+	transform, ok := rotateTransformations[deg]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
@@ -170,14 +190,16 @@ func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, deg int, options *Optio
 	return e.ToBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Flip(img *imagefile.ImageFile, pos string, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
 		return nil, err
 	}
 
-	transform, ok := FlipTransformations[pos]
+	pos := options.Position
+
+	transform, ok := flipTransformations[pos]
 
 	if !ok {
 		return nil, fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
@@ -186,9 +208,9 @@ func (e *GoImageEngine) Flip(img *imagefile.ImageFile, pos string, options *Opti
 	return e.ToBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
-		content, err := e.TransformGIF(img, width, height, options, imaging.Thumbnail)
+		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
 
 		if err != nil {
 			return nil, err
@@ -203,16 +225,12 @@ func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, width int, height in
 		return nil, err
 	}
 
-	return e.thumbnail(image, width, height, options)
+	return e.transform(image, options, imaging.Thumbnail)
 }
 
-func (e *GoImageEngine) thumbnail(img image.Image, width int, height int, options *Options) ([]byte, error) {
-	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Thumbnail), options.Format, options.Quality)
-}
-
-func (e *GoImageEngine) Fit(img *imagefile.ImageFile, width int, height int, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
-		content, err := e.TransformGIF(img, width, height, options, imaging.Thumbnail)
+		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
 
 		if err != nil {
 			return nil, err
@@ -227,22 +245,11 @@ func (e *GoImageEngine) Fit(img *imagefile.ImageFile, width int, height int, opt
 		return nil, err
 	}
 
-	return e.fit(image, width, height, options)
+	return e.transform(image, options, imaging.Fit)
 }
 
-func (e *GoImageEngine) fit(img image.Image, width int, height int, options *Options) ([]byte, error) {
-	return e.ToBytes(e.Scale(img, width, height, options.Upscale, imaging.Fit), options.Format, options.Quality)
-}
-
-func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation, qs map[string]string) (*imagefile.ImageFile, error) {
-	params := map[string]string{
-		"upscale": "1",
-		"h":       "0",
-		"w":       "0",
-		"deg":     "90",
-	}
-
-	err := mergo.Merge(&qs, params)
+func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation Operation, qs map[string]string) (*imagefile.ImageFile, error) {
+	err := mergo.Merge(&qs, defaultParams)
 
 	if err != nil {
 		return nil, err
@@ -308,7 +315,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 	options := &Options{
 		Quality: quality,
-		Format:  Formats[format],
+		Format:  formats[format],
 	}
 
 	switch operation {
@@ -323,7 +330,9 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 		}
 
-		content, err := e.Flip(img, pos, options)
+		options.Position = pos
+
+		content, err := e.Flip(img, options)
 
 		if err != nil {
 			return nil, err
@@ -339,7 +348,9 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, err
 		}
 
-		content, err := e.Rotate(img, deg, options)
+		options.Degree = deg
+
+		content, err := e.Rotate(img, options)
 
 		if err != nil {
 			return nil, err
@@ -365,11 +376,13 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 			return nil, err
 		}
 
+		options.Width = w
+		options.Height = h
 		options.Upscale = upscale
 
 		switch operation {
 		case Resize:
-			content, err := e.Resize(img, w, h, options)
+			content, err := e.Resize(img, options)
 
 			if err != nil {
 				return nil, err
@@ -379,7 +392,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 			return file, err
 		case Thumbnail:
-			content, err := e.Thumbnail(img, w, h, options)
+			content, err := e.Thumbnail(img, options)
 
 			if err != nil {
 				return nil, err
@@ -389,7 +402,7 @@ func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation
 
 			return file, err
 		case Fit:
-			content, err := e.Fit(img, w, h, options)
+			content, err := e.Fit(img, options)
 
 			if err != nil {
 				return nil, err
