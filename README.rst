@@ -7,14 +7,13 @@ picfit
 
 .. image:: https://d262ilb51hltx0.cloudfront.net/max/800/1*oR04S6Ie7s1JctwjsDsN0w.png
 
-picfit is a reusable Go server to manipulate (resize, thumbnail, etc.)
-images built on top of `gin <https://github.com/codegangsta/negroni>`_.
+picfit is a reusable Go server to manipulate images (resize, thumbnail, etc.).
 
-It will act as a proxy of your storage engine and will be
-served ideally behind an http cache system like varnish_.
+It will act as a proxy on your storage engine and will be
+served ideally behind an HTTP cache system like varnish_.
 
-It supports multiple `storages backends <https://github.com/thoas/gostorages>`_
-and multiple `key/value stores <https://github.com/thoas/gokvstores>`_.
+It supports multiple `storage backends <https://github.com/ulule/gostorages>`_
+and multiple `key/value stores <https://github.com/ulule/gokvstores>`_.
 
 Installation
 ============
@@ -22,7 +21,7 @@ Installation
 Build it
 --------
 
-1. Make sure you have a Go language compiler >= 1.3 (required) and git installed.
+1. Make sure you have a Go language compiler and git installed.
 2. Make sure you have the following go system dependencies in your $PATH: bzr, svn, hg, git
 3. Ensure your GOPATH_ is properly set.
 4. Download it:
@@ -35,6 +34,12 @@ Build it
 
 You have now a binary version of picfit in the ``bin`` directory which
 fits perfectly with your architecture.
+
+picfit has also a Docker integration to built a unix binary without having to install it
+
+::
+
+    make docker-build
 
 Debian and Ubuntu
 -----------------
@@ -63,16 +68,16 @@ Configuration should be stored in a readable file and in JSON format.
 
 ``[KVSTORE]`` can be:
 
-- **redis** - Store generated keys in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
-- **cache** - Store generated keys in an in-memory cache
-- **redis-cluster** - Store generated keys in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_
+- **redis** - generated keys stored in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
+- **cache** - generated keys stored in an in-memory cache
+- **redis-cluster** - generated keys stored in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_
 
 ``[STORAGE]`` can be:
 
-- **fs** - Store generated images in your File system
-- **http+fs** - Store generated images in your File system and loaded using HTTP protocol
-- **s3** - Store generated images in Amazon S3
-- **http+s3** - Store generated images in Amazon S3 and loaded using HTTP protocol
+- **fs** - generated images stored in your File system
+- **http+fs** - generated images stored in your File system and loaded using HTTP protocol
+- **s3** - generated images stored in Amazon S3
+- **http+s3** - generated images stored in Amazon S3 and loaded using HTTP protocol
 
 Basic
 -----
@@ -89,7 +94,7 @@ Basic
       "port": 3001
     }
 
-Images are generated on the fly at each request
+Images are generated on the fly at each request.
 
 Store images on file system and keys in an in-memory cache
 ----------------------------------------------------------
@@ -101,7 +106,7 @@ An image is generated from your source storage (``src``) and uploaded
 asynchronously to this storage.
 
 A unique key is generated and stored in a in-memory key/value store to process
-a dedicated request only once.
+a request only once.
 
 ``config.json``
 
@@ -374,7 +379,7 @@ then you can call the service to load this file:
 Formats
 =======
 
-picfit currently supports the following formats:
+picfit currently supports the following image formats:
 
 - ``image/jpeg`` with the keyword ``jpg`` or ``jpeg``
 - ``image/png`` with the keyword ``png``
