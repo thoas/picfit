@@ -248,7 +248,7 @@ func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte,
 	return e.transform(image, options, imaging.Fit)
 }
 
-func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation *Operation, qs map[string]string) (*imagefile.ImageFile, error) {
+func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation Operation, qs map[string]string) (*imagefile.ImageFile, error) {
 	err := mergo.Merge(&qs, defaultParams)
 
 	if err != nil {

@@ -1,14 +1,12 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
 
-	"context"
-
 	conv "github.com/cstockton/go-conv"
-
 	"github.com/gin-gonic/gin"
 
 	"github.com/thoas/picfit/config"
@@ -68,15 +66,13 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 	l.Infof("Save thumbnail %s to storage", i.Filepath)
 
-	storeKey := i.Key
-
-	err = k.Set(storeKey, i.Filepath)
+	err = k.Set(i.Key, i.Filepath)
 
 	if err != nil {
 		return err
 	}
 
-	l.Infof("Save key %s => %s to kvstore", storeKey, i.Filepath)
+	l.Infof("Save key %s => %s to kvstore", i.Key, i.Filepath)
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
@@ -84,12 +80,12 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = k.AppendSlice(parentKey, storeKey)
+		err = k.AppendSlice(parentKey, i.Key)
 		if err != nil {
 			return err
 		}
 
-		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, storeKey)
+		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, i.Key)
 	}
 
 	return nil
@@ -265,7 +261,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			return nil, err
 		}
 
-		op := c.MustGet("op").(*engine.Operation)
+		op := c.MustGet("op").(engine.Operation)
 
 		file, err = engine.FromContext(c).Transform(file, op, parameters)
 
