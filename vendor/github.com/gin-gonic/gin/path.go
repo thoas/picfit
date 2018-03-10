@@ -1,11 +1,11 @@
 // Copyright 2013 Julien Schmidt. All rights reserved.
 // Based on the path package, Copyright 2009 The Go Authors.
 // Use of this source code is governed by a BSD-style license that can be found
-// in the LICENSE file.
+// at https://github.com/julienschmidt/httprouter/blob/master/LICENSE.
 
 package gin
 
-// CleanPath is the URL version of path.Clean, it returns a canonical URL path
+// cleanPath is the URL version of path.Clean, it returns a canonical URL path
 // for p, eliminating . and .. elements.
 //
 // The following rules are applied iteratively until no further processing can
@@ -17,7 +17,7 @@ package gin
 //	4. Eliminate .. elements that begin a rooted path:
 //	   that is, replace "/.." by "/" at the beginning of a path.
 //
-// If the result of this process is an empty string, "/" is returned
+// If the result of this process is an empty string, "/" is returned.
 func cleanPath(p string) string {
 	// Turn empty string into "/"
 	if p == "" {
@@ -109,7 +109,7 @@ func cleanPath(p string) string {
 	return string(buf[:w])
 }
 
-// internal helper to lazily create a buffer if necessary
+// internal helper to lazily create a buffer if necessary.
 func bufApp(buf *[]byte, s string, w int, c byte) {
 	if *buf == nil {
 		if s[w] == c {

@@ -5,17 +5,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/signature"
 )
 
 // Security wraps the request and confront sent parameters with secret key
-func Security() gin.HandlerFunc {
+func Security(secretKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cfg := config.FromContext(c)
-
-		secretKey := cfg.SecretKey
-
 		if secretKey != "" {
 			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]string)) {
 				c.String(http.StatusUnauthorized, "Invalid signature")
@@ -28,7 +25,7 @@ func Security() gin.HandlerFunc {
 	}
 }
 
-func RestrictSizes() gin.HandlerFunc {
+func RestrictSizes(sizes []config.AllowedSize) gin.HandlerFunc {
 	handler := func(c *gin.Context, sizes []config.AllowedSize) {
 		params := c.MustGet("parameters").(map[string]string)
 
@@ -59,8 +56,6 @@ func RestrictSizes() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		sizes := config.FromContext(c).Options.AllowedSizes
-
 		if len(sizes) > 0 {
 			handler(c, sizes)
 		}

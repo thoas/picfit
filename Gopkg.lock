@@ -10,18 +10,33 @@
 [[projects]]
   name = "github.com/Sirupsen/logrus"
   packages = ["."]
-  revision = "ba1b36c82c5e05c4f912a88eab0dcd91a171688f"
+  revision = "v1.0.4"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
   packages = ["."]
-  revision = "03be5e6bb9874570ea7fb0961225d193cbc374c5"
-  version = "2017.01.23"
+  revision = "deb3ae2ef2610fde3330947281941c562861188b"
+  version = "2018.01.18"
+
+[[projects]]
+  name = "github.com/cstockton/go-conv"
+  packages = [
+    ".",
+    "internal/refconv",
+    "internal/refutil"
+  ]
+  revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"
 
 [[projects]]
   name = "github.com/disintegration/imaging"
   packages = ["."]
-  revision = "ac27d1805a555e1754fa177216ee07f4e63c30b5"
+  revision = "1884593a19ddc6f2ea050403430d02c1d0fc1283"
+
+[[projects]]
+  name = "github.com/djherbis/times"
+  packages = ["."]
+  revision = "95292e44976d1217cf3611dc7c8d9466877d3ed5"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/franela/goreq"
@@ -31,38 +46,59 @@
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
-  revision = "4da3e2cfbabc9f751898f250b49f2439785783a1"
-  version = "v1.4.2"
-
-[[projects]]
-  name = "github.com/garyburd/redigo"
-  packages = ["internal","redis"]
-  revision = "cca3df8fa0670249a3f746bcc062c69aeba0517c"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
 
 [[projects]]
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "b68337dbf03e7fbb53d9fd9b63fd09b28e8f13f7"
+  revision = "563b81fc02b75d664e54da31f787c2cc2186780b"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gin-contrib/sse"
+  packages = ["."]
+  revision = "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae"
 
 [[projects]]
   name = "github.com/gin-gonic/contrib"
-  packages = ["cors","sentry"]
+  packages = [
+    "cors",
+    "sentry"
+  ]
   revision = "ffa12cf90b52a4af3ae604f6452e61f8218a517c"
 
 [[projects]]
   name = "github.com/gin-gonic/gin"
-  packages = [".","binding","render"]
-  revision = "e2212d40c62a98b388a5eb48ecbdcf88534688ba"
+  packages = [
+    ".",
+    "binding",
+    "json",
+    "render"
+  ]
+  revision = "5d3f30cfc81f9109850fa9043a19783cbbde68a5"
 
 [[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "2402d76f3d41f928c7902a765dfc872356dd3aad"
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
-  revision = "630949a3c5fa3c613328e1b8256052cbc2327c9b"
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
+  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
   name = "github.com/imdario/mergo"
@@ -70,54 +106,53 @@
   revision = "6ce7536fed6623eff47b95768f858a0f8d1ac57b"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/kr/fs"
+  name = "github.com/json-iterator/go"
   packages = ["."]
-  revision = "2788f0dbd16903de03cb8186e5c7d97b69ad387b"
+  revision = "0ac74bba4a81211b28e32ef260c0f16ae41f1377"
+  version = "1.1.1"
 
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "51463bfca2576e06c62a8504b5c0f06d61312647"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/manucorporat/sse"
-  packages = ["."]
-  revision = "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d"
+  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
+  version = "v1.7.6"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
-  version = "v0.0.2"
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/mholt/binding"
   packages = ["."]
-  revision = "89411c4ffb61f0ebef45d8bdb830103b358ef9fa"
+  revision = "f4f58459f5f7f67cb8fb4a72a905a4ca63fead83"
 
 [[projects]]
   name = "github.com/mitchellh/goamz"
-  packages = ["aws","s3"]
+  packages = [
+    "aws",
+    "s3"
+  ]
   revision = "e99a7300be9605de0c4b6366988e1df883fabfe3"
 
 [[projects]]
+  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "53818660ed4955e899c0bcafa97299a388bd7c8e"
+  revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
+
+[[projects]]
+  name = "github.com/patrickmn/go-cache"
+  packages = ["."]
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  version = "v2.1.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "ff09b135c25aae272398c51a07235b90a75aa4f0"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
-
-[[projects]]
-  name = "github.com/pkg/sftp"
-  packages = ["."]
-  revision = "6c86161fec09fa4d543f4ae7fc67dfab22abf457"
-  version = "1.0.0"
 
 [[projects]]
   branch = "master"
@@ -127,25 +162,29 @@
 
 [[projects]]
   name = "github.com/spf13/afero"
-  packages = [".","mem","sftp"]
-  revision = "cc9c21814bb945440253108c4d3c65c85aac3c68"
+  packages = [
+    ".",
+    "mem"
+  ]
+  revision = "bb8f1927f2a9d3ab41c9340aa034f6b803f4359c"
+  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/spf13/cast"
   packages = ["."]
-  revision = "ce135a4ebeee6cfe9a26c93ee0d37825f26113c7"
-  version = "v1.1.0"
+  revision = "8965335b8c7107321228e3e3702cab9832751bac"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
-  revision = "fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66"
+  revision = "7c0cea34c8ece3fbeb2b27ab9b59511d360fb394"
 
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "9a906f17374922ed0f74e1b2f593d3723f2ffb00"
+  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
   version = "v1.0.0"
 
 [[projects]]
@@ -159,14 +198,10 @@
   revision = "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 
 [[projects]]
+  branch = "master"
   name = "github.com/thoas/gokvstores"
   packages = ["."]
-  revision = "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
-
-[[projects]]
-  name = "github.com/thoas/gostorages"
-  packages = ["."]
-  revision = "a193818eb9acc5104bf1d73319da30b3c21e9a04"
+  revision = "29c8500276dbe765dab52a065f8292c68ee7d8ce"
 
 [[projects]]
   name = "github.com/thoas/stats"
@@ -174,9 +209,35 @@
   revision = "152b5d051953fdb6e45f14b6826962aadc032324"
 
 [[projects]]
+  name = "github.com/ugorji/go"
+  packages = ["codec"]
+  revision = "9831f2c3ac1068a78f50999a30db84270f647af6"
+  version = "v1.1"
+
+[[projects]]
+  name = "github.com/ulule/gokvstores"
+  packages = ["."]
+  revision = "06854a16f68d91c55ae6269a655bc7324169e607"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/ulule/gostorages"
+  packages = ["."]
+  revision = "e2229fc2f445b6a607e1fa0a1fe2d0f7cad8a97c"
+
+[[projects]]
   name = "github.com/urfave/cli"
   packages = ["."]
-  revision = "ac249472b7de27a9e8990819566d9be95ab5b816"
+  revision = "446f49e78f79a164079a99a88446182703331c75"
+
+[[projects]]
+  name = "github.com/v2pro/plz"
+  packages = [
+    "concurrent",
+    "reflect2"
+  ]
+  revision = "10fc95fad3224a032229e59f6e7023137d82b526"
+  version = "0.9.1"
 
 [[projects]]
   branch = "master"
@@ -185,45 +246,77 @@
   revision = "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh"]
-  revision = "55a552f0823e0d3d54931488a2993ebd2fd0258c"
+  packages = ["ssh/terminal"]
+  revision = "49796115aa4b964c318aad4f3084fdb41e9aa067"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/image"
-  packages = ["bmp","tiff","tiff/lzw"]
-  revision = "84a65118940ed74c8e841be84d3e502c29eff703"
+  packages = [
+    "bmp",
+    "tiff",
+    "tiff/lzw"
+  ]
+  revision = "12117c17ca67ffa1ce22e9409f3b0b0a93ac08c7"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "f315505cf3349909cdf013ea56690da34e96a451"
+  revision = "cbe0f9307d0156177f9dd5dc85da1a31abc5f2fb"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "f3918c30c5c2cb527c0b071a27c35120a6c0719a"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "88d2dcc510266da9f7f8c7f34e1940716cab5f5c"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
-  revision = "f4b4367115ec2de254587813edaa901bc1c723a8"
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
-  revision = "c193cecd124b5cc722d7ee5538e945bdb3348435"
-  version = "v8.15.1"
+  revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
+  version = "v8.18.2"
+
+[[projects]]
+  name = "gopkg.in/redis.v5"
+  packages = [
+    ".",
+    "internal",
+    "internal/consistenthash",
+    "internal/hashtag",
+    "internal/pool",
+    "internal/proto"
+  ]
+  revision = "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0"
+  version = "v5.2.9"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b"
+  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
+  version = "v2.1.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "93e71358343d308022ca157158ac540e12a4520aa97d006a8508e088f8304dac"
+  inputs-digest = "8ef739a0e53de2f87f5e2a3b3a1f9e13c71cff785c0a87b8fcc21103e148c748"
   solver-name = "gps-cdcl"
   solver-version = 1

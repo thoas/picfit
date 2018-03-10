@@ -7,10 +7,10 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
-	"github.com/thoas/picfit/middleware/context"
 	"github.com/thoas/picfit/util"
 )
 
@@ -80,7 +80,9 @@ func KeyParser() gin.HandlerFunc {
 }
 
 // URLParser extracts the url query string and add a url.URL to the context
-func URLParser() gin.HandlerFunc {
+func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
+	mimetypeDetector := image.GetMimetypeDetector(mimetypeDetectorType)
+
 	return func(c *gin.Context) {
 		value := c.Query("url")
 
@@ -93,9 +95,7 @@ func URLParser() gin.HandlerFunc {
 				return
 			}
 
-			cfg := context.Config(c)
-
-			mimetype, _ := image.GetMimetypeDetector(cfg.Options)(url)
+			mimetype, _ := mimetypeDetector(url)
 
 			_, ok := image.Extensions[mimetype]
 

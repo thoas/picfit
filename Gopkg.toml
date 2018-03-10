@@ -20,18 +20,20 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+[prune]
+  non-go = true
 
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
-  revision = "ba1b36c82c5e05c4f912a88eab0dcd91a171688f"
+  revision = "v1.0.4"
 
 [[constraint]]
   name = "github.com/urfave/cli"
-  revision = "ac249472b7de27a9e8990819566d9be95ab5b816"
+  revision = "446f49e78f79a164079a99a88446182703331c75"
 
 [[constraint]]
   name = "github.com/disintegration/imaging"
-  revision = "ac27d1805a555e1754fa177216ee07f4e63c30b5"
+  revision = "1884593a19ddc6f2ea050403430d02c1d0fc1283"
 
 [[constraint]]
   name = "github.com/franela/goreq"
@@ -39,7 +41,7 @@
 
 [[constraint]]
   name = "github.com/getsentry/raven-go"
-  revision = "b68337dbf03e7fbb53d9fd9b63fd09b28e8f13f7"
+  revision = "563b81fc02b75d664e54da31f787c2cc2186780b"
 
 [[constraint]]
   name = "github.com/gin-gonic/contrib"
@@ -47,7 +49,7 @@
 
 [[constraint]]
   name = "github.com/gin-gonic/gin"
-  revision = "e2212d40c62a98b388a5eb48ecbdcf88534688ba"
+  revision = "5d3f30cfc81f9109850fa9043a19783cbbde68a5"
 
 [[constraint]]
   name = "github.com/imdario/mergo"
@@ -55,7 +57,7 @@
 
 [[constraint]]
   name = "github.com/mholt/binding"
-  revision = "89411c4ffb61f0ebef45d8bdb830103b358ef9fa"
+  revision = "f4f58459f5f7f67cb8fb4a72a905a4ca63fead83"
 
 [[constraint]]
   name = "github.com/mitchellh/goamz"
@@ -74,17 +76,21 @@
   revision = "e4ec8152c15fc46bd5056ce65997a07c7d415325"
 
 [[constraint]]
-  name = "github.com/thoas/gokvstores"
-  revision = "ae1105ba099c89f31af38c658ab6e64f1fc50e62"
-
-[[constraint]]
-  name = "github.com/thoas/gostorages"
-  revision = "a193818eb9acc5104bf1d73319da30b3c21e9a04"
-
-[[constraint]]
   name = "github.com/thoas/stats"
   revision = "152b5d051953fdb6e45f14b6826962aadc032324"
 
 [[constraint]]
   branch = "master"
   name = "golang.org/x/image"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/ulule/gostorages"
+
+[[constraint]]
+  name = "github.com/ulule/gokvstores"
+  revision = "06854a16f68d91c55ae6269a655bc7324169e607"
+
+[[constraint]]
+  name = "github.com/cstockton/go-conv"
+  revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"

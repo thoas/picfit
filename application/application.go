@@ -1,15 +1,14 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
 
-	"context"
-
-	"github.com/Sirupsen/logrus"
+	conv "github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
-	"github.com/thoas/gokvstores"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/errs"
@@ -20,23 +19,11 @@ import (
 	"github.com/thoas/picfit/storage"
 )
 
-// LoadFromConfigContent returns a net/context from content
-func LoadFromConfigContent(content string) (context.Context, error) {
-	cfg, err := config.LoadFromContent(content)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return LoadFromConfig(cfg)
-}
-
-// LoadFromConfig returns a net/context from a config.Config instance
-func LoadFromConfig(cfg *config.Config) (context.Context, error) {
+// Load returns a net/context from a config.Config instance
+func Load(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
-	sourceStorage, destinationStorage, err := storage.NewStoragesFromConfig(cfg)
-
+	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
@@ -44,42 +31,23 @@ func LoadFromConfig(cfg *config.Config) (context.Context, error) {
 	ctx = storage.NewSourceContext(ctx, sourceStorage)
 	ctx = storage.NewDestinationContext(ctx, destinationStorage)
 
-	keystore, err := kvstore.NewKVStoreFromConfig(cfg)
-
+	keystore, err := kvstore.New(cfg.KVStore)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx = kvstore.NewContext(ctx, keystore)
 
-	e := &engine.GoImageEngine{
-		DefaultFormat:  cfg.Options.DefaultFormat,
-		Format:         cfg.Options.Format,
-		DefaultQuality: cfg.Options.Quality,
-	}
+	e := engine.New(*cfg.Engine)
+	ctx = engine.NewContext(ctx, e)
 
-	log := logrus.New()
-	level, err := logrus.ParseLevel(cfg.Logger.GetLevel())
+	log, err := logger.New(cfg.Logger)
 	if err != nil {
 		return nil, err
 	}
-	log.Level = level
-
-	ctx = engine.NewContext(ctx, e)
 	ctx = logger.NewContext(ctx, log)
 
 	return ctx, nil
-}
-
-// Load creates a net/context from a file config path
-func Load(path string) (context.Context, error) {
-	cfg, err := config.Load(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return LoadFromConfig(cfg)
 }
 
 // Store stores an image file with the defined filepath
@@ -89,56 +57,35 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	cfg := config.FromContext(ctx)
 
 	k := kvstore.FromContext(ctx)
-	con := k.Connection()
-	defer con.Close()
 
 	err := i.Save()
 
 	if err != nil {
-		l.Fatal(err)
 		return err
 	}
 
 	l.Infof("Save thumbnail %s to storage", i.Filepath)
 
-	prefix := cfg.KVStore.Prefix
-
-	storeKey := i.Key
-
-	key := i.Key
-
-	if prefix != "" {
-		storeKey = prefix + storeKey
-	}
-
-	err = con.Set(storeKey, i.Filepath)
+	err = k.Set(i.Key, i.Filepath)
 
 	if err != nil {
-		l.Fatal(err)
-
 		return err
 	}
 
-	l.Infof("Save key %s => %s to kvstore", storeKey, i.Filepath)
+	l.Infof("Save key %s => %s to kvstore", i.Key, i.Filepath)
 
 	// Write children info only when we actually want to be able to delete things.
 	if cfg.Options.EnableDelete {
 		parentKey := hash.Tokey(filepath)
 
-		if prefix != "" {
-			parentKey = prefix + parentKey
-		}
-
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = con.SetAdd(parentKey, storeKey)
-
+		err = k.AppendSlice(parentKey, i.Key)
 		if err != nil {
-			l.Fatal(err)
 			return err
 		}
 
-		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, key)
+		l.Infof("Put key into set %s (%s) => %s in kvstore", parentKey, filepath, i.Key)
 	}
 
 	return nil
@@ -147,8 +94,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 // Delete removes a file from kvstore and storage
 func Delete(ctx context.Context, filepath string) error {
 	k := kvstore.FromContext(ctx)
-	con := k.Connection()
-	defer con.Close()
 
 	l := logger.FromContext(ctx)
 
@@ -170,22 +115,24 @@ func Delete(ctx context.Context, filepath string) error {
 
 	parentKey := hash.Tokey(filepath)
 
-	prefix := config.FromContext(ctx).KVStore.Prefix
-
-	if prefix != "" {
-		parentKey = prefix + parentKey
-	}
-
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
-	if !con.Exists(childrenKey) {
+	exists, err := k.Exists(childrenKey)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
 		l.Infof("Children key %s does not exist for parent %s", childrenKey, parentKey)
 
 		return errs.ErrKeyNotExists
 	}
 
 	// Get the list of items to cleanup.
-	children := con.SetMembers(childrenKey)
+	children, err := k.GetSlice(childrenKey)
+	if err != nil {
+		return err
+	}
 
 	if children == nil {
 		l.Infof("No children to delete for %s", parentKey)
@@ -196,16 +143,19 @@ func Delete(ctx context.Context, filepath string) error {
 	store := storage.DestinationFromContext(ctx)
 
 	for _, s := range children {
-		key, err := gokvstores.String(s)
-
+		key, err := conv.String(s)
 		if err != nil {
 			return err
 		}
 
 		// Now, every child is a hash which points to a key/value pair in
 		// KVStore which in turn points to a file in dst storage.
-		dstfile, err := gokvstores.String(con.Get(key))
+		dstfileRaw, err := k.Get(key)
+		if err != nil {
+			return err
+		}
 
+		dstfile, err := conv.String(dstfileRaw)
 		if err != nil {
 			return err
 		}
@@ -217,7 +167,7 @@ func Delete(ctx context.Context, filepath string) error {
 			return err
 		}
 
-		err = con.Delete(key)
+		err = k.Delete(key)
 
 		if err != nil {
 			return err
@@ -229,7 +179,7 @@ func Delete(ctx context.Context, filepath string) error {
 	// Delete them right away, we don't care about them anymore.
 	l.Infof("Deleting children set %s", childrenKey)
 
-	err = con.Delete(childrenKey)
+	err = k.Delete(childrenKey)
 
 	if err != nil {
 		return err
@@ -243,13 +193,10 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	key := c.MustGet("key").(string)
 
 	k := kvstore.FromContext(c)
-	con := k.Connection()
 
 	cfg := config.FromContext(c)
 
 	l := logger.FromContext(c)
-
-	defer con.Close()
 
 	destStorage := storage.DestinationFromContext(c)
 
@@ -261,20 +208,22 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	var err error
 	var filepath string
 
-	prefix := cfg.KVStore.Prefix
-
 	storeKey := key
 
-	if prefix != "" {
-		storeKey = prefix + key
+	// Image from the KVStore found
+	imageKey, err := k.Get(storeKey)
+	if err != nil {
+		return nil, err
 	}
 
-	// Image from the KVStore found
-	stored, err := gokvstores.String(con.Get(storeKey))
+	if imageKey != nil {
+		stored, err := conv.String(imageKey)
+		if err != nil {
+			return nil, err
+		}
 
-	file.Filepath = stored
+		file.Filepath = stored
 
-	if stored != "" {
 		l.Infof("Key %s found in kvstore: %s", storeKey, stored)
 
 		if load {
@@ -312,7 +261,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 			return nil, err
 		}
 
-		op := c.MustGet("op").(*engine.Operation)
+		op := c.MustGet("op").(engine.Operation)
 
 		file, err = engine.FromContext(c).Transform(file, op, parameters)
 
@@ -330,7 +279,7 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 
 	file.Headers["ETag"] = key
 
-	if stored == "" {
+	if imageKey == nil {
 		if async == true {
 			go Store(c, filepath, file)
 		} else {

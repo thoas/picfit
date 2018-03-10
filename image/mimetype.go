@@ -1,19 +1,19 @@
 package image
 
 import (
+	"fmt"
 	"mime"
 	"net/url"
 	"path/filepath"
 	"strings"
 
 	"github.com/rubenfonseca/fastimage"
-	"github.com/thoas/picfit/config"
 )
 
 const MimetypeDetectorTypeFastimage = "fastimage"
 
-func GetMimetypeDetector(cfg *config.Options) MimetypeDetectorFunc {
-	switch cfg.MimetypeDetector {
+func GetMimetypeDetector(mimetypeDetectorType string) MimetypeDetectorFunc {
+	switch mimetypeDetectorType {
 	case MimetypeDetectorTypeFastimage:
 		return MimetypeDetectorFastimage
 	default:
@@ -31,10 +31,10 @@ func MimetypeDetectorExtension(uri *url.URL) (string, error) {
 // Detect mimetype with third-party fastimage library.
 // Overhead warning: fastimage makes a request (albeit a very small partial one) upon each detection.
 func MimetypeDetectorFastimage(uri *url.URL) (string, error) {
-	if imageType, _, err := fastimage.DetectImageType(uri.String()); err != nil {
+	imageType, _, err := fastimage.DetectImageType(uri.String())
+	if err != nil {
 		return "", err
-	} else {
-		mimetype := "image/" + strings.ToLower(imageType.String())
-		return mimetype, nil
 	}
+
+	return fmt.Sprint("image/", strings.ToLower(imageType.String())), nil
 }

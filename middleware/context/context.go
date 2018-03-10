@@ -4,8 +4,11 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/thoas/gokvstores"
-	"github.com/thoas/gostorages"
+
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/kvstore"
