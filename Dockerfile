@@ -1,6 +1,7 @@
 FROM alpine:3.7
 
+RUN apk add --no-cache ca-certificates
+
 ADD bin/picfit /picfit
-ADD ssl/ /etc/ssl
 
 CMD ["/picfit"]

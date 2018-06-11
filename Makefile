@@ -49,7 +49,6 @@ build-static:
 		    -X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit
 
 docker-build-static: build-static
-	cp -r /etc/ssl/* $(APP_DIR)/ssl/
 
 
 .PNONY: all test format
@@ -58,4 +57,4 @@ docker-build:
 	@(echo "-> Preparing builder...")
 	@(docker build -t picfit-builder -f Dockerfile.build .)
 	@(mkdir -p $(BIN_DIR))
-	@(docker run --rm -v $(BIN_DIR):$(APP_DIR)/bin -v $(SSL_DIR):$(APP_DIR)/ssl picfit-builder)
+	@(docker run --rm -v $(BIN_DIR):$(APP_DIR)/bin picfit-builder)
