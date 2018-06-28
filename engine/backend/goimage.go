@@ -1,4 +1,4 @@
-package engine
+package backend
 
 import (
 	"bytes"
@@ -11,11 +11,8 @@ import (
 	"image/png"
 	"io"
 	"math"
-	"strconv"
 
 	"github.com/disintegration/imaging"
-
-	"github.com/imdario/mergo"
 
 	imagefile "github.com/thoas/picfit/image"
 
@@ -23,28 +20,9 @@ import (
 	"golang.org/x/image/tiff"
 )
 
-type GoImageEngine struct {
-	DefaultFormat  string
-	Format         string
-	DefaultQuality int
-}
+type GoImageEngine struct{}
 
 type ImageTransformation func(img image.Image) *image.NRGBA
-
-var defaultParams = map[string]string{
-	"upscale": "1",
-	"h":       "0",
-	"w":       "0",
-	"deg":     "90",
-}
-
-var formats = map[string]imaging.Format{
-	"jpeg": imaging.JPEG,
-	"jpg":  imaging.JPEG,
-	"png":  imaging.PNG,
-	"gif":  imaging.GIF,
-	"bmp":  imaging.BMP,
-}
 
 var flipTransformations = map[string]ImageTransformation{
 	"h": imaging.FlipH,
@@ -246,175 +224,6 @@ func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte,
 	}
 
 	return e.transform(image, options, imaging.Fit)
-}
-
-func (e *GoImageEngine) Transform(img *imagefile.ImageFile, operation Operation, qs map[string]string) (*imagefile.ImageFile, error) {
-	err := mergo.Merge(&qs, defaultParams)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var quality int
-	var format string
-
-	q, ok := qs["q"]
-
-	if ok {
-		quality, err := strconv.Atoi(q)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if quality > 100 {
-			return nil, fmt.Errorf("Quality should be <= 100")
-		}
-	} else {
-		quality = e.DefaultQuality
-	}
-
-	format, ok = qs["fmt"]
-	filepath := img.Filepath
-
-	if ok {
-		if _, ok := ContentTypes[format]; !ok {
-			return nil, fmt.Errorf("Unknown format %s", format)
-		}
-
-	}
-
-	if format == "" && e.Format != "" {
-		format = e.Format
-	}
-
-	if format == "" {
-		format = img.Format()
-	}
-
-	if format == "" {
-		format = e.DefaultFormat
-	}
-
-	if format != img.Format() {
-		index := len(filepath) - len(img.Format())
-
-		filepath = filepath[:index] + format
-
-		if contentType, ok := ContentTypes[format]; ok {
-			img.Headers["Content-Type"] = contentType
-		}
-	}
-
-	file := &imagefile.ImageFile{
-		Source:   img.Source,
-		Key:      img.Key,
-		Headers:  img.Headers,
-		Filepath: filepath,
-	}
-
-	options := &Options{
-		Quality: quality,
-		Format:  formats[format],
-	}
-
-	switch operation {
-	case Noop:
-		file.Processed = file.Source
-
-		return file, err
-	case Flip:
-		pos, ok := qs["pos"]
-
-		if !ok {
-			return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
-		}
-
-		options.Position = pos
-
-		content, err := e.Flip(img, options)
-
-		if err != nil {
-			return nil, err
-		}
-
-		file.Processed = content
-
-		return file, err
-	case Rotate:
-		deg, err := strconv.Atoi(qs["deg"])
-
-		if err != nil {
-			return nil, err
-		}
-
-		options.Degree = deg
-
-		content, err := e.Rotate(img, options)
-
-		if err != nil {
-			return nil, err
-		}
-
-		file.Processed = content
-
-		return file, err
-	case Thumbnail, Resize, Fit:
-		var upscale bool
-		var w int
-		var h int
-
-		if upscale, err = strconv.ParseBool(qs["upscale"]); err != nil {
-			return nil, err
-		}
-
-		if w, err = strconv.Atoi(qs["w"]); err != nil {
-			return nil, err
-		}
-
-		if h, err = strconv.Atoi(qs["h"]); err != nil {
-			return nil, err
-		}
-
-		options.Width = w
-		options.Height = h
-		options.Upscale = upscale
-
-		switch operation {
-		case Resize:
-			content, err := e.Resize(img, options)
-
-			if err != nil {
-				return nil, err
-			}
-
-			file.Processed = content
-
-			return file, err
-		case Thumbnail:
-			content, err := e.Thumbnail(img, options)
-
-			if err != nil {
-				return nil, err
-			}
-
-			file.Processed = content
-
-			return file, err
-		case Fit:
-			content, err := e.Fit(img, options)
-
-			if err != nil {
-				return nil, err
-			}
-
-			file.Processed = content
-
-			return file, err
-		}
-	}
-
-	return nil, fmt.Errorf("Operation not found for %s", operation)
 }
 
 func (e *GoImageEngine) ToBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
