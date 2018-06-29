@@ -31,7 +31,7 @@ type Engine struct {
 	Format         string
 	DefaultQuality int
 
-	b backend.Backend
+	backends []backend.Backend
 }
 
 const (
@@ -41,17 +41,23 @@ const (
 
 // New initializes an Engine
 func New(cfg Config) *Engine {
-	var back backend.Backend
-	if cfg.Type == lilliputEngineType {
-		back = backend.NewLilliputEngine(cfg.MaxBufferSize)
-	} else {
-		back = &backend.GoImageEngine{}
+	var b []backend.Backend
+	for i := range cfg.Backends {
+		if cfg.Backends[i] == lilliputEngineType {
+			b = append(b, backend.NewLilliputEngine(cfg.MaxBufferSize))
+		} else if cfg.Backends[i] == goEngineType {
+			b = append(b, &backend.GoImageEngine{})
+		}
+	}
+
+	if len(b) == 0 {
+		b = append(b, &backend.GoImageEngine{})
 	}
 	return &Engine{
 		DefaultFormat:  cfg.DefaultFormat,
 		Format:         cfg.Format,
 		DefaultQuality: cfg.Quality,
-		b:              back,
+		backends:       b,
 	}
 }
 
@@ -62,26 +68,7 @@ func (e *Engine) Transform(img *image.ImageFile, operation Operation, qs map[str
 		return nil, err
 	}
 
-	var quality int
-	var format string
-
-	q, ok := qs["q"]
-
-	if ok {
-		quality, err := strconv.Atoi(q)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if quality > 100 {
-			return nil, fmt.Errorf("Quality should be <= 100")
-		}
-	} else {
-		quality = e.DefaultQuality
-	}
-
-	format, ok = qs["fmt"]
+	format, ok := qs["fmt"]
 	filepath := img.Filepath
 
 	if ok {
@@ -120,74 +107,89 @@ func (e *Engine) Transform(img *image.ImageFile, operation Operation, qs map[str
 		Filepath: filepath,
 	}
 
-	options := &backend.Options{
-		Quality: quality,
-		Format:  formats[format],
+	options, err := newBackendOptions(e, operation, qs)
+	options.Format = formats[format]
+
+	for i := range e.backends {
+		file.Processed, err = operate(e.backends[i], img, operation, options)
+		if err == nil {
+			break
+		}
+		if err != backend.MethodNotImplementedError {
+			return nil, err
+		}
 	}
 
-	var content []byte
+	return file, err
+}
+
+func operate(b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
 	switch operation {
 	case Noop:
-		file.Processed = file.Source
-
-		return file, err
+		return img.Source, nil
 	case Flip:
-		pos, ok := qs["pos"]
-		if !ok {
-			return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
-		}
-
-		options.Position = pos
-		content, err = e.b.Flip(img, options)
-
+		return b.Flip(img, options)
 	case Rotate:
-		deg, err := strconv.Atoi(qs["deg"])
+		return b.Rotate(img, options)
+	case Resize:
+		return b.Resize(img, options)
+	case Thumbnail:
+		return b.Thumbnail(img, options)
+	case Fit:
+		return b.Fit(img, options)
+	default:
+		return nil, fmt.Errorf("Operation not found for %s", operation)
+	}
+}
+
+func newBackendOptions(e *Engine, operation Operation, qs map[string]string) (*backend.Options, error) {
+	var quality int
+	q, ok := qs["q"]
+	if ok {
+		quality, err := strconv.Atoi(q)
+
 		if err != nil {
 			return nil, err
 		}
 
-		options.Degree = deg
-		content, err = e.b.Rotate(img, options)
-
-	case Thumbnail, Resize, Fit:
-		var upscale bool
-		var w int
-		var h int
-
-		if upscale, err = strconv.ParseBool(qs["upscale"]); err != nil {
-			return nil, err
+		if quality > 100 {
+			return nil, fmt.Errorf("Quality should be <= 100")
 		}
-
-		if w, err = strconv.Atoi(qs["w"]); err != nil {
-			return nil, err
-		}
-
-		if h, err = strconv.Atoi(qs["h"]); err != nil {
-			return nil, err
-		}
-
-		options.Width = w
-		options.Height = h
-		options.Upscale = upscale
-
-		switch operation {
-		case Resize:
-			content, err = e.b.Resize(img, options)
-		case Thumbnail:
-			content, err = e.b.Thumbnail(img, options)
-		case Fit:
-			content, err = e.b.Fit(img, options)
-		}
-
-	default:
-		return nil, fmt.Errorf("Operation not found for %s", operation)
+	} else {
+		quality = e.DefaultQuality
 	}
 
+	position, ok := qs["pos"]
+	if !ok && operation == Flip {
+		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
+	}
+
+	degree, err := strconv.Atoi(qs["deg"])
 	if err != nil {
 		return nil, err
 	}
 
-	file.Processed = content
+	upscale, err := strconv.ParseBool(qs["upscale"])
+	if err != nil {
+		return nil, err
+	}
 
-	return file, err
+	width, err := strconv.Atoi(qs["w"])
+	if err != nil {
+		return nil, err
+	}
+
+	height, err := strconv.Atoi(qs["h"])
+	if err != nil {
+		return nil, err
+	}
+
+	return &backend.Options{
+		Width:    width,
+		Height:   height,
+		Upscale:  upscale,
+		Position: position,
+		Quality:  quality,
+		Degree:   degree,
+	}, nil
 }

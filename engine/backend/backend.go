@@ -2,8 +2,12 @@ package backend
 
 import (
 	"github.com/disintegration/imaging"
+	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
 )
+
+// NotImplementedError is an error returned if method is not implemented
+var MethodNotImplementedError = errors.New("Not implemented")
 
 // Options is the engine options
 type Options struct {
@@ -24,5 +28,3 @@ type Backend interface {
 	Rotate(img *image.ImageFile, options *Options) ([]byte, error)
 	Fit(img *image.ImageFile, options *Options) ([]byte, error)
 }
-
-
