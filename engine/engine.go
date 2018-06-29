@@ -39,17 +39,6 @@ const (
 	lilliputEngineType = "lilliput"
 )
 
-// Options is the engine options
-type Options struct {
-	Upscale  bool
-	Format   imaging.Format
-	Quality  int
-	Width    int
-	Height   int
-	Position string
-	Degree   int
-}
-
 // New initializes an Engine
 func New(cfg Config) *Engine {
 	var back backend.Backend
