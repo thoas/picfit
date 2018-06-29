@@ -54,7 +54,7 @@ type Options struct {
 func New(cfg Config) *Engine {
 	var back backend.Backend
 	if cfg.Type == lilliputEngineType {
-		back = &backend.LilliputEngine{}
+		back = backend.NewLilliputEngine(cfg.MaxBufferSize)
 	} else {
 		back = &backend.GoImageEngine{}
 	}
