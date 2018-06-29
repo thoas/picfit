@@ -30,15 +30,15 @@ func (e *LilliputEngine) Resize(img *imagefile.ImageFile, options *Options) ([]b
 }
 
 func (e *LilliputEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return nil, nil
+	return nil, MethodNotImplementedError
 }
 
 func (e *LilliputEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return nil, nil
+	return nil, MethodNotImplementedError
 }
 
 func (e *LilliputEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return nil, nil
+	return nil, MethodNotImplementedError
 }
 
 func (e *LilliputEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {

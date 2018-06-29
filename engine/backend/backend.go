@@ -6,7 +6,7 @@ import (
 	"github.com/thoas/picfit/image"
 )
 
-// NotImplementedError is an error returned if method is not implemented
+// MethodNotImplementedError is an error returned if method is not implemented
 var MethodNotImplementedError = errors.New("Not implemented")
 
 // Options is the engine options
