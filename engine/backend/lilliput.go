@@ -18,6 +18,9 @@ func NewLilliputEngine(maxBufferSize int) *LilliputEngine {
 	return &LilliputEngine{MaxBufferSize: 8192}
 }
 
+// Resize resizes the image to the specified width and height and
+// returns the transformed image. If one of width or height is 0,
+// the image aspect ratio is preserved.
 func (e *LilliputEngine) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
 		FileType:     img.FilenameExt(),
@@ -37,19 +40,22 @@ func (e *LilliputEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byt
 	return nil, MethodNotImplementedError
 }
 
+// Thumbnail scales the image up or down using the specified resample filter, crops it
+// to the specified width and hight and returns the transformed image.
 func (e *LilliputEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
-}
-
-func (e *LilliputEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
-		FileType:     img.FilenameExt(),
-		Width:        options.Width,
-		Height:       options.Height,
-		ResizeMethod: lilliput.ImageOpsNoResize,
+		FileType: img.FilenameExt(),
+		Width:    options.Width,
+		Height:   options.Height,
+		// Lilliput ImageOpsFit is a thumbnail operation
+		ResizeMethod: lilliput.ImageOpsFit,
 	}
 
 	return e.transform(img, opts)
+}
+
+func (e *LilliputEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
 }
 
 func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.ImageOptions) ([]byte, error) {
