@@ -1,6 +1,8 @@
 package backend
 
 import (
+	"math"
+
 	"github.com/discordapp/lilliput"
 	"github.com/pkg/errors"
 
@@ -29,7 +31,7 @@ func (e *LilliputEngine) Resize(img *imagefile.ImageFile, options *Options) ([]b
 		ResizeMethod: lilliput.ImageOpsResize,
 	}
 
-	return e.transform(img, opts)
+	return e.transform(img, opts, options.Upscale)
 }
 
 func (e *LilliputEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
@@ -51,14 +53,14 @@ func (e *LilliputEngine) Thumbnail(img *imagefile.ImageFile, options *Options) (
 		ResizeMethod: lilliput.ImageOpsFit,
 	}
 
-	return e.transform(img, opts)
+	return e.transform(img, opts, options.Upscale)
 }
 
 func (e *LilliputEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
-func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.ImageOptions) ([]byte, error) {
+func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.ImageOptions, upscale bool) ([]byte, error) {
 	decoder, err := lilliput.NewDecoder(img.Source)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -66,12 +68,24 @@ func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.I
 	defer decoder.Close()
 
 	header, err := decoder.Header()
-	if options.Width == 0 {
-		options.Width = header.Width()
+	if err != nil {
+		return nil, err
 	}
 
+	srcW := header.Width()
+	srcH := header.Height()
+
+	if scalingFactor(srcW, srcH, options.Width, options.Height) > 1 && !upscale {
+		return img.Source, nil
+	}
+
+	if options.Width == 0 {
+		tmpW := float64(options.Height) * float64(srcW) / float64(srcH)
+		options.Width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	}
 	if options.Height == 0 {
-		options.Height = header.Height()
+		tmpH := float64(options.Width) * float64(srcH) / float64(srcW)
+		options.Height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
 	}
 
 	ops := lilliput.NewImageOps(e.MaxBufferSize)
