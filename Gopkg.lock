@@ -28,6 +28,12 @@
   revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"
 
 [[projects]]
+  name = "github.com/discordapp/lilliput"
+  packages = ["."]
+  revision = "e611eea2a29a12d1363b5ceb31d3af3ef4012e9c"
+  version = "v1.2"
+
+[[projects]]
   name = "github.com/disintegration/imaging"
   packages = ["."]
   revision = "1884593a19ddc6f2ea050403430d02c1d0fc1283"
@@ -311,6 +317,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f509ca122daa7cd4215fa7ca655743d59540a4c21e5bfadd6e6d78f141a32a3e"
+  inputs-digest = "ef18dbf3534f81f10264f7a3432b52a7ce1e76b752eda1ada960d5feb7d29e1a"
   solver-name = "gps-cdcl"
   solver-version = 1
