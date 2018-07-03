@@ -23,6 +23,11 @@
 [prune]
   non-go = true
 
+  [[prune.project]]
+    name = "github.com/discordapp/lilliput"
+    go-tests = true
+    non-go = false
+
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
   revision = "v1.0.4"
