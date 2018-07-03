@@ -151,3 +151,7 @@ func (e *Lilliput) transform(img *imagefile.ImageFile, options *lilliput.ImageOp
 func (e *Lilliput) String() string {
 	return "lilliput"
 }
+
+func (e *LilliputEngine) Flat(background *imagefile.ImageFile, imgs []imagefile.ImageFile, options *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}

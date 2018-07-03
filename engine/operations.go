@@ -15,6 +15,7 @@ const (
 	Flip      = Operation("flip")
 	Fit       = Operation("fit")
 	Noop      = Operation("noop")
+	flat      = Operation("flat")
 )
 
 var Operations = map[string]Operation{
