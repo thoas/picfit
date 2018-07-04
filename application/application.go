@@ -193,25 +193,10 @@ func Delete(ctx context.Context, filepath string) error {
 
 // ImageFileFromContext generates an ImageFile from gin context
 func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFile, error) {
-	key := c.MustGet("key").(string)
+	storeKey := c.MustGet("key").(string)
 
 	k := kvstore.FromContext(c)
-
-	cfg := config.FromContext(c)
-
 	l := logger.FromContext(c)
-
-	destStorage := storage.DestinationFromContext(c)
-
-	var file = &image.ImageFile{
-		Key:     key,
-		Storage: destStorage,
-		Headers: map[string]string{},
-	}
-	var err error
-	var filepath string
-
-	storeKey := key
 
 	// Image from the KVStore found
 	imageKey, err := k.Get(storeKey)
@@ -220,77 +205,96 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 	}
 
 	if imageKey != nil {
-		stored, err := conv.String(imageKey)
-		if err != nil {
-			return nil, err
-		}
-
-		file.Filepath = stored
-
-		l.Infof("Key %s found in kvstore: %s", storeKey, stored)
-
-		if load {
-			file, err = image.FromStorage(destStorage, stored)
-
-			if err != nil {
-				return nil, err
-			}
-		}
+		return fileFromStorage(c, l, storeKey, imageKey, load)
 	} else {
-		l.Infof("Key %s not found in kvstore", storeKey)
-
-		u, exists := c.Get("url")
-
-		parameters := c.MustGet("parameters").(map[string]string)
-
 		// Image not found from the KVStore, we need to process it
 		// URL available in Query String
-		if exists {
-			file, err = image.FromURL(u.(*url.URL), cfg.Options.DefaultUserAgent)
-		} else {
-			// URL provided we use http protocol to retrieve it
-			s := storage.SourceFromContext(c)
+		l.Infof("Key %s not found in kvstore", storeKey)
+		return processImage(c, l, storeKey, async)
+	}
+}
 
-			filepath = parameters["path"]
-
-			if !s.Exists(filepath) {
-				return nil, errs.ErrFileNotExists
-			}
-
-			file, err = image.FromStorage(s, filepath)
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		op := c.MustGet("op").(engine.Operation)
-
-		file, err = engine.FromContext(c).Transform(file, op, parameters)
-
-		if err != nil {
-			return nil, err
-		}
-
-		filename := ShardFilename(c, key)
-
-		file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
+func fileFromStorage(c *gin.Context, l logger.Logger, storeKey string, imageKey interface{}, load bool) (*image.ImageFile, error) {
+	stored, err := conv.String(imageKey)
+	if err != nil {
+		return nil, err
 	}
 
-	file.Key = key
+	l.Infof("Key %s found in kvstore: %s", storeKey, stored)
+
+	destStorage := storage.DestinationFromContext(c)
+
+	file := &image.ImageFile{
+		Key:      storeKey,
+		Storage:  destStorage,
+		Filepath: stored,
+		Headers:  map[string]string{},
+	}
+
+	if load {
+		file, err = image.FromStorage(destStorage, stored)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	file.Headers["ETag"] = storeKey
+	return file, nil
+}
+
+func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) (*image.ImageFile, error) {
+	cfg := config.FromContext(c)
+	destStorage := storage.DestinationFromContext(c)
+
+	file := &image.ImageFile{
+		Key:     storeKey,
+		Storage: destStorage,
+		Headers: map[string]string{},
+	}
+
+	var filepath string
+	parameters := c.MustGet("parameters").(map[string]string)
+
+	var err error
+	u, exists := c.Get("url")
+	if exists {
+		file, err = image.FromURL(u.(*url.URL), cfg.Options.DefaultUserAgent)
+	} else {
+		// URL provided we use http protocol to retrieve it
+		s := storage.SourceFromContext(c)
+
+		filepath = parameters["path"]
+		if !s.Exists(filepath) {
+			return nil, errs.ErrFileNotExists
+		}
+
+		file, err = image.FromStorage(s, filepath)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	op := c.MustGet("op").(engine.Operation)
+	file, err = engine.FromContext(c).Transform(file, op, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := ShardFilename(c, storeKey)
+	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
 	file.Storage = destStorage
+	file.Headers["ETag"] = storeKey
 
-	file.Headers["ETag"] = key
-
-	if imageKey == nil {
-		if async == true {
-			go Store(c, filepath, file)
-		} else {
-			err = Store(c, filepath, file)
+	if async == true {
+		go Store(c, filepath, file)
+	} else {
+		err = Store(c, filepath, file)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return file, err
+	return file, nil
 }
 
 // ShardFilename shards a filename based on config
