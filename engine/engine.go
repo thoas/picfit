@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/imdario/mergo"
@@ -53,6 +54,7 @@ func New(cfg Config) *Engine {
 	if len(b) == 0 {
 		b = append(b, &backend.GoImageEngine{})
 	}
+
 	return &Engine{
 		DefaultFormat:  cfg.DefaultFormat,
 		Format:         cfg.Format,
@@ -61,7 +63,16 @@ func New(cfg Config) *Engine {
 	}
 }
 
-func (e *Engine) Transform(img *image.ImageFile, operation Operation, qs map[string]string) (*image.ImageFile, error) {
+func (e Engine) String() string {
+	backendNames := make([]string, len(e.backends))
+	for i := range e.backends {
+		backendNames[i] = e.backends[i].String()
+	}
+
+	return strings.Join(backendNames, " ")
+}
+
+func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[string]string) (*image.ImageFile, error) {
 	err := mergo.Merge(&qs, defaultParams)
 
 	if err != nil {
@@ -142,7 +153,7 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 	}
 }
 
-func newBackendOptions(e *Engine, operation Operation, qs map[string]string) (*backend.Options, error) {
+func newBackendOptions(e Engine, operation Operation, qs map[string]string) (*backend.Options, error) {
 	var quality int
 	q, ok := qs["q"]
 	if ok {

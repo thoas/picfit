@@ -113,3 +113,7 @@ func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.I
 
 	return ops.Transform(decoder, options, outputImg)
 }
+
+func (e *LilliputEngine) String() string {
+	return "lilliput"
+}

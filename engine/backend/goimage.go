@@ -68,6 +68,10 @@ func imageToPaletted(img image.Image) *image.Paletted {
 	return pm
 }
 
+func (e *GoImageEngine) String() string {
+	return "goimage"
+}
+
 func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options, trans Transformation) ([]byte, error) {
 	first, err := gif.Decode(bytes.NewReader(img.Source))
 

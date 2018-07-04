@@ -22,6 +22,7 @@ type Options struct {
 
 // Engine is an interface to define an image engine
 type Backend interface {
+	String() string
 	Resize(img *image.ImageFile, options *Options) ([]byte, error)
 	Thumbnail(img *image.ImageFile, options *Options) ([]byte, error)
 	Flip(img *image.ImageFile, options *Options) ([]byte, error)
