@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"bytes"
 	"math"
 
 	"github.com/discordapp/lilliput"
@@ -25,10 +26,11 @@ func NewLilliputEngine(maxBufferSize int) *LilliputEngine {
 // the image aspect ratio is preserved.
 func (e *LilliputEngine) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
-		FileType:     img.FilenameExt(),
-		Width:        options.Width,
-		Height:       options.Height,
-		ResizeMethod: lilliput.ImageOpsResize,
+		FileType:             img.FilenameExt(),
+		Width:                options.Width,
+		Height:               options.Height,
+		NormalizeOrientation: true,
+		ResizeMethod:         lilliput.ImageOpsResize,
 	}
 
 	return e.transform(img, opts, options.Upscale)
@@ -46,9 +48,10 @@ func (e *LilliputEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byt
 // to the specified width and hight and returns the transformed image.
 func (e *LilliputEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
-		FileType: img.FilenameExt(),
-		Width:    options.Width,
-		Height:   options.Height,
+		FileType:             img.FilenameExt(),
+		Width:                options.Width,
+		Height:               options.Height,
+		NormalizeOrientation: true,
 		// Lilliput ImageOpsFit is a thumbnail operation
 		ResizeMethod: lilliput.ImageOpsFit,
 	}
@@ -72,8 +75,23 @@ func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.I
 		return nil, err
 	}
 
-	srcW := header.Width()
-	srcH := header.Height()
+	var (
+		srcW int
+		srcH int
+	)
+
+	same, err := sameInputAndOutputHeader(bytes.NewReader(img.Source))
+	if err != nil {
+		return nil, err
+	}
+
+	if same {
+		srcW = header.Width()
+		srcH = header.Height()
+	} else {
+		srcH = header.Width()
+		srcW = header.Height()
+	}
 
 	if scalingFactor(srcW, srcH, options.Width, options.Height) > 1 && !upscale {
 		return img.Source, nil

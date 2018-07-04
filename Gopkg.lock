@@ -167,6 +167,14 @@
   revision = "7e006a27a95babf4d41ca61e8c43df92ca3ff873"
 
 [[projects]]
+  name = "github.com/rwcarlsen/goexif"
+  packages = [
+    "exif",
+    "tiff"
+  ]
+  revision = "8d986c03457a2057c7b0fb0a48113f7dd48f9619"
+
+[[projects]]
   name = "github.com/spf13/afero"
   packages = [
     ".",
@@ -317,6 +325,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ef18dbf3534f81f10264f7a3432b52a7ce1e76b752eda1ada960d5feb7d29e1a"
+  inputs-digest = "a84f8f0eb9a31ed5617f2b14b315f0a05665cdd4951b490ca304ab8bf9d58443"
   solver-name = "gps-cdcl"
   solver-version = 1
