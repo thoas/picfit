@@ -7,7 +7,7 @@ now = $(shell date "+%Y-%m-%d %T UTC%z")
 compiler = $(shell go version)
 
 BIN_DIR = $(ROOT_DIR)/bin
-CONFIG=`pwd`/config.json
+PICFIT_CONFIG_PATH ?= `pwd`/config.json
 BIN = $(BIN_DIR)/picfit
 SSL_DIR = $(ROOT_DIR)/ssl
 APP_DIR = /go/src/github.com/thoas/picfit
@@ -18,7 +18,7 @@ vendorize:
 	find vendor/ -type f -not -path "*/.git*" -exec git add {} \;
 
 run-server:
-	@PICFIT_CONFIG_PATH=$(CONFIG) $(BIN)
+	@PICFIT_CONFIG_PATH=$(PICFIT_CONFIG_PATH) $(BIN)
 
 serve:
 	@modd
