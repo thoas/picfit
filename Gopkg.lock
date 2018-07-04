@@ -28,6 +28,12 @@
   revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"
 
 [[projects]]
+  name = "github.com/discordapp/lilliput"
+  packages = ["."]
+  revision = "e611eea2a29a12d1363b5ceb31d3af3ef4012e9c"
+  version = "v1.2"
+
+[[projects]]
   name = "github.com/disintegration/imaging"
   packages = ["."]
   revision = "1884593a19ddc6f2ea050403430d02c1d0fc1283"
@@ -159,6 +165,14 @@
   name = "github.com/rubenfonseca/fastimage"
   packages = ["."]
   revision = "7e006a27a95babf4d41ca61e8c43df92ca3ff873"
+
+[[projects]]
+  name = "github.com/rwcarlsen/goexif"
+  packages = [
+    "exif",
+    "tiff"
+  ]
+  revision = "8d986c03457a2057c7b0fb0a48113f7dd48f9619"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -311,6 +325,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f509ca122daa7cd4215fa7ca655743d59540a4c21e5bfadd6e6d78f141a32a3e"
+  inputs-digest = "a84f8f0eb9a31ed5617f2b14b315f0a05665cdd4951b490ca304ab8bf9d58443"
   solver-name = "gps-cdcl"
   solver-version = 1

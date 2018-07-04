@@ -23,6 +23,11 @@
 [prune]
   non-go = true
 
+  [[prune.project]]
+    name = "github.com/discordapp/lilliput"
+    go-tests = true
+    non-go = false
+
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
   revision = "v1.0.4"
@@ -94,3 +99,7 @@
 [[constraint]]
   name = "github.com/cstockton/go-conv"
   revision = "66a2b2ba36e101a342252b65b26176cf2f27d210"
+
+[[constraint]]
+  name = "github.com/rwcarlsen/goexif"
+  revision = "8d986c03457a2057c7b0fb0a48113f7dd48f9619"

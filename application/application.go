@@ -23,6 +23,12 @@ import (
 func Load(cfg *config.Config) (context.Context, error) {
 	ctx := config.NewContext(context.Background(), *cfg)
 
+	log, err := logger.New(cfg.Logger)
+	if err != nil {
+		return nil, err
+	}
+	ctx = logger.NewContext(ctx, log)
+
 	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
 	if err != nil {
 		return nil, err
@@ -39,13 +45,10 @@ func Load(cfg *config.Config) (context.Context, error) {
 	ctx = kvstore.NewContext(ctx, keystore)
 
 	e := engine.New(*cfg.Engine)
-	ctx = engine.NewContext(ctx, e)
 
-	log, err := logger.New(cfg.Logger)
-	if err != nil {
-		return nil, err
-	}
-	ctx = logger.NewContext(ctx, log)
+	log.Debugf("Image engine %s configured", e.String())
+
+	ctx = engine.NewContext(ctx, e)
 
 	return ctx, nil
 }

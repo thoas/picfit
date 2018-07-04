@@ -1,0 +1,10 @@
+prefix=/home/brian_armstrong/lilliput/deps/linux
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libjpeg
+Description: A SIMD-accelerated JPEG codec that provides the libjpeg API
+Version: 1.5.1
+Libs: -L${libdir} -ljpeg
+Cflags: -I${includedir}

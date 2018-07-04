@@ -1,0 +1,14 @@
+prefix=/Users/brianarmstrong/code/lilliput/deps/osx
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 6.82.100
+Requires: libavutil >= 55.58.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavfilter -framework QuartzCore -framework CoreFoundation -framework VideoToolbox -framework CoreMedia -framework CoreVideo -framework CoreFoundation -framework AudioToolbox -framework CoreMedia -framework VideoDecodeAcceleration -framework CoreFoundation -framework QuartzCore -Wl,-framework,CoreFoundation -Wl,-framework,Security -lm -llzma -lbz2 -lz -pthread -framework CoreServices
+Libs.private: 
+Cflags: -I${includedir}
