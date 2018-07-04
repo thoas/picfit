@@ -1,4 +1,4 @@
-package image
+package backend
 
 import (
 	"image"
@@ -10,7 +10,7 @@ import (
 
 //Decode is image.Decode handling orientation in EXIF tags if exists.
 //Requires io.ReadSeeker instead of io.Reader.
-func Decode(reader io.ReadSeeker) (image.Image, error) {
+func decode(reader io.ReadSeeker) (image.Image, error) {
 	img, err := imaging.Decode(reader)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func Decode(reader io.ReadSeeker) (image.Image, error) {
 
 // SameInputAndOutputHeader return true if image width and height
 // are not changed after exif correction.
-func SameInputAndOutputHeader(reader io.ReadSeeker) (bool, error) {
+func sameInputAndOutputHeader(reader io.ReadSeeker) (bool, error) {
 	_, err := imaging.Decode(reader)
 	if err != nil {
 		return false, err

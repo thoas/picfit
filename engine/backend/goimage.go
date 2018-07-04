@@ -147,7 +147,7 @@ func (e *GoImageEngine) transform(img image.Image, options *Options, trans Trans
 }
 
 func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
-	return imagefile.Decode(bytes.NewReader(img.Source))
+	return decode(bytes.NewReader(img.Source))
 }
 
 func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {

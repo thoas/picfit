@@ -80,7 +80,7 @@ func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.I
 		srcH int
 	)
 
-	same, err := imagefile.SameInputAndOutputHeader(bytes.NewReader(img.Source))
+	same, err := sameInputAndOutputHeader(bytes.NewReader(img.Source))
 	if err != nil {
 		return nil, err
 	}
