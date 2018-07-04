@@ -13,29 +13,61 @@ import (
 func Decode(reader io.ReadSeeker) (image.Image, error) {
 	img, err := imaging.Decode(reader)
 	if err != nil {
-		return img, err
+		return nil, err
 	}
 	reader.Seek(0, io.SeekStart)
 	orientation := getOrientation(reader)
 	switch orientation {
 	case "1":
+		return img, nil
 	case "2":
-		img = imaging.FlipV(img)
+		return imaging.FlipV(img), nil
 	case "3":
-		img = imaging.Rotate180(img)
+		return imaging.Rotate180(img), nil
 	case "4":
-		img = imaging.Rotate180(imaging.FlipV(img))
+		return imaging.Rotate180(imaging.FlipV(img)), nil
 	case "5":
-		img = imaging.Rotate270(imaging.FlipV(img))
+		return imaging.Rotate270(imaging.FlipV(img)), nil
 	case "6":
-		img = imaging.Rotate270(img)
+		return imaging.Rotate270(img), nil
 	case "7":
-		img = imaging.Rotate90(imaging.FlipV(img))
+		return imaging.Rotate90(imaging.FlipV(img)), nil
 	case "8":
-		img = imaging.Rotate90(img)
+		return imaging.Rotate90(img), nil
+	default:
+		return img, nil
 	}
+}
 
-	return img, err
+// SameInputAndOutputHeader return true if image width and height
+// are not changed after exif correction.
+func SameInputAndOutputHeader(reader io.ReadSeeker) (bool, error) {
+	_, err := imaging.Decode(reader)
+	if err != nil {
+		return false, err
+	}
+	reader.Seek(0, io.SeekStart)
+	orientation := getOrientation(reader)
+	switch orientation {
+	case "1":
+		return true, nil
+	case "2":
+		return true, nil
+	case "3":
+		return true, nil
+	case "4":
+		return true, nil
+	case "5":
+		return false, nil
+	case "6":
+		return false, nil
+	case "7":
+		return false, nil
+	case "8":
+		return false, nil
+	default:
+		return true, nil
+	}
 }
 
 func getOrientation(reader io.Reader) string {
