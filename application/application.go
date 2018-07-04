@@ -283,6 +283,7 @@ func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) 
 	filename := ShardFilename(c, storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
 	file.Storage = destStorage
+	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
 	if async == true {
