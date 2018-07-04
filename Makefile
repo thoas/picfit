@@ -42,11 +42,11 @@ format:
 build-static:
 	@(echo "-> Creating statically linked binary...")
 	mkdir -p $(BIN_DIR)
-	CGO_ENABLED=0 go build -ldflags "\
-		    -X github.com/thoas/picfit/constants.Branch=$(branch) \
-		    -X github.com/thoas/picfit/constants.Revision=$(commit) \
-		    -X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
-		    -X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit
+	go build -ldflags "\
+		-X github.com/thoas/picfit/constants.Branch=$(branch) \
+		-X github.com/thoas/picfit/constants.Revision=$(commit) \
+		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
+		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit
 
 docker-build-static: build-static
 
