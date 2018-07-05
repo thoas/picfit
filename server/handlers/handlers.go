@@ -7,12 +7,18 @@ import (
 
 	"github.com/mholt/binding"
 
+	api "gopkg.in/fukata/golang-stats-api-handler.v1"
+
 	"github.com/thoas/picfit/application"
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/errs"
 	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/storage"
 )
+
+func StatsHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, api.GetStats())
+}
 
 // Healthcheck displays an ok response for healthcheck
 func Healthcheck(c *gin.Context) {
