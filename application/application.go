@@ -206,12 +206,12 @@ func ImageFileFromContext(c *gin.Context, async bool, load bool) (*image.ImageFi
 
 	if imageKey != nil {
 		return fileFromStorage(c, l, storeKey, imageKey, load)
-	} else {
-		// Image not found from the KVStore, we need to process it
-		// URL available in Query String
-		l.Infof("Key %s not found in kvstore", storeKey)
-		return processImage(c, l, storeKey, async)
 	}
+
+	// Image not found from the KVStore, we need to process it
+	// URL available in Query String
+	l.Infof("Key %s not found in kvstore", storeKey)
+	return processImage(c, l, storeKey, async)
 }
 
 func fileFromStorage(c *gin.Context, l logger.Logger, storeKey string, imageKey interface{}, load bool) (*image.ImageFile, error) {
