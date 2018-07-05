@@ -11,7 +11,6 @@ import (
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
-	"github.com/thoas/picfit/util"
 )
 
 const sigParamName = "sig"
@@ -64,11 +63,9 @@ func KeyParser() gin.HandlerFunc {
 			queryString[k] = v[0]
 		}
 
-		sorted := util.SortMapString(queryString)
+		delete(queryString, sigParamName)
 
-		delete(sorted, sigParamName)
-
-		serialized := hash.Serialize(sorted)
+		serialized := hash.Serialize(queryString)
 
 		key := hash.Tokey(serialized)
 
