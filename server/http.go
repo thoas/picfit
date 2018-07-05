@@ -105,7 +105,9 @@ func (s *HTTPServer) Init(opts Options) error {
 		router.GET("/sys/stats", func(c *gin.Context) {
 			c.JSON(http.StatusOK, s.Data())
 		})
+	}
 
+	if s.config.Options.EnableHealth {
 		router.GET("/sys/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, api.GetStats())
 		})

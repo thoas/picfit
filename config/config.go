@@ -31,6 +31,7 @@ type Options struct {
 	EnableUpload     bool          `mapstructure:"enable_upload"`
 	EnableDelete     bool          `mapstructure:"enable_delete"`
 	EnableStats      bool          `mapstructure:"enable_stats"`
+	EnableHealth     bool          `mapstructure:"enable_health"`
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
