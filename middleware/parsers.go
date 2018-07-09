@@ -61,12 +61,23 @@ func KeyParser() gin.HandlerFunc {
 		}
 
 		for k, v := range c.Request.URL.Query() {
-			if k == "op" && len(v) > 1 {
-				queryString[k] = v
+			if k != "op" {
+				queryString[k] = v[0]
 				continue
 			}
 
-			queryString[k] = v[0]
+			var operations []string
+			op, ok := queryString[k].(string)
+			if ok {
+				operations = append(operations, op)
+			}
+			operations = append(operations, v...)
+
+			if len(operations) > 1 {
+				queryString[k] = operations
+			} else if len(operations) == 1 {
+				queryString[k] = operations[0]
+			}
 		}
 
 		sorted := util.SortMapString(queryString)

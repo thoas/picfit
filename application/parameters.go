@@ -87,6 +87,23 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 		})
 	}
 
+	ops, ok := qs["op"].([]string)
+	if ok {
+		for i := range ops {
+			operation := engine.Operation(ops[i])
+			opts, err := newBackendOptions(e, operation, qs)
+			if err != nil {
+				return nil, err
+			}
+
+			opts.Format = formats[format]
+			operations = append(operations, engine.EngineOperation{
+				Options:   opts,
+				Operation: operation,
+			})
+		}
+	}
+
 	return &Parameters{
 		Output:     output,
 		Operations: operations,
