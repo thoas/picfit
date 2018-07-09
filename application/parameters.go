@@ -72,8 +72,9 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 
 	var operations []engine.EngineOperation
 
-	operation, ok := qs["op"].(engine.Operation)
+	op, ok := qs["op"].(string)
 	if ok {
+		operation := engine.Operation(op)
 		opts, err := newBackendOptions(e, operation, qs)
 		if err != nil {
 			return nil, err
