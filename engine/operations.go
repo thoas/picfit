@@ -1,5 +1,7 @@
 package engine
 
+import "github.com/thoas/picfit/engine/backend"
+
 type Operation string
 
 func (o Operation) String() string {
@@ -22,4 +24,9 @@ var Operations = map[string]Operation{
 	Rotate.String():    Rotate,
 	Fit.String():       Fit,
 	Noop.String():      Noop,
+}
+
+type EngineOperation struct {
+	Options   backend.Options
+	Operation Operation
 }
