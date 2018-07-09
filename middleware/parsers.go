@@ -61,6 +61,11 @@ func KeyParser() gin.HandlerFunc {
 		}
 
 		for k, v := range c.Request.URL.Query() {
+			if k == "op" && len(v) > 1 {
+				queryString[k] = v
+				continue
+			}
+
 			queryString[k] = v[0]
 		}
 
@@ -119,23 +124,34 @@ func OperationParser() gin.HandlerFunc {
 		parameters := c.MustGet("parameters").(map[string]interface{})
 
 		operation, ok := parameters["op"].(string)
+		if ok && operation != "" {
+			if _, k := engine.Operations[operation]; !k {
+				c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operation))
+				c.Abort()
+				return
+			}
+			c.Set("op", operation)
+			c.Next()
+			return
+		}
 
-		if !ok {
+		operations, ok := parameters["op"].([]string)
+		if !ok || len(operations) == 0 {
 			c.String(http.StatusBadRequest, "`op` parameter or query string cannot be empty")
 			c.Abort()
 			return
 		}
 
-		op, ok := engine.Operations[operation]
-
-		if !ok {
-			c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operation))
-			c.Abort()
-			return
+		for i := range operations {
+			_, ok := engine.Operations[operations[i]]
+			if !ok {
+				c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operations[i]))
+				c.Abort()
+				return
+			}
 		}
 
-		c.Set("op", op)
-
+		c.Set("op", operations)
 		c.Next()
 	}
 }

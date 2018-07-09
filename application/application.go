@@ -274,7 +274,8 @@ func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) 
 		return nil, err
 	}
 
-	op := c.MustGet("op").(engine.Operation)
+	operations := c.MustGet("op")
+	op := engine.Operation(operations.(string))
 	file, err = engine.FromContext(c).Transform(file, op, parameters)
 	if err != nil {
 		return nil, err

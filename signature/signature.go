@@ -16,7 +16,18 @@ func VerifyParameters(key string, qs map[string]interface{}) bool {
 	params := url.Values{}
 
 	for k, v := range qs {
-		params.Set(k, v.(string))
+		s, ok := v.(string)
+		if ok {
+			params.Set(k, s)
+			continue
+		}
+
+		l, ok := v.([]string)
+		if ok {
+			for i := range l {
+				params.Add(k, l[i])
+			}
+		}
 	}
 
 	return VerifySign(key, params.Encode())
