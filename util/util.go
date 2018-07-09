@@ -15,7 +15,7 @@ func MapInterfaceToMapString(obj map[string]interface{}) map[string]string {
 	return results
 }
 
-func SortMapString(obj map[string]string) map[string]string {
+func SortMapString(obj map[string]interface{}) map[string]interface{} {
 	mk := make([]string, len(obj))
 
 	i := 0
@@ -26,7 +26,7 @@ func SortMapString(obj map[string]string) map[string]string {
 
 	sort.Strings(mk)
 
-	results := make(map[string]string)
+	results := make(map[string]interface{})
 
 	for _, index := range mk {
 		results[index] = obj[index]

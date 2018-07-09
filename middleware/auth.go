@@ -14,7 +14,7 @@ import (
 func Security(secretKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if secretKey != "" {
-			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]string)) {
+			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]interface{})) {
 				c.String(http.StatusUnauthorized, "Invalid signature")
 				c.Abort()
 				return
@@ -27,17 +27,17 @@ func Security(secretKey string) gin.HandlerFunc {
 
 func RestrictSizes(sizes []config.AllowedSize) gin.HandlerFunc {
 	handler := func(c *gin.Context, sizes []config.AllowedSize) {
-		params := c.MustGet("parameters").(map[string]string)
+		params := c.MustGet("parameters").(map[string]interface{})
 
 		var w int
 		var h int
 		var err error
 
-		if w, err = strconv.Atoi(params["w"]); err != nil {
+		if w, err = strconv.Atoi(params["w"].(string)); err != nil {
 			return
 		}
 
-		if h, err = strconv.Atoi(params["h"]); err != nil {
+		if h, err = strconv.Atoi(params["h"].(string)); err != nil {
 			return
 		}
 

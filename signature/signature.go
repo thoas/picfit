@@ -12,11 +12,11 @@ import (
 var signRegex = regexp.MustCompile("&?sig=[^&]*")
 
 // VerifyParameters encodes map parameters with a key and returns if parameters match signature
-func VerifyParameters(key string, qs map[string]string) bool {
+func VerifyParameters(key string, qs map[string]interface{}) bool {
 	params := url.Values{}
 
 	for k, v := range qs {
-		params.Set(k, v)
+		params.Set(k, v.(string))
 	}
 
 	return VerifySign(key, params.Encode())

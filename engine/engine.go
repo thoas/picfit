@@ -12,7 +12,7 @@ import (
 	"github.com/thoas/picfit/image"
 )
 
-var defaultParams = map[string]string{
+var defaultParams = map[string]interface{}{
 	"upscale": "1",
 	"h":       "0",
 	"w":       "0",
@@ -72,14 +72,14 @@ func (e Engine) String() string {
 	return strings.Join(backendNames, " ")
 }
 
-func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[string]string) (*image.ImageFile, error) {
+func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[string]interface{}) (*image.ImageFile, error) {
 	err := mergo.Merge(&qs, defaultParams)
 
 	if err != nil {
 		return nil, err
 	}
 
-	format, ok := qs["fmt"]
+	format, ok := qs["fmt"].(string)
 	filepath := img.Filepath
 
 	if ok {
@@ -122,7 +122,7 @@ func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[stri
 	options.Format = formats[format]
 
 	for i := range e.backends {
-		file.Processed, err = operate(e.backends[i], img, operation, options)
+		file.Processed, err = operate(e.backends[i], file, operation, options)
 		if err == nil {
 			break
 		}
@@ -153,9 +153,9 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 	}
 }
 
-func newBackendOptions(e Engine, operation Operation, qs map[string]string) (*backend.Options, error) {
+func newBackendOptions(e Engine, operation Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var quality int
-	q, ok := qs["q"]
+	q, ok := qs["q"].(string)
 	if ok {
 		quality, err := strconv.Atoi(q)
 
@@ -170,27 +170,27 @@ func newBackendOptions(e Engine, operation Operation, qs map[string]string) (*ba
 		quality = e.DefaultQuality
 	}
 
-	position, ok := qs["pos"]
+	position, ok := qs["pos"].(string)
 	if !ok && operation == Flip {
 		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 	}
 
-	degree, err := strconv.Atoi(qs["deg"])
+	degree, err := strconv.Atoi(qs["deg"].(string))
 	if err != nil {
 		return nil, err
 	}
 
-	upscale, err := strconv.ParseBool(qs["upscale"])
+	upscale, err := strconv.ParseBool(qs["upscale"].(string))
 	if err != nil {
 		return nil, err
 	}
 
-	width, err := strconv.Atoi(qs["w"])
+	width, err := strconv.Atoi(qs["w"].(string))
 	if err != nil {
 		return nil, err
 	}
 
-	height, err := strconv.Atoi(qs["h"])
+	height, err := strconv.Atoi(qs["h"].(string))
 	if err != nil {
 		return nil, err
 	}

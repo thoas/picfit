@@ -26,7 +26,7 @@ func ParametersParser() gin.HandlerFunc {
 		if result != "" {
 			match := parametersReg.FindStringSubmatch(result)
 
-			parameters := make(map[string]string)
+			parameters := make(map[string]interface{})
 
 			for i, name := range parametersReg.SubexpNames() {
 				if i != 0 && match[i] != "" {
@@ -50,14 +50,14 @@ func ParametersParser() gin.HandlerFunc {
 // KeyParser injects an unique key from query parameters
 func KeyParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var queryString map[string]string
+		var queryString map[string]interface{}
 
 		params, exists := c.Get("parameters")
 
 		if exists {
-			queryString = params.(map[string]string)
+			queryString = params.(map[string]interface{})
 		} else {
-			queryString = make(map[string]string)
+			queryString = make(map[string]interface{})
 		}
 
 		for k, v := range c.Request.URL.Query() {
@@ -116,9 +116,9 @@ func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
 // OperationParser extracts the operation and add it to the context
 func OperationParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		parameters := c.MustGet("parameters").(map[string]string)
+		parameters := c.MustGet("parameters").(map[string]interface{})
 
-		operation, ok := parameters["op"]
+		operation, ok := parameters["op"].(string)
 
 		if !ok {
 			c.String(http.StatusBadRequest, "`op` parameter or query string cannot be empty")
