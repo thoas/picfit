@@ -27,6 +27,6 @@ var Operations = map[string]Operation{
 }
 
 type EngineOperation struct {
-	Options   backend.Options
+	Options   *backend.Options
 	Operation Operation
 }
