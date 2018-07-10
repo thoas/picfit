@@ -32,4 +32,4 @@ const DefaultPngCompression = 0
 const DefaultMaxBufferSize = 8192
 
 // DefaultImageBufferSize is the default image buffer size for lilliput
-const DefaultImageBufferSize = 5 * 1024 * 1024
+const DefaultImageBufferSize = 50 * 1024 * 1024

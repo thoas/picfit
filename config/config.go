@@ -99,6 +99,7 @@ func load(content string, isPath bool) (*Config, error) {
 	viper.SetDefault("shard", defaultConfig.Shard)
 	viper.SetDefault("port", defaultConfig.Port)
 	viper.SetDefault("kvstore", defaultConfig.KVStore)
+	viper.SetDefault("engine", defaultConfig.Engine)
 	viper.SetEnvPrefix("picfit")
 
 	var err error
@@ -122,10 +123,6 @@ func load(content string, isPath bool) (*Config, error) {
 	err = viper.Unmarshal(&config)
 	if err != nil {
 		return nil, err
-	}
-
-	if config.Engine == nil {
-		config.Engine = defaultConfig.Engine
 	}
 
 	return config, nil
