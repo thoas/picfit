@@ -18,13 +18,38 @@ type Lilliput struct {
 }
 
 func NewLilliput(cfg config.Config) *Lilliput {
+	maxBufferSize := config.DefaultMaxBufferSize
+	if cfg.MaxBufferSize != 0 {
+		maxBufferSize = cfg.MaxBufferSize
+	}
+
+	imageBufferSize := config.DefaultImageBufferSize
+	if cfg.ImageBufferSize != 0 {
+		imageBufferSize = cfg.ImageBufferSize
+	}
+
+	jpegQuality := config.DefaultQuality
+	if cfg.JpegQuality != 0 {
+		jpegQuality = cfg.JpegQuality
+	}
+
+	webpQuality := config.DefaultQuality
+	if cfg.WebpQuality != 0 {
+		webpQuality = cfg.WebpQuality
+	}
+
+	pngCompression := config.DefaultPngCompression
+	if cfg.PngCompression != 0 {
+		pngCompression = cfg.PngCompression
+	}
+
 	return &Lilliput{
-		MaxBufferSize:   cfg.MaxBufferSize,
-		ImageBufferSize: cfg.ImageBufferSize,
+		MaxBufferSize:   maxBufferSize,
+		ImageBufferSize: imageBufferSize,
 		EncodeOptions: map[int]int{
-			lilliput.JpegQuality:    cfg.JpegQuality,
-			lilliput.PngCompression: cfg.PngCompression,
-			lilliput.WebpQuality:    cfg.WebpQuality,
+			lilliput.JpegQuality:    jpegQuality,
+			lilliput.PngCompression: pngCompression,
+			lilliput.WebpQuality:    webpQuality,
 		}}
 }
 

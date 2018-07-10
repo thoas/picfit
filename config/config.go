@@ -67,9 +67,9 @@ func DefaultConfig() *Config {
 			Quality:         DefaultQuality,
 			JpegQuality:     DefaultQuality,
 			WebpQuality:     DefaultQuality,
-			PngCompression:  DefaultPngCompression,
-			MaxBufferSize:   DefaultMaxBufferSize,
-			ImageBufferSize: DefaultImageBufferSize,
+			PngCompression:  engineconfig.DefaultPngCompression,
+			MaxBufferSize:   engineconfig.DefaultMaxBufferSize,
+			ImageBufferSize: engineconfig.DefaultImageBufferSize,
 			Format:          "",
 		},
 		Options: &Options{
