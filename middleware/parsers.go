@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -156,9 +157,24 @@ func OperationParser() gin.HandlerFunc {
 		for i := range operations {
 			_, ok := engine.Operations[operations[i]]
 			if !ok {
-				c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operations[i]))
-				c.Abort()
-				return
+				params := make(map[string]string)
+				for _, p := range strings.Split(operations[i], " ") {
+					l := strings.Split(p, ":")
+					if len(l) > 1 {
+						params[l[0]] = l[1]
+					}
+				}
+
+				v, exists := params["op"]
+				if !exists {
+					c.String(http.StatusBadRequest, "`op` parameter or query string cannot be empty")
+					c.Abort()
+					return
+				} else if _, ok := engine.Operations[v]; !ok {
+					c.String(http.StatusBadRequest, fmt.Sprintf("Invalid method %s or invalid parameters", operations[i]))
+					c.Abort()
+					return
+				}
 			}
 		}
 

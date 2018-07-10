@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/thoas/picfit/engine"
@@ -75,7 +76,7 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 	op, ok := qs["op"].(string)
 	if ok {
 		operation := engine.Operation(op)
-		opts, err := newBackendOptions(e, operation, qs)
+		opts, err := newBackendOptionsFromParameters(e, operation, qs)
 		if err != nil {
 			return nil, err
 		}
@@ -90,17 +91,26 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 	ops, ok := qs["op"].([]string)
 	if ok {
 		for i := range ops {
-			operation := engine.Operation(ops[i])
-			opts, err := newBackendOptions(e, operation, qs)
-			if err != nil {
-				return nil, err
+			var err error
+			engineOperation := &engine.EngineOperation{}
+			operation, k := engine.Operations[ops[i]]
+			if k {
+				engineOperation.Operation = operation
+				engineOperation.Options, err = newBackendOptionsFromParameters(e, operation, qs)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				engineOperation, err = newEngineOperationFromQuery(e, ops[i])
+				if err != nil {
+					return nil, err
+				}
 			}
 
-			opts.Format = formats[format]
-			operations = append(operations, engine.EngineOperation{
-				Options:   opts,
-				Operation: operation,
-			})
+			if engineOperation != nil {
+				engineOperation.Options.Format = formats[format]
+				operations = append(operations, *engineOperation)
+			}
 		}
 	}
 
@@ -110,7 +120,33 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 	}, nil
 }
 
-func newBackendOptions(e *engine.Engine, operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
+func newEngineOperationFromQuery(e *engine.Engine, op string) (*engine.EngineOperation, error) {
+	params := make(map[string]interface{})
+	for _, p := range strings.Split(op, " ") {
+		l := strings.Split(p, ":")
+		if len(l) > 1 {
+			params[l[0]] = l[1]
+		}
+	}
+
+	op, ok := params["op"].(string)
+	if !ok {
+		return nil, nil
+	}
+
+	operation := engine.Operation(op)
+	opts, err := newBackendOptionsFromParameters(e, operation, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &engine.EngineOperation{
+		Options:   opts,
+		Operation: operation,
+	}, nil
+}
+
+func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var (
 		err     error
 		quality int
