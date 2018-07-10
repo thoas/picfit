@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/thoas/picfit/constants"
-	"github.com/thoas/picfit/engine"
+	engineconfig "github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/storage"
@@ -45,7 +45,7 @@ type Sentry struct {
 // Config is a struct to load configuration flags
 type Config struct {
 	Debug          bool
-	Engine         *engine.Config
+	Engine         *engineconfig.Config
 	Sentry         *Sentry
 	SecretKey      string `mapstructure:"secret_key"`
 	Shard          *Shard
@@ -62,10 +62,15 @@ type Config struct {
 // DefaultConfig returns a default config instance
 func DefaultConfig() *Config {
 	return &Config{
-		Engine: &engine.Config{
-			DefaultFormat: DefaultFormat,
-			Quality:       DefaultQuality,
-			Format:        "",
+		Engine: &engineconfig.Config{
+			DefaultFormat:   DefaultFormat,
+			Quality:         DefaultQuality,
+			JpegQuality:     DefaultQuality,
+			WebpQuality:     DefaultQuality,
+			PngCompression:  DefaultPngCompression,
+			MaxBufferSize:   DefaultMaxBufferSize,
+			ImageBufferSize: DefaultImageBufferSize,
+			Format:          "",
 		},
 		Options: &Options{
 			EnableDelete:     false,

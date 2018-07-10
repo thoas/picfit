@@ -24,3 +24,12 @@ const DefaultShardDepth = 0
 
 // DefaultShardRestOnly is the default shard rest behaviour
 const DefaultShardRestOnly = true
+
+// DefaultPngCompression is the default compression for png.
+const DefaultPngCompression = 0
+
+// DefaultMaxBufferSize is the maximum size of buffer for lilliput
+const DefaultMaxBufferSize = 8192
+
+// DefaultImageBufferSize is the default image buffer size for lilliput
+const DefaultImageBufferSize = 5 * 1024 * 1024
