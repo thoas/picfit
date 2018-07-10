@@ -9,6 +9,6 @@ type Config struct {
 	MaxBufferSize   int      `mapstructure:"max_buffer_size"`
 	ImageBufferSize int      `mapstructure:"image_buffer_size"`
 	JpegQuality     int      `mapstructure:"jpeg_quality"`
-	PngCompression  int      `mapstructure:"jpeg_quality"`
+	PngCompression  int      `mapstructure:"png_compression"`
 	WebpQuality     int      `mapstructure:"webp_quality"`
 }
