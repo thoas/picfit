@@ -158,8 +158,7 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 
 	q, ok := qs["q"].(string)
 	if ok {
-		quality, err := strconv.Atoi(q)
-
+		quality, err = strconv.Atoi(q)
 		if err != nil {
 			return nil, err
 		}
