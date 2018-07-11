@@ -278,7 +278,7 @@ func encode(w io.Writer, img image.Image, format imaging.Format, quality int) er
 	return err
 }
 
-func (e *GoImageEngine) Flat(backgroundFile *imagefile.ImageFile, imgs []imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImageEngine) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		return e.TransformGIF(backgroundFile, options, imaging.Resize)
 	}
@@ -288,9 +288,9 @@ func (e *GoImageEngine) Flat(backgroundFile *imagefile.ImageFile, imgs []imagefi
 		return nil, err
 	}
 
-	images := make([]image.Image, len(imgs))
-	for i := range imgs {
-		images[i], err = e.Source(&imgs[i])
+	images := make([]image.Image, len(options.Images))
+	for i := range options.Images {
+		images[i], err = e.Source(&options.Images[i])
 		if err != nil {
 			return nil, err
 		}

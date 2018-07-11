@@ -15,7 +15,7 @@ const (
 	Flip      = Operation("flip")
 	Fit       = Operation("fit")
 	Noop      = Operation("noop")
-	flat      = Operation("flat")
+	Flat      = Operation("flat")
 )
 
 var Operations = map[string]Operation{
@@ -25,6 +25,7 @@ var Operations = map[string]Operation{
 	Rotate.String():    Rotate,
 	Fit.String():       Fit,
 	Noop.String():      Noop,
+	Flat.String():      Flat,
 }
 
 type EngineOperation struct {
