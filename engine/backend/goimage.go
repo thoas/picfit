@@ -20,7 +20,7 @@ import (
 	"golang.org/x/image/tiff"
 )
 
-type GoImageEngine struct{}
+type GoImage struct{}
 
 type ImageTransformation func(img image.Image) *image.NRGBA
 
@@ -68,11 +68,11 @@ func imageToPaletted(img image.Image) *image.Paletted {
 	return pm
 }
 
-func (e *GoImageEngine) String() string {
+func (e *GoImage) String() string {
 	return "goimage"
 }
 
-func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options, trans Transformation) ([]byte, error) {
+func (e *GoImage) TransformGIF(img *imagefile.ImageFile, options *Options, trans Transformation) ([]byte, error) {
 	first, err := gif.Decode(bytes.NewReader(img.Source))
 
 	if err != nil {
@@ -126,7 +126,7 @@ func (e *GoImageEngine) TransformGIF(img *imagefile.ImageFile, options *Options,
 	return buf.Bytes(), nil
 }
 
-func (e *GoImageEngine) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Resize)
 
@@ -146,15 +146,15 @@ func (e *GoImageEngine) Resize(img *imagefile.ImageFile, options *Options) ([]by
 	return e.transform(image, options, imaging.Resize)
 }
 
-func (e *GoImageEngine) transform(img image.Image, options *Options, trans Transformation) ([]byte, error) {
+func (e *GoImage) transform(img image.Image, options *Options, trans Transformation) ([]byte, error) {
 	return e.ToBytes(scale(img, options, trans), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Source(img *imagefile.ImageFile) (image.Image, error) {
+func (e *GoImage) Source(img *imagefile.ImageFile) (image.Image, error) {
 	return decode(bytes.NewReader(img.Source))
 }
 
-func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
@@ -172,7 +172,7 @@ func (e *GoImageEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]by
 	return e.ToBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
 
 	if err != nil {
@@ -190,7 +190,7 @@ func (e *GoImageEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte
 	return e.ToBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
 
@@ -210,7 +210,7 @@ func (e *GoImageEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([
 	return e.transform(image, options, imaging.Thumbnail)
 }
 
-func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
 
@@ -230,7 +230,7 @@ func (e *GoImageEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte,
 	return e.transform(image, options, imaging.Fit)
 }
 
-func (e *GoImageEngine) ToBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
+func (e *GoImage) ToBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
 	var err error

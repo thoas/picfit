@@ -7,63 +7,97 @@ import (
 	"github.com/discordapp/lilliput"
 	"github.com/pkg/errors"
 
+	"github.com/thoas/picfit/engine/config"
 	imagefile "github.com/thoas/picfit/image"
 )
 
-type LilliputEngine struct {
-	MaxBufferSize int
+type Lilliput struct {
+	MaxBufferSize   int
+	ImageBufferSize int
+	EncodeOptions   map[int]int
 }
 
-func NewLilliputEngine(maxBufferSize int) *LilliputEngine {
-	if maxBufferSize > 0 {
-		return &LilliputEngine{MaxBufferSize: maxBufferSize}
+func NewLilliput(cfg config.Config) *Lilliput {
+	maxBufferSize := config.DefaultMaxBufferSize
+	if cfg.MaxBufferSize != 0 {
+		maxBufferSize = cfg.MaxBufferSize
 	}
-	return &LilliputEngine{MaxBufferSize: 8192}
+
+	imageBufferSize := config.DefaultImageBufferSize
+	if cfg.ImageBufferSize != 0 {
+		imageBufferSize = cfg.ImageBufferSize
+	}
+
+	jpegQuality := config.DefaultQuality
+	if cfg.JpegQuality != 0 {
+		jpegQuality = cfg.JpegQuality
+	}
+
+	webpQuality := config.DefaultQuality
+	if cfg.WebpQuality != 0 {
+		webpQuality = cfg.WebpQuality
+	}
+
+	pngCompression := config.DefaultPngCompression
+	if cfg.PngCompression != 0 {
+		pngCompression = cfg.PngCompression
+	}
+
+	return &Lilliput{
+		MaxBufferSize:   maxBufferSize,
+		ImageBufferSize: imageBufferSize,
+		EncodeOptions: map[int]int{
+			lilliput.JpegQuality:    jpegQuality,
+			lilliput.PngCompression: pngCompression,
+			lilliput.WebpQuality:    webpQuality,
+		}}
 }
 
 // Resize resizes the image to the specified width and height and
 // returns the transformed image. If one of width or height is 0,
 // the image aspect ratio is preserved.
-func (e *LilliputEngine) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
 		FileType:             img.FilenameExt(),
 		Width:                options.Width,
 		Height:               options.Height,
 		NormalizeOrientation: true,
 		ResizeMethod:         lilliput.ImageOpsResize,
+		EncodeOptions:        e.EncodeOptions,
 	}
 
 	return e.transform(img, opts, options.Upscale)
 }
 
-func (e *LilliputEngine) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
-func (e *LilliputEngine) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
 // Thumbnail scales the image up or down using the specified resample filter, crops it
 // to the specified width and hight and returns the transformed image.
-func (e *LilliputEngine) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	opts := &lilliput.ImageOptions{
 		FileType:             img.FilenameExt(),
 		Width:                options.Width,
 		Height:               options.Height,
 		NormalizeOrientation: true,
 		// Lilliput ImageOpsFit is a thumbnail operation
-		ResizeMethod: lilliput.ImageOpsFit,
+		ResizeMethod:  lilliput.ImageOpsFit,
+		EncodeOptions: e.EncodeOptions,
 	}
 
 	return e.transform(img, opts, options.Upscale)
 }
 
-func (e *LilliputEngine) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
-func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.ImageOptions, upscale bool) ([]byte, error) {
+func (e *Lilliput) transform(img *imagefile.ImageFile, options *lilliput.ImageOptions, upscale bool) ([]byte, error) {
 	decoder, err := lilliput.NewDecoder(img.Source)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -109,11 +143,11 @@ func (e *LilliputEngine) transform(img *imagefile.ImageFile, options *lilliput.I
 	ops := lilliput.NewImageOps(e.MaxBufferSize)
 	defer ops.Close()
 
-	outputImg := make([]byte, 50*1024*1024)
+	outputImg := make([]byte, e.ImageBufferSize)
 
 	return ops.Transform(decoder, options, outputImg)
 }
 
-func (e *LilliputEngine) String() string {
+func (e *Lilliput) String() string {
 	return "lilliput"
 }
