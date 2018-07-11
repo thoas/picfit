@@ -617,6 +617,20 @@ func TestDummyApplication(t *testing.T) {
 				},
 				ContentType: "image/jpeg",
 			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&op=op:resize+w:100+h:50&op=op:rotate+deg:90", u.String()),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 100,
+				},
+			},
+			&TestRequest{
+				URL: fmt.Sprintf("http://example.com/display?url=%s&op=resize&w=100&h=50&op=op:rotate+deg:90", u.String()),
+				Dimensions: &Dimension{
+					Width:  50,
+					Height: 100,
+				},
+			},
 		}
 
 		for _, test := range tests {
