@@ -51,38 +51,14 @@ func ParametersParser() gin.HandlerFunc {
 // KeyParser injects an unique key from query parameters
 func KeyParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var queryString map[string]interface{}
+		queryString := make(map[string]interface{})
 
 		params, exists := c.Get("parameters")
-
 		if exists {
 			queryString = params.(map[string]interface{})
-		} else {
-			queryString = make(map[string]interface{})
 		}
 
-		for k, v := range c.Request.URL.Query() {
-			if k != "op" {
-				queryString[k] = v[0]
-				continue
-			}
-
-			var operations []string
-			op, ok := queryString[k].(string)
-			if ok {
-				operations = append(operations, op)
-			}
-			operations = append(operations, v...)
-
-			if len(operations) > 1 {
-				queryString[k] = operations
-			} else if len(operations) == 1 {
-				queryString[k] = operations[0]
-			}
-		}
-
-		sorted := util.SortMapString(queryString)
-
+		sorted := setParamsFromURLValues(queryString, c.Request.URL.Query())
 		delete(sorted, sigParamName)
 
 		serialized := hash.Serialize(sorted)
@@ -94,6 +70,30 @@ func KeyParser() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func setParamsFromURLValues(params map[string]interface{}, values url.Values) map[string]interface{} {
+	for k, v := range values {
+		if k != "op" {
+			params[k] = v[0]
+			continue
+		}
+
+		var operations []string
+		op, ok := params[k].(string)
+		if ok {
+			operations = append(operations, op)
+		}
+		operations = append(operations, v...)
+
+		if len(operations) > 1 {
+			params[k] = operations
+		} else if len(operations) == 1 {
+			params[k] = operations[0]
+		}
+	}
+
+	return util.SortMapString(params)
 }
 
 // URLParser extracts the url query string and add a url.URL to the context
