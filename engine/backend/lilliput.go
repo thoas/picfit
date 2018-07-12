@@ -152,6 +152,6 @@ func (e *Lilliput) String() string {
 	return "lilliput"
 }
 
-func (e *LilliputEngine) Flat(background *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *Lilliput) Flat(background *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }

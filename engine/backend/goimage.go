@@ -278,7 +278,7 @@ func encode(w io.Writer, img image.Image, format imaging.Format, quality int) er
 	return err
 }
 
-func (e *GoImageEngine) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		return e.TransformGIF(backgroundFile, options, imaging.Resize)
 	}
@@ -302,7 +302,7 @@ func (e *GoImageEngine) Flat(backgroundFile *imagefile.ImageFile, options *Optio
 	fg := foreground(images, options)
 	draw.Draw(bg, fg.Bounds(), fg, image.Point{}, draw.Over)
 
-	return e.transform(bg, options, imaging.Resize)
+	return e.ToBytes(bg, options.Format, options.Quality)
 }
 
 func foreground(images []image.Image, options *Options) *image.RGBA {

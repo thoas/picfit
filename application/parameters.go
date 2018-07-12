@@ -170,7 +170,7 @@ func newEngineOperationFromQuery(e *engine.Engine, s gostorages.Storage, op stri
 func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var (
 		err     error
-		quality int
+		quality = e.DefaultQuality
 		upscale = defaultUpscale
 		height  = defaultHeight
 		width   = defaultWidth
@@ -187,8 +187,6 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 		if quality > 100 {
 			return nil, fmt.Errorf("Quality should be <= 100")
 		}
-	} else {
-		quality = e.DefaultQuality
 	}
 
 	position, ok := qs["pos"].(string)

@@ -37,10 +37,15 @@ func New(cfg config.Config) *Engine {
 		b = append(b, &backend.GoImage{})
 	}
 
+	quality := config.DefaultQuality
+	if cfg.Quality != 0 {
+		quality = cfg.Quality
+	}
+
 	return &Engine{
 		DefaultFormat:  cfg.DefaultFormat,
 		Format:         cfg.Format,
-		DefaultQuality: cfg.Quality,
+		DefaultQuality: quality,
 		backends:       b,
 	}
 }
@@ -93,6 +98,8 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 		return b.Thumbnail(img, options)
 	case Fit:
 		return b.Fit(img, options)
+	case Flat:
+		return b.Flat(img, options)
 	default:
 		return nil, fmt.Errorf("Operation not found for %s", operation)
 	}
