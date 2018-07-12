@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/thoas/picfit/engine/backend"
+	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
 )
 
@@ -22,18 +23,18 @@ const (
 )
 
 // New initializes an Engine
-func New(cfg Config) *Engine {
+func New(cfg config.Config) *Engine {
 	var b []backend.Backend
 	for i := range cfg.Backends {
 		if cfg.Backends[i] == lilliputEngineType {
-			b = append(b, backend.NewLilliputEngine(cfg.MaxBufferSize))
+			b = append(b, backend.NewLilliput(cfg))
 		} else if cfg.Backends[i] == goEngineType {
-			b = append(b, &backend.GoImageEngine{})
+			b = append(b, &backend.GoImage{})
 		}
 	}
 
 	if len(b) == 0 {
-		b = append(b, &backend.GoImageEngine{})
+		b = append(b, &backend.GoImage{})
 	}
 
 	return &Engine{

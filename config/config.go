@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/thoas/picfit/constants"
-	"github.com/thoas/picfit/engine"
+	engineconfig "github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/kvstore"
 	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/storage"
@@ -31,6 +31,7 @@ type Options struct {
 	EnableUpload     bool          `mapstructure:"enable_upload"`
 	EnableDelete     bool          `mapstructure:"enable_delete"`
 	EnableStats      bool          `mapstructure:"enable_stats"`
+	EnableHealth     bool          `mapstructure:"enable_health"`
 	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent string        `mapstructure:"default_user_agent"`
 	MimetypeDetector string        `mapstructure:"mimetype_detector"`
@@ -45,7 +46,7 @@ type Sentry struct {
 // Config is a struct to load configuration flags
 type Config struct {
 	Debug          bool
-	Engine         *engine.Config
+	Engine         *engineconfig.Config
 	Sentry         *Sentry
 	SecretKey      string `mapstructure:"secret_key"`
 	Shard          *Shard
@@ -62,10 +63,15 @@ type Config struct {
 // DefaultConfig returns a default config instance
 func DefaultConfig() *Config {
 	return &Config{
-		Engine: &engine.Config{
-			DefaultFormat: DefaultFormat,
-			Quality:       DefaultQuality,
-			Format:        "",
+		Engine: &engineconfig.Config{
+			DefaultFormat:   DefaultFormat,
+			Quality:         DefaultQuality,
+			JpegQuality:     DefaultQuality,
+			WebpQuality:     DefaultQuality,
+			PngCompression:  engineconfig.DefaultPngCompression,
+			MaxBufferSize:   engineconfig.DefaultMaxBufferSize,
+			ImageBufferSize: engineconfig.DefaultImageBufferSize,
+			Format:          "",
 		},
 		Options: &Options{
 			EnableDelete:     false,
@@ -94,6 +100,7 @@ func load(content string, isPath bool) (*Config, error) {
 	viper.SetDefault("shard", defaultConfig.Shard)
 	viper.SetDefault("port", defaultConfig.Port)
 	viper.SetDefault("kvstore", defaultConfig.KVStore)
+	viper.SetDefault("engine", defaultConfig.Engine)
 	viper.SetEnvPrefix("picfit")
 
 	var err error
@@ -117,10 +124,6 @@ func load(content string, isPath bool) (*Config, error) {
 	err = viper.Unmarshal(&config)
 	if err != nil {
 		return nil, err
-	}
-
-	if config.Engine == nil {
-		config.Engine = defaultConfig.Engine
 	}
 
 	return config, nil

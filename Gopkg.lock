@@ -298,6 +298,12 @@
   version = "v0.3.0"
 
 [[projects]]
+  name = "gopkg.in/fukata/golang-stats-api-handler.v1"
+  packages = ["."]
+  revision = "90f0b59102629831cc109845475a8d77043412ec"
+  version = "v1.0.0"
+
+[[projects]]
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
   revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
@@ -325,6 +331,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a84f8f0eb9a31ed5617f2b14b315f0a05665cdd4951b490ca304ab8bf9d58443"
+  inputs-digest = "f8aabb9e62bc4c0dc3fcc9f74d3880cb6c8d96025fb50610b02d0fc02dec281d"
   solver-name = "gps-cdcl"
   solver-version = 1

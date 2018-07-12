@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	api "gopkg.in/fukata/golang-stats-api-handler.v1"
+
 	raven "github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
@@ -100,8 +102,14 @@ func (s *HTTPServer) Init(opts Options) error {
 			}
 		}())
 
-		router.GET("/stats", func(c *gin.Context) {
+		router.GET("/sys/stats", func(c *gin.Context) {
 			c.JSON(http.StatusOK, s.Data())
+		})
+	}
+
+	if s.config.Options.EnableHealth {
+		router.GET("/sys/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, api.GetStats())
 		})
 	}
 
