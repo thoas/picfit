@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strconv"
+	"strings"
 
 	"github.com/disintegration/imaging"
 
@@ -31,19 +33,34 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 	bg := image.NewRGBA(image.Rectangle{image.Point{}, background.Bounds().Size()})
 	draw.Draw(bg, background.Bounds(), background, image.Point{}, draw.Src)
 
-	fg := drawForeground(foregroundImage(bg, options.Color), images, options)
-	draw.Draw(bg, fg.Bounds(), fg, image.ZP, draw.Over)
+	dst := positionForeground(bg, options.Position)
+	fg := foregroundImage(dst)
+	fg = drawForeground(fg, images, options)
+
+	draw.Draw(bg, dst, fg, dst.Min, draw.Src)
 
 	return e.ToBytes(bg, options.Format, options.Quality)
 }
 
-func foregroundImage(bg image.Image, c string) *image.RGBA {
+func positionForeground(bg image.Image, pos string) image.Rectangle {
+	ratios := []int{100, 100, 100, 100}
+	val := strings.Split(pos, ".")
+	for i := range val {
+		if i+1 > len(ratios) {
+			break
+		}
+		ratios[i], _ = strconv.Atoi(val[i])
+	}
 	b := bg.Bounds()
-	fg := image.NewRGBA(image.Rectangle{
-		image.Point{0, 0},
-		image.Point{b.Dx(), b.Dy() / 6},
-	})
-	draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
+	return image.Rectangle{
+		image.Point{b.Dx() * ratios[0], b.Dy() * ratios[1]}.Div(100),
+		image.Point{b.Dx() * ratios[2], b.Dy() * ratios[3]}.Div(100),
+	}
+}
+
+func foregroundImage(rec image.Rectangle) *image.RGBA {
+	fg := image.NewRGBA(rec)
+	draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, fg.Bounds().Min, draw.Src)
 	return fg
 }
 
@@ -55,9 +72,14 @@ func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *ima
 
 	// resize images for foreground
 	b := fg.Bounds()
-	opts := &Options{
-		Width:  b.Dx() / n,
-		Height: b.Dy() / n,
+	opts := &Options{Upscale: true}
+
+	if b.Dx() > b.Dy() {
+		opts.Width = b.Dx() / n
+		opts.Height = b.Dy()
+	} else {
+		opts.Width = b.Dx()
+		opts.Height = b.Dy() / n
 	}
 
 	for i := range images {
@@ -72,7 +94,7 @@ func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *ima
 }
 
 func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
-	position := image.Point{0, 0}
+	position := fg.Bounds().Min
 	totalHeight := fg.Bounds().Dy()
 	for i := range images {
 		bounds := images[i].Bounds()
@@ -81,14 +103,14 @@ func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options
 			position,
 			position.Add(image.Point{bounds.Dx(), bounds.Dy()}),
 		}
-		draw.Draw(fg, r, images[i], image.Point{}, draw.Over)
+		draw.Draw(fg, r, images[i], bounds.Min, draw.Over)
 		position.X = position.X + bounds.Dx()
 	}
 	return fg
 }
 
 func foregroundVertical(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
-	position := image.Point{0, 0}
+	position := fg.Bounds().Min
 	cellHeight := fg.Bounds().Dy() / len(images)
 	for i := range images {
 		bounds := images[i].Bounds()
@@ -97,7 +119,7 @@ func foregroundVertical(fg *image.RGBA, images []image.Image, options *Options) 
 			position,
 			position.Add(image.Point{bounds.Dx(), bounds.Dy()}),
 		}
-		draw.Draw(fg, r, images[i], image.Point{}, draw.Over)
+		draw.Draw(fg, r, images[i], bounds.Min, draw.Over)
 		position.Y = position.Y + bounds.Dy()
 	}
 	return fg
