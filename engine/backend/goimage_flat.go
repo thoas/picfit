@@ -37,7 +37,7 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 	fg := foregroundImage(dst)
 	fg = drawForeground(fg, images, options)
 
-	draw.Draw(bg, dst, fg, dst.Min, draw.Src)
+	draw.Draw(bg, dst, fg, fg.Bounds().Min, draw.Src)
 
 	return e.ToBytes(bg, options.Format, options.Quality)
 }
@@ -59,7 +59,7 @@ func positionForeground(bg image.Image, pos string) image.Rectangle {
 }
 
 func foregroundImage(rec image.Rectangle) *image.RGBA {
-	fg := image.NewRGBA(rec)
+	fg := image.NewRGBA(image.Rectangle{image.ZP, rec.Size()})
 	draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, fg.Bounds().Min, draw.Src)
 	return fg
 }
@@ -96,15 +96,16 @@ func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *ima
 func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
 	position := fg.Bounds().Min
 	totalHeight := fg.Bounds().Dy()
+	cellWidth := fg.Bounds().Dx() / len(images)
 	for i := range images {
 		bounds := images[i].Bounds()
 		position.Y = (totalHeight - bounds.Dy()) / 2
+		position.X = fg.Bounds().Min.X + i*cellWidth + (cellWidth-bounds.Dx())/2
 		r := image.Rectangle{
 			position,
-			position.Add(image.Point{bounds.Dx(), bounds.Dy()}),
+			position.Add(fg.Bounds().Size()),
 		}
-		draw.Draw(fg, r, images[i], bounds.Min, draw.Over)
-		position.X = position.X + bounds.Dx()
+		draw.Draw(fg, r, images[i], bounds.Min, draw.Src)
 	}
 	return fg
 }
@@ -112,15 +113,16 @@ func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options
 func foregroundVertical(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
 	position := fg.Bounds().Min
 	cellHeight := fg.Bounds().Dy() / len(images)
+	totalWidth := fg.Bounds().Dx()
 	for i := range images {
 		bounds := images[i].Bounds()
-		position.Y = (cellHeight - bounds.Dy()) / 2
+		position.Y = fg.Bounds().Min.Y + i*cellHeight + (cellHeight-bounds.Dy())/2
+		position.X = fg.Bounds().Min.X + (totalWidth-bounds.Dx())/2
 		r := image.Rectangle{
 			position,
 			position.Add(image.Point{bounds.Dx(), bounds.Dy()}),
 		}
 		draw.Draw(fg, r, images[i], bounds.Min, draw.Over)
-		position.Y = position.Y + bounds.Dy()
 	}
 	return fg
 }
