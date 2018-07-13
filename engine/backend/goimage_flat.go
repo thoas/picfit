@@ -105,7 +105,7 @@ func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options
 			position,
 			position.Add(fg.Bounds().Size()),
 		}
-		draw.Draw(fg, r, images[i], bounds.Min, draw.Src)
+		draw.Draw(fg, r, images[i], bounds.Min, draw.Over)
 	}
 	return fg
 }
