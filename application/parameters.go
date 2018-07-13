@@ -194,6 +194,8 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 	}
 
+	color, _ := qs["color"].(string)
+
 	if deg, ok := qs["deg"].(string); ok {
 		degree, err = strconv.Atoi(deg)
 		if err != nil {
@@ -229,5 +231,6 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 		Position: position,
 		Quality:  quality,
 		Degree:   degree,
+		Color:    color,
 	}, nil
 }

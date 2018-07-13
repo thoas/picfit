@@ -34,10 +34,10 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 	draw.Draw(bg, background.Bounds(), background, image.Point{}, draw.Src)
 
 	dst := positionForeground(bg, options.Position)
-	fg := foregroundImage(dst)
+	fg := foregroundImage(dst, options.Color)
 	fg = drawForeground(fg, images, options)
 
-	draw.Draw(bg, dst, fg, fg.Bounds().Min, draw.Src)
+	draw.Draw(bg, dst, fg, fg.Bounds().Min, draw.Over)
 
 	return e.ToBytes(bg, options.Format, options.Quality)
 }
@@ -58,9 +58,11 @@ func positionForeground(bg image.Image, pos string) image.Rectangle {
 	}
 }
 
-func foregroundImage(rec image.Rectangle) *image.RGBA {
+func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 	fg := image.NewRGBA(image.Rectangle{image.ZP, rec.Size()})
-	draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, fg.Bounds().Min, draw.Src)
+	if c != "" {
+		draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, fg.Bounds().Min, draw.Src)
+	}
 	return fg
 }
 
