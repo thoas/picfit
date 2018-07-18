@@ -2,12 +2,12 @@ package backend
 
 import (
 	"image"
-	"image/color"
 	"image/draw"
 	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
+	colorful "github.com/lucasb-eyer/go-colorful"
 
 	imagefile "github.com/thoas/picfit/image"
 )
@@ -60,9 +60,16 @@ func positionForeground(bg image.Image, pos string) image.Rectangle {
 
 func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 	fg := image.NewRGBA(image.Rectangle{image.ZP, rec.Size()})
-	if c != "" {
-		draw.Draw(fg, fg.Bounds(), &image.Uniform{color.White}, fg.Bounds().Min, draw.Src)
+	if c == "" {
+		return fg
 	}
+
+	col, err := colorful.Hex(c)
+	if err != nil {
+		return fg
+	}
+
+	draw.Draw(fg, fg.Bounds(), &image.Uniform{col}, fg.Bounds().Min, draw.Src)
 	return fg
 }
 
