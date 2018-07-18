@@ -434,6 +434,18 @@ Rotate rotates the image to the desired degree and returns the transformed image
 You have to pass the ``rotate`` value to the ``op`` parameter
 to use this operation.
 
+Flat
+----
+
+Flat draws a given image on the image resulted by the previous operation.
+Flat can be used only with the [multiple operation system].
+
+- **path** - the foreground image path
+- **color** - the foreground color
+- **pos** - the destination rectange
+
+In order to undersand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
+
 Methods
 =======
 
