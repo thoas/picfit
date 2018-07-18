@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
 	"strconv"
@@ -64,7 +65,7 @@ func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 		return fg
 	}
 
-	col, err := colorful.Hex(c)
+	col, err := colorful.Hex(fmt.Sprintf("#%s", c))
 	if err != nil {
 		return fg
 	}
