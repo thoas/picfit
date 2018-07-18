@@ -10,7 +10,7 @@ in the URL.
 
 * `path`: the foreground image, can be multiple.
 * `pos`: the foreground destination as a rectangle
-* `color`: the foreground color, default is transparent.
+* `color`: the foreground color in Hex (without `#`), default is transparent.
 
 
 ## Usage

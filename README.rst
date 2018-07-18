@@ -441,7 +441,7 @@ Flat draws a given image on the image resulted by the previous operation.
 Flat can be used only with the [multiple operation system].
 
 - **path** - the foreground image path
-- **color** - the foreground color
+- **color** - the foreground color in Hex (without ``#``), default is transparent
 - **pos** - the destination rectange
 
 In order to undersand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
