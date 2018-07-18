@@ -536,8 +536,8 @@ Each options of the operation must be described with subparameters separed by
 Example of a resize followed by a rotation:
 
 ::
-    <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize
-        &op=op:rotate+deg:180"
+
+    <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize&op=op:rotate+deg:180"
 
 Security
 ========
