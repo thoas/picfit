@@ -120,6 +120,9 @@ func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[stri
 	}
 
 	options, err := newBackendOptions(e, operation, qs)
+	if err != nil {
+		return nil, err
+	}
 	options.Format = formats[format]
 
 	for i := range e.backends {
