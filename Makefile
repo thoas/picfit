@@ -26,7 +26,7 @@ serve:
 	@modd
 
 unit:
-	@(go list ./... | grep -v "vendor/" | xargs -n1 go test -mod=vendor -v -cover)
+	go test -mod=vendor -v -cover ./...
 
 all: picfit
 	@(mkdir -p $(BIN_DIR))
