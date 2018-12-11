@@ -2,7 +2,6 @@ module github.com/thoas/picfit
 
 require (
 	github.com/BurntSushi/toml v0.3.0 // indirect
-	github.com/Sirupsen/logrus v1.0.4
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a
@@ -31,7 +30,7 @@ require (
 	github.com/pkg/errors v0.8.0
 	github.com/rubenfonseca/fastimage v0.0.0-20170112075114-7e006a27a95b
 	github.com/rwcarlsen/goexif v0.0.0-20180518182100-8d986c03457a
-	github.com/sirupsen/logrus v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.2.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/spf13/afero v1.0.2 // indirect
@@ -54,9 +53,7 @@ require (
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
 	golang.org/x/sys v0.0.0-20181211161752-7da8ea5c8182 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/redis.v5 v5.2.9 // indirect

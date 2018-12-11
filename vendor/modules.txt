@@ -1,7 +1,5 @@
 # github.com/BurntSushi/toml v0.3.0
 github.com/BurntSushi/toml
-# github.com/Sirupsen/logrus v1.0.4
-github.com/Sirupsen/logrus
 # github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261
 github.com/certifi/gocertifi
 # github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
@@ -46,6 +44,8 @@ github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
 # github.com/json-iterator/go v0.0.0-20180223002031-0ac74bba4a81
 github.com/json-iterator/go
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/lucasb-eyer/go-colorful v0.0.0-20180709185858-c7842319cf3a
 github.com/lucasb-eyer/go-colorful
 # github.com/magiconair/properties v1.7.6
@@ -70,6 +70,8 @@ github.com/rubenfonseca/fastimage
 # github.com/rwcarlsen/goexif v0.0.0-20180518182100-8d986c03457a
 github.com/rwcarlsen/goexif/exif
 github.com/rwcarlsen/goexif/tiff
+# github.com/sirupsen/logrus v1.2.0
+github.com/sirupsen/logrus
 # github.com/spf13/afero v1.0.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
