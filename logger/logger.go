@@ -1,6 +1,6 @@
 package logger
 
-import "github.com/Sirupsen/logrus"
+import "github.com/sirupsen/logrus"
 
 // Logger provides a leveled-logging interface.
 type Logger interface {

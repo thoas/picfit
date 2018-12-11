@@ -1,8 +1,5 @@
-language: go
-before_install:
-  - go get golang.org/x/tools/cmd/cover
 services:
+  - docker
   - redis-server
-go:
-  - "1.10"
-script: make test
+
+script: make ci
