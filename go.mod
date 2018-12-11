@@ -5,11 +5,11 @@ require (
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a
-	github.com/disintegration/imaging v1.3.0
+	github.com/disintegration/imaging v1.5.0
 	github.com/djherbis/times v1.0.1 // indirect
 	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
 	github.com/franela/goreq v0.0.0-20141202194629-6d074b8384a4
-	github.com/getsentry/raven-go v0.0.0-20180121060056-563b81fc02b7
+	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
 	github.com/gin-gonic/gin v0.0.0-20180223010933-5d3f30cfc81f

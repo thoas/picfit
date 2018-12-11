@@ -10,7 +10,7 @@ github.com/cstockton/go-conv/internal/refutil
 github.com/davecgh/go-spew/spew
 # github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a
 github.com/discordapp/lilliput
-# github.com/disintegration/imaging v1.3.0
+# github.com/disintegration/imaging v1.5.0
 github.com/disintegration/imaging
 # github.com/djherbis/times v1.0.1
 github.com/djherbis/times
@@ -18,7 +18,7 @@ github.com/djherbis/times
 github.com/franela/goreq
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/getsentry/raven-go v0.0.0-20180121060056-563b81fc02b7
+# github.com/getsentry/raven-go v0.2.0
 github.com/getsentry/raven-go
 # github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7
 github.com/gin-contrib/sse

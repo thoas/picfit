@@ -10,6 +10,8 @@ github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a h1:8gF+vS7jFVW
 github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a/go.mod h1:Y/qDoFO8ipcjzUjR+FB3NrX2oJcp6EXQBLuW0nws2IY=
 github.com/disintegration/imaging v1.3.0 h1:AihaBC+K3RHP7JL8scqq2GgNQhVzMcCYh7gJbAjAvpo=
 github.com/disintegration/imaging v1.3.0/go.mod h1:9B/deIUIrliYkyMTuXJd6OUFLcrZ2tf+3Qlwnaf/CjU=
+github.com/disintegration/imaging v1.5.0 h1:uYqUhwNmLU4K1FN44vhqS4TZJRAA4RhBINgbQlKyGi0=
+github.com/disintegration/imaging v1.5.0/go.mod h1:9B/deIUIrliYkyMTuXJd6OUFLcrZ2tf+3Qlwnaf/CjU=
 github.com/djherbis/times v1.0.1 h1:nVRrVOTFd2r0C7wCQdIDz/fqt8yO0EEzr5f6aXfXiS0=
 github.com/djherbis/times v1.0.1/go.mod h1:CGMZlo255K5r4Yw0b9RRfFQpM2y7uOmxg4jm9HsaVf8=
 github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 h1:eouy4stZdUKn7n98c1+rdUTxWMg+jvhP+oHt0K8fiug=
@@ -20,6 +22,8 @@ github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/getsentry/raven-go v0.0.0-20180121060056-563b81fc02b7 h1:ELaJ1cjF2nEJeIlHXahGme22yG7TK+3jB6IGCq0Cdrc=
 github.com/getsentry/raven-go v0.0.0-20180121060056-563b81fc02b7/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
+github.com/getsentry/raven-go v0.2.0 h1:no+xWJRb5ZI7eE8TWgIq1jLulQiIoLG0IfYxv5JYMGs=
+github.com/getsentry/raven-go v0.2.0/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
 github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 h1:AzN37oI0cOS+cougNAV9szl6CVoj2RYwzS3DpUQNtlY=
 github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
 github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52 h1:evaGerpO/GTS3ShoV3u693a1zuoZkpplBYCcYpw6zZk=
