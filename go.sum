@@ -30,6 +30,8 @@ github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52 h1:evaGerpO/GTS3
 github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52/go.mod h1:iqneQ2Df3omzIVTkIfn7c1acsVnMGiSLn4XF5Blh3Yg=
 github.com/gin-gonic/gin v0.0.0-20180223010933-5d3f30cfc81f h1:hdivfSFZyNeJRZJ68/U+Mrj+V79oBE1FUv3KNw/rt6o=
 github.com/gin-gonic/gin v0.0.0-20180223010933-5d3f30cfc81f/go.mod h1:7cKuhb5qV2ggCFctp2fJQ+ErvciLZrIeoOSOm6mUr7Y=
+github.com/gin-gonic/gin v1.3.0 h1:kCmZyPklC0gVdL728E6Aj20uYBJV93nj/TkwBTKhFbs=
+github.com/gin-gonic/gin v1.3.0/go.mod h1:7cKuhb5qV2ggCFctp2fJQ+ErvciLZrIeoOSOm6mUr7Y=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e h1:JKmoR8x90Iww1ks85zJ1lfDGgIiMDuIptTOhJq+zKyg=

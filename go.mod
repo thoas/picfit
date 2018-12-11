@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
-	github.com/gin-gonic/gin v0.0.0-20180223010933-5d3f30cfc81f
+	github.com/gin-gonic/gin v1.3.0
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
 	github.com/json-iterator/go v0.0.0-20180223002031-0ac74bba4a81 // indirect
