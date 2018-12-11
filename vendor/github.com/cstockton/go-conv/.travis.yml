@@ -1,0 +1,23 @@
+language: go
+
+os:
+  - linux
+  - osx
+
+go:
+  - tip
+  - 1.8
+  - 1.7
+
+matrix:
+  allow_failures:
+    - go: tip
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

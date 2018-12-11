@@ -12,6 +12,8 @@ BIN = $(BIN_DIR)/picfit
 SSL_DIR = $(ROOT_DIR)/ssl
 APP_DIR = /go/src/github.com/thoas/picfit
 
+export GO111MODULE=on
+
 test: unit
 
 vendorize:
@@ -32,7 +34,7 @@ all: picfit
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
-	@(go build -o $(BIN_DIR)/picfit)
+	@(go build -mod=vendor -o $(BIN_DIR)/picfit)
 	@(echo "-> picfit binary created")
 
 format:
@@ -42,7 +44,7 @@ format:
 build-static:
 	@(echo "-> Creating statically linked binary...")
 	mkdir -p $(BIN_DIR)
-	go build -ldflags "\
+	go build -mod=vendor -ldflags "\
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
