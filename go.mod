@@ -48,9 +48,11 @@ require (
 	github.com/urfave/cli v0.0.0-20180221051631-446f49e78f79
 	github.com/v2pro/plz v0.0.0-20180222231523-10fc95fad322 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
+	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/image v0.0.0-20171214225156-12117c17ca67
 	golang.org/x/net v0.0.0-20181207154023-610586996380 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
+	golang.org/x/sys v0.0.0-20181211161752-7da8ea5c8182 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
