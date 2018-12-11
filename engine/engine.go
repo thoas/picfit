@@ -2,31 +2,12 @@ package engine
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
-
-	"github.com/disintegration/imaging"
-	"github.com/imdario/mergo"
 
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
 )
-
-var defaultParams = map[string]string{
-	"upscale": "1",
-	"h":       "0",
-	"w":       "0",
-	"deg":     "90",
-}
-
-var formats = map[string]imaging.Format{
-	"jpeg": imaging.JPEG,
-	"jpg":  imaging.JPEG,
-	"png":  imaging.PNG,
-	"gif":  imaging.GIF,
-	"bmp":  imaging.BMP,
-}
 
 type Engine struct {
 	DefaultFormat  string
@@ -73,69 +54,29 @@ func (e Engine) String() string {
 	return strings.Join(backendNames, " ")
 }
 
-func (e Engine) Transform(img *image.ImageFile, operation Operation, qs map[string]string) (*image.ImageFile, error) {
-	err := mergo.Merge(&qs, defaultParams)
-
-	if err != nil {
-		return nil, err
-	}
-
-	format, ok := qs["fmt"]
-	filepath := img.Filepath
-
-	if ok {
-		if _, ok := ContentTypes[format]; !ok {
-			return nil, fmt.Errorf("Unknown format %s", format)
-		}
-
-	}
-
-	if format == "" && e.Format != "" {
-		format = e.Format
-	}
-
-	if format == "" {
-		format = img.Format()
-	}
-
-	if format == "" {
-		format = e.DefaultFormat
-	}
-
-	if format != img.Format() {
-		index := len(filepath) - len(img.Format())
-
-		filepath = filepath[:index] + format
-
-		if contentType, ok := ContentTypes[format]; ok {
-			img.Headers["Content-Type"] = contentType
+func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation) (*image.ImageFile, error) {
+	var (
+		err       error
+		processed []byte
+		source    = output.Source
+	)
+	for i := range operations {
+		for j := range e.backends {
+			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
+			if err == nil {
+				output.Source = processed
+				break
+			}
+			if err != backend.MethodNotImplementedError {
+				return nil, err
+			}
 		}
 	}
 
-	file := &image.ImageFile{
-		Source:   img.Source,
-		Key:      img.Key,
-		Headers:  img.Headers,
-		Filepath: filepath,
-	}
+	output.Source = source
+	output.Processed = processed
 
-	options, err := newBackendOptions(e, operation, qs)
-	if err != nil {
-		return nil, err
-	}
-	options.Format = formats[format]
-
-	for i := range e.backends {
-		file.Processed, err = operate(e.backends[i], img, operation, options)
-		if err == nil {
-			break
-		}
-		if err != backend.MethodNotImplementedError {
-			return nil, err
-		}
-	}
-
-	return file, err
+	return output, err
 }
 
 func operate(b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
@@ -155,56 +96,4 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 	default:
 		return nil, fmt.Errorf("Operation not found for %s", operation)
 	}
-}
-
-func newBackendOptions(e Engine, operation Operation, qs map[string]string) (*backend.Options, error) {
-	var quality int
-	q, ok := qs["q"]
-	if ok {
-		quality, err := strconv.Atoi(q)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if quality > 100 {
-			return nil, fmt.Errorf("Quality should be <= 100")
-		}
-	} else {
-		quality = e.DefaultQuality
-	}
-
-	position, ok := qs["pos"]
-	if !ok && operation == Flip {
-		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
-	}
-
-	degree, err := strconv.Atoi(qs["deg"])
-	if err != nil {
-		return nil, err
-	}
-
-	upscale, err := strconv.ParseBool(qs["upscale"])
-	if err != nil {
-		return nil, err
-	}
-
-	width, err := strconv.Atoi(qs["w"])
-	if err != nil {
-		return nil, err
-	}
-
-	height, err := strconv.Atoi(qs["h"])
-	if err != nil {
-		return nil, err
-	}
-
-	return &backend.Options{
-		Width:    width,
-		Height:   height,
-		Upscale:  upscale,
-		Position: position,
-		Quality:  quality,
-		Degree:   degree,
-	}, nil
 }

@@ -511,7 +511,7 @@ storage to your configuration file.
         "enable_upload": true
       }
     }
-    
+
 To work properly, the input field must be named "data"
 
 Test it with the excellent httpie_:
@@ -521,6 +521,23 @@ Test it with the excellent httpie_:
     http -f POST localhost:3000/upload data@myupload
 
 You will retrieve the uploaded image information in ``JSON`` format.
+
+Multiple operations
+===================
+
+Multiple operations can be done on the same image following a given order.
+
+First operation must be described as above then other operation are described in parameters ``op``.
+The order of ``op`` parameters is the order used.
+
+Each options of the operation must be described with subparameters separed by
+``:`` with the operation name as argument to ``op``.
+
+Example of a resize followed by a rotation:
+
+::
+
+    <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize&op=op:rotate+deg:180"
 
 Security
 ========
@@ -706,7 +723,7 @@ Stats
 
 The stats middleware is disabled by default, you can enable it your config.
 
-It will store various information about your web application (response time, status code count, etc.) 
+It will store various information about your web application (response time, status code count, etc.)
 
 ``config.json``
 
