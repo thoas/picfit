@@ -6,8 +6,11 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+	"github.com/ulule/gostorages"
+
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/engine/backend"
+	"github.com/thoas/picfit/errs"
 	"github.com/thoas/picfit/image"
 )
 
@@ -31,7 +34,8 @@ type Parameters struct {
 	Operations []engine.EngineOperation
 }
 
-func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
+// NewParameters returns Parameters for engine.
+func NewParameters(e *engine.Engine, s gostorages.Storage, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -101,7 +105,7 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 					return nil, err
 				}
 			} else {
-				engineOperation, err = newEngineOperationFromQuery(e, ops[i])
+				engineOperation, err = newEngineOperationFromQuery(e, s, ops[i])
 				if err != nil {
 					return nil, err
 				}
@@ -120,12 +124,17 @@ func NewParameters(e *engine.Engine, input *image.ImageFile, qs map[string]inter
 	}, nil
 }
 
-func newEngineOperationFromQuery(e *engine.Engine, op string) (*engine.EngineOperation, error) {
+func newEngineOperationFromQuery(e *engine.Engine, s gostorages.Storage, op string) (*engine.EngineOperation, error) {
 	params := make(map[string]interface{})
+	var imagePaths []string
 	for _, p := range strings.Split(op, " ") {
 		l := strings.Split(p, ":")
 		if len(l) > 1 {
-			params[l[0]] = l[1]
+			if l[0] == "path" {
+				imagePaths = append(imagePaths, l[1])
+			} else {
+				params[l[0]] = l[1]
+			}
 		}
 	}
 
@@ -140,6 +149,18 @@ func newEngineOperationFromQuery(e *engine.Engine, op string) (*engine.EngineOpe
 		return nil, err
 	}
 
+	for i := range imagePaths {
+		if !s.Exists(imagePaths[i]) {
+			return nil, errs.ErrFileNotExists
+		}
+
+		file, err := image.FromStorage(s, imagePaths[i])
+		if err != nil {
+			return nil, err
+		}
+		opts.Images = append(opts.Images, *file)
+	}
+
 	return &engine.EngineOperation{
 		Options:   opts,
 		Operation: operation,
@@ -149,7 +170,7 @@ func newEngineOperationFromQuery(e *engine.Engine, op string) (*engine.EngineOpe
 func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var (
 		err     error
-		quality int
+		quality = e.DefaultQuality
 		upscale = defaultUpscale
 		height  = defaultHeight
 		width   = defaultWidth
@@ -166,14 +187,14 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 		if quality > 100 {
 			return nil, fmt.Errorf("Quality should be <= 100")
 		}
-	} else {
-		quality = e.DefaultQuality
 	}
 
 	position, ok := qs["pos"].(string)
 	if !ok && operation == engine.Flip {
 		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 	}
+
+	color, _ := qs["color"].(string)
 
 	if deg, ok := qs["deg"].(string); ok {
 		degree, err = strconv.Atoi(deg)
@@ -210,5 +231,6 @@ func newBackendOptionsFromParameters(e *engine.Engine, operation engine.Operatio
 		Position: position,
 		Quality:  quality,
 		Degree:   degree,
+		Color:    color,
 	}, nil
 }

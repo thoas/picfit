@@ -107,15 +107,15 @@
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
-  name = "github.com/imdario/mergo"
-  packages = ["."]
-  revision = "6ce7536fed6623eff47b95768f858a0f8d1ac57b"
-
-[[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
   revision = "0ac74bba4a81211b28e32ef260c0f16ae41f1377"
   version = "1.1.1"
+
+[[projects]]
+  name = "github.com/lucasb-eyer/go-colorful"
+  packages = ["."]
+  revision = "c7842319cf3ac2eff253e8b3ebe15fcc56b6414a"
 
 [[projects]]
   name = "github.com/magiconair/properties"
@@ -331,6 +331,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8aabb9e62bc4c0dc3fcc9f74d3880cb6c8d96025fb50610b02d0fc02dec281d"
+  inputs-digest = "7510fd7021bc0b09307edb3ed5e34495556854b9eb9a5f29d06da3bca2fc87e1"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -10,7 +10,7 @@ import (
 
 func TestEngineOperationFromQuery(t *testing.T) {
 	op := "op:resize w:123 h:321 upscale:true pos:top q:99"
-	operation, err := newEngineOperationFromQuery(&engine.Engine{}, op)
+	operation, err := newEngineOperationFromQuery(&engine.Engine{}, nil, op)
 	assert.Nil(t, err)
 
 	assert.Equal(t, operation.Operation.String(), "resize")

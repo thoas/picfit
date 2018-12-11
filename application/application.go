@@ -256,13 +256,13 @@ func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) 
 	qs := c.MustGet("parameters").(map[string]interface{})
 
 	var err error
+	s := storage.SourceFromContext(c)
+
 	u, exists := c.Get("url")
 	if exists {
 		file, err = image.FromURL(u.(*url.URL), cfg.Options.DefaultUserAgent)
 	} else {
 		// URL provided we use http protocol to retrieve it
-		s := storage.SourceFromContext(c)
-
 		filepath = qs["path"].(string)
 		if !s.Exists(filepath) {
 			return nil, errs.ErrFileNotExists
@@ -275,7 +275,7 @@ func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) 
 	}
 
 	e := engine.FromContext(c)
-	parameters, err := NewParameters(e, file, qs)
+	parameters, err := NewParameters(e, s, file, qs)
 	if err != nil {
 		return nil, err
 	}
