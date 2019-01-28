@@ -88,7 +88,7 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 		}
 
 		for j := range backends {
-			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
+			processed, err = operate(backends[j], output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break
