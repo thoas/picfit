@@ -14,27 +14,39 @@ type Engine struct {
 	Format         string
 	DefaultQuality int
 
-	backends []backend.Backend
+	backends  []backend.Backend
+	mimetypes map[string]backend.Backend
 }
-
-const (
-	goEngineType       = "go"
-	lilliputEngineType = "lilliput"
-)
 
 // New initializes an Engine
 func New(cfg config.Config) *Engine {
-	var b []backend.Backend
-	for i := range cfg.Backends {
-		if cfg.Backends[i] == lilliputEngineType {
-			b = append(b, backend.NewLilliput(cfg))
-		} else if cfg.Backends[i] == goEngineType {
-			b = append(b, &backend.GoImage{})
-		}
-	}
+	var (
+		b         []backend.Backend
+		mimetypes = map[string]backend.Backend{}
+	)
 
-	if len(b) == 0 {
+	if cfg.Backends == nil {
 		b = append(b, &backend.GoImage{})
+	} else {
+		if cfg.Backends.Lilliput != nil {
+			back := backend.NewLilliput(cfg)
+
+			b = append(b, back)
+
+			for _, mimetype := range cfg.Backends.Lilliput.Mimetypes {
+				mimetypes[mimetype] = back
+			}
+		}
+
+		if cfg.Backends.GoImage != nil {
+			back := &backend.GoImage{}
+
+			b = append(b, back)
+
+			for _, mimetype := range cfg.Backends.GoImage.Mimetypes {
+				mimetypes[mimetype] = back
+			}
+		}
 	}
 
 	quality := config.DefaultQuality
@@ -47,13 +59,14 @@ func New(cfg config.Config) *Engine {
 		Format:         cfg.Format,
 		DefaultQuality: quality,
 		backends:       b,
+		mimetypes:      mimetypes,
 	}
 }
 
 func (e Engine) String() string {
-	backendNames := make([]string, len(e.backends))
-	for i := range e.backends {
-		backendNames[i] = e.backends[i].String()
+	backendNames := []string{}
+	for _, backend := range e.backends {
+		backendNames = append(backendNames, backend.String())
 	}
 
 	return strings.Join(backendNames, " ")
@@ -65,9 +78,17 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 		processed []byte
 		source    = output.Source
 	)
+
 	for i := range operations {
-		for j := range e.backends {
-			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
+		backends := e.backends
+
+		back, ok := e.mimetypes[output.ContentType()]
+		if ok {
+			backends = []backend.Backend{back}
+		}
+
+		for j := range backends {
+			processed, err = operate(backends[j], output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break
