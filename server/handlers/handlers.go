@@ -22,10 +22,15 @@ func StatsHandler(c *gin.Context) {
 }
 
 // Healthcheck displays an ok response for healthcheck
-func Healthcheck(uptime time.Time) func(c *gin.Context) {
+func Healthcheck(startedAt time.Time) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		now := time.Now().UTC()
+
+		uptime := now.Sub(startedAt)
+
 		c.JSON(http.StatusOK, gin.H{
-			"uptime":     uptime,
+			"started_at": startedAt.String(),
+			"uptime":     uptime.String(),
 			"status":     "Ok",
 			"version":    constants.Version,
 			"revision":   constants.Revision,
