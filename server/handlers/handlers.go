@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -21,14 +22,17 @@ func StatsHandler(c *gin.Context) {
 }
 
 // Healthcheck displays an ok response for healthcheck
-func Healthcheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":     "Ok",
-		"version":    constants.Version,
-		"revision":   constants.Revision,
-		"build_time": constants.BuildTime,
-		"compiler":   constants.Compiler,
-	})
+func Healthcheck(uptime time.Time) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"uptime":     uptime,
+			"status":     "Ok",
+			"version":    constants.Version,
+			"revision":   constants.Revision,
+			"build_time": constants.BuildTime,
+			"compiler":   constants.Compiler,
+		})
+	}
 }
 
 // Display displays and image using resizing parameters

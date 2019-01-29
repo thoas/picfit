@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
@@ -89,7 +90,7 @@ func (s *HTTPServer) Init(opts Options) error {
 		}))
 	}
 
-	router.GET("/healthcheck", handlers.Healthcheck)
+	router.GET("/healthcheck", handlers.Healthcheck(time.Now().UTC()))
 
 	if s.config.Options.EnableStats {
 		s := stats.New()
