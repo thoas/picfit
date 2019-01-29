@@ -9,6 +9,7 @@ import (
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
 	raven "github.com/getsentry/raven-go"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -138,6 +139,10 @@ func (s *HTTPServer) Init(opts Options) error {
 
 	if s.config.Options.EnableDelete {
 		router.DELETE("/*path", handlers.Delete)
+	}
+
+	if s.config.Options.EnablePprof {
+		pprof.Register(router)
 	}
 
 	s.Engine = router

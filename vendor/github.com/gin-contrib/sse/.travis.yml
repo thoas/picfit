@@ -1,12 +1,16 @@
 language: go
 sudo: false
 go:
-  - 1.6.4
-  - 1.7.4
-  - tip
+  - 1.6.x
+  - 1.7.x
+  - 1.8.x
+  - 1.9.x
+  - 1.10.x
+  - 1.11.x
+  - master
 
 git:
-  depth: 3
+  depth: 10
 
 script:
   - go test -v -covermode=count -coverprofile=coverage.out

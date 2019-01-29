@@ -28,6 +28,7 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
+	EnablePprof      bool          `mapstructure:"enable_pprof"`
 	EnableUpload     bool          `mapstructure:"enable_upload"`
 	EnableDelete     bool          `mapstructure:"enable_delete"`
 	EnableStats      bool          `mapstructure:"enable_stats"`
