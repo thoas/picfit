@@ -10,6 +10,7 @@ type StorageConfig struct {
 	AccessKeyID     string `mapstructure:"access_key_id"`
 	BucketName      string `mapstructure:"bucket_name"`
 	SecretAccessKey string `mapstructure:"secret_access_key"`
+	CacheControl    string `mapstructure:"cache_control"`
 }
 
 // Config is a struct to represent a section of storage (src, fst)
