@@ -3,6 +3,7 @@ package config
 type Backends struct {
 	Lilliput *Backend `mapstructure:"lilliput"`
 	GoImage  *Backend `mapstructure:"goimage"`
+	Vips     *Backend `mapstructure:"vips"`
 }
 
 type Backend struct {

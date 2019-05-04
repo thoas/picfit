@@ -28,6 +28,16 @@ func New(cfg config.Config) *Engine {
 	if cfg.Backends == nil {
 		b = append(b, &backend.GoImage{})
 	} else {
+		if cfg.Backends.Vips != nil {
+			back := backend.NewVips(cfg)
+
+			b = append(b, back)
+
+			for _, mimetype := range cfg.Backends.Vips.Mimetypes {
+				mimetypes[mimetype] = back
+			}
+		}
+
 		if cfg.Backends.Lilliput != nil {
 			back := backend.NewLilliput(cfg)
 
