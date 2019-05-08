@@ -155,3 +155,7 @@ func (e *Lilliput) String() string {
 func (e *Lilliput) Flat(background *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
+
+func (e *Lilliput) Fill(background *imagefile.ImageFile, options *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}

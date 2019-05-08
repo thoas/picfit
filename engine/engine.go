@@ -129,6 +129,8 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 		return b.Thumbnail(img, options)
 	case Fit:
 		return b.Fit(img, options)
+	case Fill:
+		return b.Fill(img, options)
 	case Flat:
 		return b.Flat(img, options)
 	default:

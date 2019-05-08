@@ -230,6 +230,30 @@ func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error
 	return e.transform(image, options, imaging.Fit)
 }
 
+func FillWrap(img image.Image, width int, height int, filter imaging.ResampleFilter) *image.NRGBA {
+	return imaging.Fill(img, width, height, imaging.Top, filter)
+}
+
+func (e *GoImage) Fill(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
+	image, err := e.Source(img)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return e.transform(image, options, FillWrap)
+}
+
 func (e *GoImage) ToBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
