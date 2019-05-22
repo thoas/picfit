@@ -36,6 +36,7 @@ func Healthcheck(startedAt time.Time) func(c *gin.Context) {
 			"revision":   constants.Revision,
 			"build_time": constants.BuildTime,
 			"compiler":   constants.Compiler,
+			"ip_address": c.ClientIP(),
 		})
 	}
 }
@@ -107,6 +108,7 @@ func Get(c *gin.Context) {
 		"filename": file.Filename(),
 		"path":     file.Path(),
 		"url":      file.URL(),
+		"key":      file.Key,
 	})
 }
 
