@@ -4,6 +4,7 @@ require (
 	github.com/BurntSushi/toml v0.3.0 // indirect
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
+	github.com/davecgh/go-spew v1.1.1
 	github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a
 	github.com/disintegration/imaging v1.5.0
 	github.com/djherbis/times v1.0.1 // indirect
@@ -17,8 +18,10 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/lucasb-eyer/go-colorful v0.0.0-20180709185858-c7842319cf3a
 	github.com/magiconair/properties v1.7.6 // indirect
+	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mholt/binding v0.0.0-20170917043419-f4f58459f5f7
 	github.com/mitchellh/goamz v0.0.0-20141203194042-e99a7300be96
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238 // indirect
@@ -42,7 +45,7 @@ require (
 	github.com/thoas/gokvstores v0.0.0-20171206131017-29c8500276db
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ugorji/go/codec v0.0.0-20190128213124-ee1426cffec0 // indirect
-	github.com/ulule/gokvstores v0.0.0-20180224164417-06854a16f68d
+	github.com/ulule/gokvstores v0.0.0-20190522151009-afe9350f1dcd
 	github.com/ulule/gostorages v0.0.0-20171002152004-e2229fc2f445
 	github.com/urfave/cli v0.0.0-20180221051631-446f49e78f79
 	github.com/v2pro/plz v0.0.0-20180222231523-10fc95fad322 // indirect
@@ -50,7 +53,6 @@ require (
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/image v0.0.0-20171214225156-12117c17ca67
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
-	golang.org/x/sys v0.0.0-20190129075346-302c3dd5f1cc // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0

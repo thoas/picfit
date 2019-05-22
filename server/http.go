@@ -20,6 +20,13 @@ import (
 	"github.com/thoas/stats"
 )
 
+type handlerMethod func(string, ...gin.HandlerFunc) gin.IRoutes
+type endpoint struct {
+	pattern string
+	handler gin.HandlerFunc
+	method  handlerMethod
+}
+
 type HTTPServer struct {
 	*gin.Engine
 	config config.Config
@@ -40,7 +47,26 @@ func NewHTTPServer(cfg config.Config, opt ...Option) (*HTTPServer, error) {
 }
 
 func (s *HTTPServer) Init(opts Options) error {
-	router := gin.New()
+	var (
+		router    = gin.New()
+		endpoints = []endpoint{
+			{
+				pattern: "redirect",
+				handler: handlers.Redirect,
+				method:  router.GET,
+			},
+			{
+				pattern: "display",
+				handler: handlers.Display,
+				method:  router.GET,
+			},
+			{
+				pattern: "get",
+				handler: handlers.Get,
+				method:  router.GET,
+			},
+		}
+	)
 
 	if s.config.Debug {
 		router.Use(gin.Recovery())
@@ -50,15 +76,8 @@ func (s *HTTPServer) Init(opts Options) error {
 		router.Use(gin.Logger())
 	}
 
-	methods := map[string]gin.HandlerFunc{
-		"redirect": handlers.Redirect,
-		"display":  handlers.Display,
-		"get":      handlers.Get,
-	}
-
 	if s.config.Sentry != nil {
 		client, err := raven.NewClient(s.config.Sentry.DSN, s.config.Sentry.Tags)
-
 		if err != nil {
 			return err
 		}
@@ -120,7 +139,7 @@ func (s *HTTPServer) Init(opts Options) error {
 			})
 	}
 
-	for name, view := range methods {
+	for _, e := range endpoints {
 		views := []gin.HandlerFunc{
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
@@ -128,13 +147,13 @@ func (s *HTTPServer) Init(opts Options) error {
 			middleware.URLParser(s.config.Options.MimetypeDetector),
 			middleware.OperationParser(),
 			middleware.RestrictSizes(s.config.Options.AllowedSizes),
-			view,
+			e.handler,
 		}
 
-		router.GET(fmt.Sprintf("/%s", name), views...)
+		e.method(fmt.Sprintf("/%s", e.pattern), views...)
 
 		if s.config.Storage != nil && s.config.Storage.Source != nil {
-			router.GET(fmt.Sprintf("/%s/*parameters", name), views...)
+			e.method(fmt.Sprintf("/%s/*parameters", e.pattern), views...)
 		}
 	}
 
@@ -145,8 +164,10 @@ func (s *HTTPServer) Init(opts Options) error {
 	}
 
 	if s.config.Options.EnableDelete {
-		router.DELETE("/*path",
+		router.DELETE("/*parameters",
 			restrictIPAddresses,
+			middleware.ParametersParser(),
+			middleware.KeyParser(),
 			handlers.Delete)
 	}
 

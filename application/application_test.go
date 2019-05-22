@@ -261,7 +261,8 @@ func TestDeleteHandler(t *testing.T) {
 	"debug": true,
 	"port": 3001,
 	"options": {
-		"enable_delete": true
+		"enable_delete": true,
+		"enable_cascade_delete": true
 	},
 	"kvstore": {"type": "cache"},
 	"storage": {

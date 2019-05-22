@@ -25,13 +25,14 @@ func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 		return storage, storage, nil
 	}
 
-	var sourceStorage gostorages.Storage
-	var destinationStorage gostorages.Storage
-	var err error
+	var (
+		sourceStorage      gostorages.Storage
+		destinationStorage gostorages.Storage
+		err                error
+	)
 
 	if cfg.Source != nil {
 		sourceStorage, err = newStorage(cfg.Source)
-
 		if err != nil {
 			return nil, nil, err
 		}
@@ -42,7 +43,6 @@ func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 	}
 
 	destinationStorage, err = newStorage(cfg.Destination)
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -64,7 +64,6 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 		cfg.Type = s3StorageType
 
 		storage, err := newStorage(cfg)
-
 		if err != nil {
 			return nil, err
 		}
@@ -72,13 +71,11 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 		return &HTTPStorage{storage, ""}, nil
 	case s3StorageType:
 		acl, ok := gostorages.ACLs[cfg.ACL]
-
 		if !ok {
 			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
 		}
 
 		region, ok := aws.Regions[cfg.Region]
-
 		if !ok {
 			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
 		}
@@ -98,7 +95,6 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 		cfg.Type = fsStorageType
 
 		storage, err := newStorage(cfg)
-
 		if err != nil {
 			return nil, err
 		}

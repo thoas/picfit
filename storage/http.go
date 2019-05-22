@@ -32,13 +32,11 @@ var HeaderKeys = []string{
 // Open retrieves a gostorages File from a filepath
 func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 	u, err := url.Parse(s.URL(filepath))
-
 	if err != nil {
 		return nil, err
 	}
 
 	content, err := s.OpenFromURL(u)
-
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +50,6 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 		Uri:       u.String(),
 		UserAgent: s.UserAgent,
 	}.Do()
-
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +76,6 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 		Method:    "GET",
 		UserAgent: s.UserAgent,
 	}.Do()
-
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +94,6 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 // Headers returns headers from a filepath
 func (s *HTTPStorage) Headers(filepath string) (map[string]string, error) {
 	u, err := url.Parse(s.URL(filepath))
-
 	if err != nil {
 		return nil, err
 	}
@@ -109,13 +104,11 @@ func (s *HTTPStorage) Headers(filepath string) (map[string]string, error) {
 // ModifiedTime returns the modified time from a filepath
 func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 	headers, err := s.Headers(filepath)
-
 	if err != nil {
 		return time.Time{}, err
 	}
 
 	lastModified, ok := headers["Last-Modified"]
-
 	if !ok {
 		return time.Time{}, fmt.Errorf("Last-Modified header not found")
 	}
