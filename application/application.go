@@ -128,7 +128,7 @@ func Delete(ctx context.Context, filepath string) error {
 	if !exists {
 		l.Infof("Children key %s does not exist for parent %s", childrenKey, parentKey)
 
-		return errs.ErrKeyNotExists
+		return nil
 	}
 
 	// Get the list of items to cleanup.
