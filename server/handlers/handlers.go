@@ -124,3 +124,10 @@ func Redirect(c *gin.Context) {
 
 	c.Redirect(http.StatusMovedPermanently, file.URL())
 }
+
+func Pprof(h http.HandlerFunc) gin.HandlerFunc {
+	handler := http.HandlerFunc(h)
+	return func(c *gin.Context) {
+		handler.ServeHTTP(c.Writer, c.Request)
+	}
+}

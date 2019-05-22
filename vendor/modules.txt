@@ -20,8 +20,6 @@ github.com/franela/goreq
 github.com/fsnotify/fsnotify
 # github.com/getsentry/raven-go v0.2.0
 github.com/getsentry/raven-go
-# github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
-github.com/gin-contrib/pprof
 # github.com/gin-contrib/sse v0.0.0-20190125020943-a7658810eb74
 github.com/gin-contrib/sse
 # github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
@@ -91,6 +89,8 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
+# github.com/thoas/go-funk v0.4.0
+github.com/thoas/go-funk
 # github.com/thoas/gokvstores v0.0.0-20171206131017-29c8500276db
 github.com/thoas/gokvstores
 # github.com/thoas/stats v0.0.0-20160726120248-152b5d051953

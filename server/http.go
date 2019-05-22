@@ -3,13 +3,13 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"strconv"
 	"time"
 
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
 	raven "github.com/getsentry/raven-go"
-	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
@@ -93,6 +93,8 @@ func (s *HTTPServer) Init(opts Options) error {
 
 	router.GET("/healthcheck", handlers.Healthcheck(time.Now().UTC()))
 
+	restrictIPAddresses := middleware.RestrictIPAddresses(s.config.Options.AllowedIPAddresses)
+
 	if s.config.Options.EnableStats {
 		s := stats.New()
 
@@ -110,9 +112,12 @@ func (s *HTTPServer) Init(opts Options) error {
 	}
 
 	if s.config.Options.EnableHealth {
-		router.GET("/sys/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, api.GetStats())
-		})
+		router.GET("/sys/health",
+			restrictIPAddresses,
+			func(c *gin.Context) {
+				c.JSON(http.StatusOK,
+					api.GetStats())
+			})
 	}
 
 	for name, view := range methods {
@@ -134,15 +139,54 @@ func (s *HTTPServer) Init(opts Options) error {
 	}
 
 	if s.config.Options.EnableUpload {
-		router.POST("/upload", handlers.Upload)
+		router.POST("/upload",
+			restrictIPAddresses,
+			handlers.Upload)
 	}
 
 	if s.config.Options.EnableDelete {
-		router.DELETE("/*path", handlers.Delete)
+		router.DELETE("/*path",
+			restrictIPAddresses,
+			handlers.Delete)
 	}
 
 	if s.config.Options.EnablePprof {
-		pprof.Register(router)
+		prefixRouter := router.Group("/debug/pprof")
+		{
+			prefixRouter.GET("/",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Index))
+			prefixRouter.GET("/cmdline",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Cmdline))
+			prefixRouter.GET("/profile",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Profile))
+			prefixRouter.POST("/symbol",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Symbol))
+			prefixRouter.GET("/symbol",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Symbol))
+			prefixRouter.GET("/trace",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Trace))
+			prefixRouter.GET("/block",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Handler("block").ServeHTTP))
+			prefixRouter.GET("/goroutine",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Handler("goroutine").ServeHTTP))
+			prefixRouter.GET("/heap",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Handler("heap").ServeHTTP))
+			prefixRouter.GET("/mutex",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Handler("mutex").ServeHTTP))
+			prefixRouter.GET("/threadcreate",
+				restrictIPAddresses,
+				handlers.Pprof(pprof.Handler("threadcreate").ServeHTTP))
+		}
 	}
 
 	s.Engine = router

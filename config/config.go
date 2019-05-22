@@ -28,14 +28,15 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	EnablePprof      bool          `mapstructure:"enable_pprof"`
-	EnableUpload     bool          `mapstructure:"enable_upload"`
-	EnableDelete     bool          `mapstructure:"enable_delete"`
-	EnableStats      bool          `mapstructure:"enable_stats"`
-	EnableHealth     bool          `mapstructure:"enable_health"`
-	AllowedSizes     []AllowedSize `mapstructure:"allowed_sizes"`
-	DefaultUserAgent string        `mapstructure:"default_user_agent"`
-	MimetypeDetector string        `mapstructure:"mimetype_detector"`
+	AllowedIPAddresses []string      `mapstructure:"allowed_ip_addresses"`
+	EnablePprof        bool          `mapstructure:"enable_pprof"`
+	EnableUpload       bool          `mapstructure:"enable_upload"`
+	EnableDelete       bool          `mapstructure:"enable_delete"`
+	EnableStats        bool          `mapstructure:"enable_stats"`
+	EnableHealth       bool          `mapstructure:"enable_health"`
+	AllowedSizes       []AllowedSize `mapstructure:"allowed_sizes"`
+	DefaultUserAgent   string        `mapstructure:"default_user_agent"`
+	MimetypeDetector   string        `mapstructure:"mimetype_detector"`
 }
 
 // Sentry is a struct to configure sentry using a dsn

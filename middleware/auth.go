@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/thoas/go-funk"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/signature"
 )
@@ -16,6 +17,20 @@ func Security(secretKey string) gin.HandlerFunc {
 		if secretKey != "" {
 			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]interface{})) {
 				c.String(http.StatusUnauthorized, "Invalid signature")
+				c.Abort()
+				return
+			}
+		}
+
+		c.Next()
+	}
+}
+
+func RestrictIPAddresses(ipAddresses []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if len(ipAddresses) > 0 {
+			if !funk.InStrings(ipAddresses, c.ClientIP()) {
+				c.String(http.StatusUnauthorized, "Endpoint restricted")
 				c.Abort()
 				return
 			}

@@ -10,7 +10,7 @@ require (
 	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
 	github.com/franela/goreq v0.0.0-20141202194629-6d074b8384a4
 	github.com/getsentry/raven-go v0.2.0
-	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d
+	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d // indirect
 	github.com/gin-contrib/sse v0.0.0-20190125020943-a7658810eb74 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
 	github.com/gin-gonic/gin v1.3.0
@@ -38,6 +38,7 @@ require (
 	github.com/spf13/pflag v1.0.0 // indirect
 	github.com/spf13/viper v0.0.0-20160806160649-346299ea79e4
 	github.com/stretchr/testify v1.3.0
+	github.com/thoas/go-funk v0.4.0
 	github.com/thoas/gokvstores v0.0.0-20171206131017-29c8500276db
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ugorji/go/codec v0.0.0-20190128213124-ee1426cffec0 // indirect
