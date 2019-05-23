@@ -74,7 +74,6 @@ func (e *GoImage) String() string {
 
 func (e *GoImage) TransformGIF(img *imagefile.ImageFile, options *Options, trans Transformation) ([]byte, error) {
 	first, err := gif.Decode(bytes.NewReader(img.Source))
-
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +85,6 @@ func (e *GoImage) TransformGIF(img *imagefile.ImageFile, options *Options, trans
 	}
 
 	g, err := gif.DecodeAll(bytes.NewReader(img.Source))
-
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +116,6 @@ func (e *GoImage) TransformGIF(img *imagefile.ImageFile, options *Options, trans
 	buf := bytes.Buffer{}
 
 	err = gif.EncodeAll(&buf, g)
-
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +126,6 @@ func (e *GoImage) TransformGIF(img *imagefile.ImageFile, options *Options, trans
 func (e *GoImage) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Resize)
-
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +134,6 @@ func (e *GoImage) Resize(img *imagefile.ImageFile, options *Options) ([]byte, er
 	}
 
 	image, err := e.Source(img)
-
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +151,6 @@ func (e *GoImage) Source(img *imagefile.ImageFile) (image.Image, error) {
 
 func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
-
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +158,6 @@ func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, er
 	deg := options.Degree
 
 	transform, ok := rotateTransformations[deg]
-
 	if !ok {
 		return nil, fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
 	}
@@ -174,7 +167,6 @@ func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, er
 
 func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.Source(img)
-
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +174,6 @@ func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, erro
 	pos := options.Position
 
 	transform, ok := flipTransformations[pos]
-
 	if !ok {
 		return nil, fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
 	}
@@ -193,7 +184,6 @@ func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, erro
 func (e *GoImage) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
-
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +192,6 @@ func (e *GoImage) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte,
 	}
 
 	image, err := e.Source(img)
-
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +202,6 @@ func (e *GoImage) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte,
 func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
-
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +210,6 @@ func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error
 	}
 
 	image, err := e.Source(img)
-
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +223,6 @@ func (e *GoImage) ToBytes(img image.Image, format imaging.Format, quality int) (
 	var err error
 
 	err = encode(buf, img, format, quality)
-
 	if err != nil {
 		return nil, err
 	}

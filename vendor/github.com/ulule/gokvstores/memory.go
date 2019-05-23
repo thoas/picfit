@@ -68,6 +68,14 @@ func (c *MemoryStore) SetMap(key string, value map[string]interface{}) error {
 	return nil
 }
 
+// SetMaps sets the given maps.
+func (c *MemoryStore) SetMaps(maps map[string]map[string]interface{}) error {
+	for k, v := range maps {
+		c.SetMap(k, v)
+	}
+	return nil
+}
+
 // DeleteMap removes the specified fields from the map stored at key.
 func (c *MemoryStore) DeleteMap(key string, fields ...string) error {
 	m, err := c.GetMap(key)

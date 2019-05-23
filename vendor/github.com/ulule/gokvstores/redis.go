@@ -175,8 +175,8 @@ func (r *RedisStore) GetSlice(key string) ([]interface{}, error) {
 	}
 
 	newValues := make([]interface{}, len(values))
-	for _, v := range values {
-		newValues = append(newValues, v)
+	for i := range values {
+		newValues[i] = values[i]
 	}
 
 	return newValues, nil
@@ -351,6 +351,18 @@ func (r *RedisStore) GetMaps(keys []string) (map[string]map[string]interface{}, 
 	}
 
 	return newValues, nil
+}
+
+// SetMaps sets the given maps.
+func (r *RedisStore) SetMaps(maps map[string]map[string]interface{}) error {
+	_, err := r.Pipeline(func(r *RedisStore) error {
+		for k, v := range maps {
+			r.SetMap(k, v)
+		}
+		return nil
+
+	})
+	return err
 }
 
 // Pipeline returns Redis pipeline

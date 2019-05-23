@@ -30,6 +30,9 @@ type KVStore interface {
 	// SetMap sets map for the given key.
 	SetMap(key string, value map[string]interface{}) error
 
+	// SetMaps sets the given maps.
+	SetMaps(maps map[string]map[string]interface{}) error
+
 	// DeleteMap removes the specified fields from the map stored at key.
 	DeleteMap(key string, fields ...string) error
 

@@ -8,6 +8,7 @@ import (
 
 	conv "github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
@@ -55,14 +56,13 @@ func Load(cfg *config.Config) (context.Context, error) {
 
 // Store stores an image file with the defined filepath
 func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
-	l := logger.FromContext(ctx)
-
-	cfg := config.FromContext(ctx)
-
-	k := kvstore.FromContext(ctx)
+	var (
+		l   = logger.FromContext(ctx)
+		cfg = config.FromContext(ctx)
+		k   = kvstore.FromContext(ctx)
+	)
 
 	err := i.Save()
-
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,6 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	l.Infof("Save thumbnail %s to storage", i.Filepath)
 
 	err = k.Set(i.Key, i.Filepath)
-
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	l.Infof("Save key %s => %s to kvstore", i.Key, i.Filepath)
 
 	// Write children info only when we actually want to be able to delete things.
-	if cfg.Options.EnableDelete {
+	if cfg.Options.EnableCascadeDelete {
 		parentKey := hash.Tokey(filepath)
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
@@ -94,13 +93,52 @@ func Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	return nil
 }
 
+// DeleteChild remove a child from kvstore and storage
+func DeleteChild(ctx context.Context, key string) error {
+	var (
+		k     = kvstore.FromContext(ctx)
+		store = storage.DestinationFromContext(ctx)
+		l     = logger.FromContext(ctx)
+	)
+
+	// Now, every child is a hash which points to a key/value pair in
+	// KVStore which in turn points to a file in dst storage.
+	dstfileRaw, err := k.Get(key)
+	if err != nil {
+		return errors.Wrapf(err, "unable to retrieve key %s", key)
+	}
+
+	if dstfileRaw != nil {
+		dstfile, err := conv.String(dstfileRaw)
+		if err != nil {
+			return errors.Wrapf(err, "unable to cast %v to string", dstfileRaw)
+		}
+
+		// And try to delete it all.
+		err = store.Delete(dstfile)
+		if err != nil {
+			return errors.Wrapf(err, "unable to delete %s on storage", dstfile)
+		}
+	}
+
+	err = k.Delete(key)
+	if err != nil {
+		return errors.Wrapf(err, "unable to delete key %s", key)
+	}
+
+	l.Infof("Deleting child %s", key)
+
+	return nil
+}
+
 // Delete removes a file from kvstore and storage
 func Delete(ctx context.Context, filepath string) error {
-	k := kvstore.FromContext(ctx)
+	var (
+		k = kvstore.FromContext(ctx)
+		l = logger.FromContext(ctx)
+	)
 
-	l := logger.FromContext(ctx)
-
-	l.Infof("Deleting source storage file: %s", filepath)
+	l.Infof("Deleting %s on source storage", filepath)
 
 	sourceStorage := storage.SourceFromContext(ctx)
 
@@ -111,9 +149,8 @@ func Delete(ctx context.Context, filepath string) error {
 	}
 
 	err := sourceStorage.Delete(filepath)
-
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to delete %s on source storage", filepath)
 	}
 
 	parentKey := hash.Tokey(filepath)
@@ -122,7 +159,7 @@ func Delete(ctx context.Context, filepath string) error {
 
 	exists, err := k.Exists(childrenKey)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to verify if %s exists", childrenKey)
 	}
 
 	if !exists {
@@ -134,7 +171,7 @@ func Delete(ctx context.Context, filepath string) error {
 	// Get the list of items to cleanup.
 	children, err := k.GetSlice(childrenKey)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to retrieve children set %s", childrenKey)
 	}
 
 	if children == nil {
@@ -143,7 +180,7 @@ func Delete(ctx context.Context, filepath string) error {
 		return nil
 	}
 
-	store := storage.DestinationFromContext(ctx)
+	l.Infof("Children %v from parent %s will be deleted", children, parentKey)
 
 	for _, s := range children {
 		key, err := conv.String(s)
@@ -151,41 +188,18 @@ func Delete(ctx context.Context, filepath string) error {
 			return err
 		}
 
-		// Now, every child is a hash which points to a key/value pair in
-		// KVStore which in turn points to a file in dst storage.
-		dstfileRaw, err := k.Get(key)
+		err = DeleteChild(ctx, key)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "unable to delete child %s", key)
 		}
-
-		dstfile, err := conv.String(dstfileRaw)
-		if err != nil {
-			return err
-		}
-
-		// And try to delete it all.
-		err = store.Delete(dstfile)
-
-		if err != nil {
-			return err
-		}
-
-		err = k.Delete(key)
-
-		if err != nil {
-			return err
-		}
-
-		l.Infof("Deleting child %s and its entry %s", dstfile, key)
 	}
 
 	// Delete them right away, we don't care about them anymore.
 	l.Infof("Deleting children set %s", childrenKey)
 
 	err = k.Delete(childrenKey)
-
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to delete key %s", childrenKey)
 	}
 
 	return nil
@@ -243,8 +257,13 @@ func fileFromStorage(c *gin.Context, l logger.Logger, storeKey string, imageKey 
 }
 
 func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) (*image.ImageFile, error) {
-	cfg := config.FromContext(c)
-	destStorage := storage.DestinationFromContext(c)
+	var (
+		cfg         = config.FromContext(c)
+		destStorage = storage.DestinationFromContext(c)
+		s           = storage.SourceFromContext(c)
+		filepath    string
+		err         error
+	)
 
 	file := &image.ImageFile{
 		Key:     storeKey,
@@ -252,11 +271,7 @@ func processImage(c *gin.Context, l logger.Logger, storeKey string, async bool) 
 		Headers: map[string]string{},
 	}
 
-	var filepath string
 	qs := c.MustGet("parameters").(map[string]interface{})
-
-	var err error
-	s := storage.SourceFromContext(c)
 
 	u, exists := c.Get("url")
 	if exists {

@@ -14,13 +14,11 @@ func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
 	storage := &storage.HTTPStorage{UserAgent: userAgent}
 
 	content, err := storage.OpenFromURL(u)
-
 	if err != nil {
 		return nil, err
 	}
 
 	headers, err := storage.HeadersFromURL(u)
-
 	if err != nil {
 		return nil, err
 	}
@@ -38,19 +36,13 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 	var err error
 
 	f, err := storage.Open(filepath)
-
 	if err != nil {
 		return nil, err
 	}
 
 	defer f.Close()
 
-	if err != nil {
-		return nil, err
-	}
-
 	modifiedTime, err := storage.ModifiedTime(filepath)
-
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +60,6 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 	}
 
 	buf, err := ioutil.ReadAll(f)
-
 	if err != nil {
 		return nil, err
 	}

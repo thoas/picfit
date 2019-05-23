@@ -44,7 +44,6 @@ func Healthcheck(startedAt time.Time) func(c *gin.Context) {
 // Display displays and image using resizing parameters
 func Display(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, true, true)
-
 	if err != nil {
 		errs.Handle(err, c.Writer)
 
@@ -83,7 +82,22 @@ func Upload(c *gin.Context) {
 
 // Delete deletes a file from storages
 func Delete(c *gin.Context) {
-	err := application.Delete(c, c.Param("path")[1:])
+	var (
+		err         error
+		path        = c.Param("parameters")
+		key, exists = c.Get("key")
+	)
+
+	if path == "" && !exists {
+		c.String(http.StatusUnprocessableEntity, "no path or key provided")
+		return
+	}
+
+	if !exists {
+		err = application.Delete(c, path[1:])
+	} else {
+		err = application.DeleteChild(c, key.(string))
+	}
 
 	if err != nil {
 		errs.Handle(err, c.Writer)
@@ -97,7 +111,6 @@ func Delete(c *gin.Context) {
 // Get generates an image synchronously and return its information from storages
 func Get(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, false, false)
-
 	if err != nil {
 		errs.Handle(err, c.Writer)
 
@@ -115,7 +128,6 @@ func Get(c *gin.Context) {
 // Redirect redirects to the image using base url from storage
 func Redirect(c *gin.Context) {
 	file, err := application.ImageFileFromContext(c, false, false)
-
 	if err != nil {
 		errs.Handle(err, c.Writer)
 

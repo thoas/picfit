@@ -26,16 +26,19 @@ func ParametersParser() gin.HandlerFunc {
 
 		if result != "" {
 			match := parametersReg.FindStringSubmatch(result)
+			if match != nil {
+				parameters := make(map[string]interface{})
 
-			parameters := make(map[string]interface{})
+				results := parametersReg.SubexpNames()
 
-			for i, name := range parametersReg.SubexpNames() {
-				if i != 0 && match[i] != "" {
-					parameters[name] = match[i]
+				for i, name := range results {
+					if i != 0 && match[i] != "" {
+						parameters[name] = match[i]
+					}
 				}
-			}
 
-			c.Set("parameters", parameters)
+				c.Set("parameters", parameters)
+			}
 		} else {
 			if c.Query("url") == "" && c.Query("path") == "" {
 				c.String(http.StatusBadRequest, "Request should contains parameters or query string")
@@ -61,12 +64,14 @@ func KeyParser() gin.HandlerFunc {
 		sorted := setParamsFromURLValues(queryString, c.Request.URL.Query())
 		delete(sorted, sigParamName)
 
-		serialized := hash.Serialize(sorted)
+		if len(sorted) != 0 {
+			serialized := hash.Serialize(sorted)
 
-		key := hash.Tokey(serialized)
+			key := hash.Tokey(serialized)
 
-		c.Set("key", key)
-		c.Set("parameters", queryString)
+			c.Set("key", key)
+			c.Set("parameters", queryString)
+		}
 
 		c.Next()
 	}

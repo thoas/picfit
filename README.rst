@@ -714,10 +714,55 @@ By default the format will be chosen in this order:
 Options
 =======
 
+Deletion
+--------
+
+Deletion is disabled by default for security reason, you can enable
+it in your config:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_delete": true
+      }
+    }
+
+You will be able to delete root image and its children, for example if you upload an image with
+the file path `/foo/bar.png`, you can delete the main image on stockage by sending the following HTTP request:
+
+
+::
+
+   DELETE https://localhost:3001/foo/bar.png
+
+or delete a child:
+
+::
+
+   DELETE https://localhost:3001/display/thumbnail/100x100/foo/bar.png
+
+If you want to delete the main image and cascade its children, you can enable it in your config:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_delete": true,
+        "enable_cascade_delete": true
+      }
+    }
+
+when a new image will be processed, it will be linked to the main image and stored in the kvstore.
+
 Upload
 ------
 
-The upload handler is disabled by default for security reason, you can enable
+Upload is disabled by default for security reason, you can enable
 it in your config:
 
 ``config.json``
@@ -733,9 +778,7 @@ it in your config:
 Stats
 -----
 
-The stats middleware is disabled by default, you can enable it your config.
-
-It will store various information about your web application (response time, status code count, etc.)
+Stats are disabled by default, you can enable them in your config.
 
 ``config.json``
 
@@ -746,6 +789,68 @@ It will store various information about your web application (response time, sta
         "enable_stats": true
       }
     }
+
+It will store various information about your web application (response time, status code count, etc.).
+
+To access these information, you can visit: http://localhost:3001/sys/stats
+
+Health
+------
+
+Health is disabled by default, you can enable it in your config.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_stats": true
+      }
+    }
+
+It will show various internal information about the Go runtime (memory, allocations, etc.).
+
+To access these information, you can visit: http://localhost:3001/sys/health
+
+Profiler
+--------
+
+Profiler is disabled by default, you can enable it in your config.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "enable_pprof": true
+      }
+    }
+
+It will start pprof_ then use the pprof tool to look at the heap profile:
+
+::
+
+   go tool pprof http://localhost:3001/debug/pprof/heap
+
+Or to look at a 30-second CPU profile:
+
+::
+
+   go tool pprof http://localhost:3001/debug/pprof/profile
+
+Or to look at the goroutine blocking profile, after calling runtime.SetBlockProfileRate in your program:
+
+::
+
+   go tool pprof http://localhost:3001/debug/pprof/block
+
+Or to collect a 5-second execution trace:
+
+::
+
+   wget http://localhost:3001/debug/pprof/trace?seconds=5
 
 Logging
 -------
@@ -788,6 +893,24 @@ preserve aspect ratio.
           {"width": 1920, "height": 1080},
           {"width": 720, "height": 480},
           {"width": 480}
+        ]
+      }
+    }
+
+IP Address restriction
+----------------------
+
+You can restrict access to upload, stats, health, delete and pprof endpoints by enabling
+restriction in your config:
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "allowed_ip_addresses": [
+          "127.0.0.1"
         ]
       }
     }
@@ -846,3 +969,4 @@ Thanks to these beautiful projects.
 .. _sentry: https://github.com/getsentry/sentry
 .. _raven: https://github.com/getsentry/raven-go
 .. _httpie: https://github.com/jakubroztocil/httpie
+.. _pprof: https://blog.golang.org/profiling-go-programs
