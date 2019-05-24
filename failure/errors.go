@@ -16,4 +16,7 @@ var (
 
 	// ErrUnprocessable is an error when parameters are missing
 	ErrUnprocessable = errors.New("Unprocessable request, missing parameters")
+
+	// ErrFileNotModified is an error when file is not modified
+	ErrFileNotModified = errors.New("File not modified")
 )

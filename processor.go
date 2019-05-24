@@ -206,6 +206,22 @@ func (p *Processor) Delete(filepath string) error {
 func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*image.ImageFile, error) {
 	storeKey := c.MustGet("key").(string)
 
+	modifiedSince := c.Request.Header.Get("If-Modified-Since")
+	if modifiedSince != "" {
+		exists, err := p.KVStore.Exists(storeKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if exists {
+			p.logger.Info("Key already exists on kvstore, file not modified",
+				logger.String("key", storeKey),
+				logger.String("modified-since", modifiedSince))
+
+			return nil, failure.ErrFileNotModified
+		}
+	}
+
 	// Image from the KVStore found
 	filepathRaw, err := p.KVStore.Get(storeKey)
 	if err != nil {
