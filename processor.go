@@ -204,10 +204,13 @@ func (p *Processor) Delete(filepath string) error {
 
 // ProcessContext processes a gin.Context generates and retrieves an ImageFile
 func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*image.ImageFile, error) {
-	storeKey := c.MustGet("key").(string)
+	var (
+		storeKey = c.MustGet("key").(string)
+		force    = c.Query("force")
+	)
 
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
-	if modifiedSince != "" {
+	if modifiedSince != "" && force == "" {
 		exists, err := p.KVStore.Exists(storeKey)
 		if err != nil {
 			return nil, err
@@ -222,29 +225,34 @@ func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*imag
 		}
 	}
 
-	// Image from the KVStore found
-	filepathRaw, err := p.KVStore.Get(storeKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if filepathRaw != nil {
-		filepath, err := conv.String(filepathRaw)
+	if force == "" {
+		// Image from the KVStore found
+		filepathRaw, err := p.KVStore.Get(storeKey)
 		if err != nil {
 			return nil, err
 		}
 
-		p.logger.Info("Key found in kvstore",
-			logger.String("key", storeKey),
-			logger.String("filepath", filepath))
+		if filepathRaw != nil {
+			filepath, err := conv.String(filepathRaw)
+			if err != nil {
+				return nil, err
+			}
 
-		return p.fileFromStorage(storeKey, filepath, load)
+			p.logger.Info("Key found in kvstore",
+				logger.String("key", storeKey),
+				logger.String("filepath", filepath))
+
+			return p.fileFromStorage(storeKey, filepath, load)
+		}
+
+		// Image not found from the KVStore, we need to process it
+		// URL available in Query String
+		p.logger.Info("Key not found in kvstore",
+			logger.String("key", storeKey))
+	} else {
+		p.logger.Info("Force activated, key will be re-processed",
+			logger.String("key", storeKey))
 	}
-
-	// Image not found from the KVStore, we need to process it
-	// URL available in Query String
-	p.logger.Info("Key not found in kvstore",
-		logger.String("key", storeKey))
 
 	return p.processImage(c, storeKey, async)
 }
