@@ -1,10 +1,9 @@
 package server
 
 import (
-	"context"
 	"net/http"
 
-	"github.com/thoas/picfit/application"
+	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 )
 
@@ -12,10 +11,13 @@ type Server struct {
 	http *HTTPServer
 }
 
-func New(ctx context.Context) (*Server, error) {
-	cfg := config.FromContext(ctx)
+func New(cfg *config.Config) (*Server, error) {
+	processor, err := picfit.NewProcessor(cfg)
+	if err != nil {
+		return nil, err
+	}
 
-	httpServer, err := NewHTTPServer(cfg, WithContext(ctx))
+	httpServer, err := NewHTTPServer(cfg, processor)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +41,7 @@ func Run(path string) error {
 		return err
 	}
 
-	ctx, err := application.Load(cfg)
-	if err != nil {
-		return err
-	}
-
-	server, err := New(ctx)
+	server, err := New(cfg)
 	if err != nil {
 		return err
 	}

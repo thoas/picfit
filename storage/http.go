@@ -11,7 +11,7 @@ import (
 
 	"github.com/ulule/gostorages"
 
-	"github.com/thoas/picfit/errs"
+	"github.com/thoas/picfit/failure"
 )
 
 // HTTPStorage wraps a storage
@@ -57,7 +57,7 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 	defer content.Body.Close()
 
 	if content.StatusCode == http.StatusNotFound {
-		return nil, errs.ErrFileNotExists
+		return nil, failure.ErrFileNotExists
 	}
 
 	if content.StatusCode != http.StatusOK {
