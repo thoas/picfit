@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/ulule/gokvstores"
+
+	"github.com/thoas/picfit/logger"
 )
 
 const (
@@ -15,10 +17,13 @@ const (
 )
 
 // New returns a KVStore from config
-func New(cfg *Config) (gokvstores.KVStore, error) {
+func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	if cfg == nil {
 		return gokvstores.DummyStore{}, nil
 	}
+
+	log.Debug("KVStore configured",
+		logger.String("type", cfg.Type))
 
 	switch cfg.Type {
 	case dummyKVStoreType:

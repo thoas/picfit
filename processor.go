@@ -66,8 +66,8 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 		return err
 	}
 
-	p.logger.Info("Save thumbnail to storage",
-		logger.String("thumbnail", i.Filepath))
+	p.logger.Info("Save file to storage",
+		logger.String("file", i.Filepath))
 
 	err = p.KVStore.Set(i.Key, i.Filepath)
 	if err != nil {

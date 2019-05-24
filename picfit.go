@@ -12,12 +12,15 @@ import (
 func NewProcessor(cfg *config.Config) (*Processor, error) {
 	log := logger.New(cfg.Logger)
 
-	sourceStorage, destinationStorage, err := storage.New(cfg.Storage)
+	sourceStorage, destinationStorage, err := storage.New(
+		log.With(logger.String("logger", "storage")), cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
 
-	keystore, err := kvstore.New(cfg.KVStore)
+	keystore, err := kvstore.New(
+		log.With(logger.String("logger", "kvstore")),
+		cfg.KVStore)
 	if err != nil {
 		return nil, err
 	}
