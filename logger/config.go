@@ -1,7 +1,12 @@
 package logger
 
-// defaultLevel is the default logger level
-const defaultLevel = "debug"
+const (
+	DevelopmentLevel = "development"
+	ProductionLevel  = "production"
+
+	// defaultLevel is the default logger level
+	defaultLevel = DevelopmentLevel
+)
 
 // Config is a struct to configure logger
 type Config struct {

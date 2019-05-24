@@ -38,7 +38,7 @@ all: picfit
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
-	@(go build -mod=vendor -o $(BIN_DIR)/picfit)
+	@(go build -mod=vendor -o $(BIN_DIR)/picfit ./cmd/picfit/main.go)
 	@(echo "-> picfit binary created")
 
 format:
@@ -52,7 +52,7 @@ build-static:
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
-		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit
+		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit ./cmd/picfit/main.go
 
 docker-build-static: build-static
 

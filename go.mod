@@ -32,7 +32,7 @@ require (
 	github.com/pkg/errors v0.8.0
 	github.com/rubenfonseca/fastimage v0.0.0-20170112075114-7e006a27a95b
 	github.com/rwcarlsen/goexif v0.0.0-20180518182100-8d986c03457a
-	github.com/sirupsen/logrus v1.2.0
+	github.com/sirupsen/logrus v1.2.0 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/spf13/afero v1.0.2 // indirect
@@ -50,6 +50,9 @@ require (
 	github.com/urfave/cli v0.0.0-20180221051631-446f49e78f79
 	github.com/v2pro/plz v0.0.0-20180222231523-10fc95fad322 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
+	go.uber.org/atomic v1.4.0 // indirect
+	go.uber.org/multierr v1.1.0 // indirect
+	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/image v0.0.0-20171214225156-12117c17ca67
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect

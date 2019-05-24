@@ -46,8 +46,6 @@ github.com/hashicorp/hcl/json/token
 github.com/json-iterator/go
 # github.com/k0kubun/pp v3.0.1+incompatible
 github.com/k0kubun/pp
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
 # github.com/lucasb-eyer/go-colorful v0.0.0-20180709185858-c7842319cf3a
 github.com/lucasb-eyer/go-colorful
 # github.com/magiconair/properties v1.7.6
@@ -78,8 +76,6 @@ github.com/rubenfonseca/fastimage
 # github.com/rwcarlsen/goexif v0.0.0-20180518182100-8d986c03457a
 github.com/rwcarlsen/goexif/exif
 github.com/rwcarlsen/goexif/tiff
-# github.com/sirupsen/logrus v1.2.0
-github.com/sirupsen/logrus
 # github.com/spf13/afero v1.0.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -109,15 +105,23 @@ github.com/ulule/gostorages
 github.com/urfave/cli
 # github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec
 github.com/vaughan0/go-ini
-# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
-golang.org/x/crypto/ssh/terminal
+# go.uber.org/atomic v1.4.0
+go.uber.org/atomic
+# go.uber.org/multierr v1.1.0
+go.uber.org/multierr
+# go.uber.org/zap v1.10.0
+go.uber.org/zap
+go.uber.org/zap/zapcore
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/buffer
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
 # golang.org/x/image v0.0.0-20171214225156-12117c17ca67
 golang.org/x/image/bmp
 golang.org/x/image/tiff
 golang.org/x/image/tiff/lzw
 # golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223
 golang.org/x/sys/unix
-golang.org/x/sys/windows
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm

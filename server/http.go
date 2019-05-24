@@ -13,32 +13,26 @@ import (
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
+	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
+	"github.com/thoas/picfit/failure"
+	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/middleware"
-	"github.com/thoas/picfit/middleware/context"
-	"github.com/thoas/picfit/server/handlers"
 	"github.com/thoas/stats"
 )
 
-type handlerMethod func(string, ...gin.HandlerFunc) gin.IRoutes
-type endpoint struct {
-	pattern string
-	handler gin.HandlerFunc
-	method  handlerMethod
-}
-
 type HTTPServer struct {
 	*gin.Engine
-	config config.Config
+	config    *config.Config
+	processor *picfit.Processor
 }
 
-func NewHTTPServer(cfg config.Config, opt ...Option) (*HTTPServer, error) {
-	opts := NewOptions(opt...)
-
+func NewHTTPServer(cfg *config.Config, processor *picfit.Processor) (*HTTPServer, error) {
 	server := &HTTPServer{
-		config: cfg,
+		config:    cfg,
+		processor: processor,
 	}
-	err := server.Init(opts)
+	err := server.Init()
 	if err != nil {
 		return nil, err
 	}
@@ -46,23 +40,24 @@ func NewHTTPServer(cfg config.Config, opt ...Option) (*HTTPServer, error) {
 	return server, nil
 }
 
-func (s *HTTPServer) Init(opts Options) error {
+func (s *HTTPServer) Init() error {
 	var (
 		router    = gin.New()
+		handlers  = &handlers{s.processor}
 		endpoints = []endpoint{
 			{
 				pattern: "redirect",
-				handler: handlers.Redirect,
+				handler: failure.Handle(handlers.redirect),
 				method:  router.GET,
 			},
 			{
 				pattern: "display",
-				handler: handlers.Display,
+				handler: failure.Handle(handlers.display),
 				method:  router.GET,
 			},
 			{
 				pattern: "get",
-				handler: handlers.Get,
+				handler: failure.Handle(handlers.get),
 				method:  router.GET,
 			},
 		}
@@ -72,7 +67,7 @@ func (s *HTTPServer) Init(opts Options) error {
 		router.Use(gin.Recovery())
 	}
 
-	if s.config.Logger.GetLevel() == "debug" {
+	if s.config.Logger.GetLevel() == logger.DevelopmentLevel {
 		router.Use(gin.Logger())
 	}
 
@@ -84,8 +79,6 @@ func (s *HTTPServer) Init(opts Options) error {
 
 		router.Use(sentry.Recovery(client, true))
 	}
-
-	router.Use(context.SetContext(opts.Context))
 
 	if s.config.AllowedOrigins != nil && s.config.AllowedMethods != nil {
 		allowedOrigins := s.config.AllowedOrigins
@@ -110,7 +103,7 @@ func (s *HTTPServer) Init(opts Options) error {
 		}))
 	}
 
-	router.GET("/healthcheck", handlers.Healthcheck(time.Now().UTC()))
+	router.GET("/healthcheck", handlers.healthcheck(time.Now().UTC()))
 
 	restrictIPAddresses := middleware.RestrictIPAddresses(s.config.Options.AllowedIPAddresses)
 
@@ -160,7 +153,7 @@ func (s *HTTPServer) Init(opts Options) error {
 	if s.config.Options.EnableUpload {
 		router.POST("/upload",
 			restrictIPAddresses,
-			handlers.Upload)
+			failure.Handle(handlers.upload))
 	}
 
 	if s.config.Options.EnableDelete {
@@ -168,7 +161,7 @@ func (s *HTTPServer) Init(opts Options) error {
 			restrictIPAddresses,
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
-			handlers.Delete)
+			failure.Handle(handlers.delete))
 	}
 
 	if s.config.Options.EnablePprof {
@@ -176,37 +169,37 @@ func (s *HTTPServer) Init(opts Options) error {
 		{
 			prefixRouter.GET("/",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Index))
+				pprofHandler(pprof.Index))
 			prefixRouter.GET("/cmdline",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Cmdline))
+				pprofHandler(pprof.Cmdline))
 			prefixRouter.GET("/profile",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Profile))
+				pprofHandler(pprof.Profile))
 			prefixRouter.POST("/symbol",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Symbol))
+				pprofHandler(pprof.Symbol))
 			prefixRouter.GET("/symbol",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Symbol))
+				pprofHandler(pprof.Symbol))
 			prefixRouter.GET("/trace",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Trace))
+				pprofHandler(pprof.Trace))
 			prefixRouter.GET("/block",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Handler("block").ServeHTTP))
+				pprofHandler(pprof.Handler("block").ServeHTTP))
 			prefixRouter.GET("/goroutine",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Handler("goroutine").ServeHTTP))
+				pprofHandler(pprof.Handler("goroutine").ServeHTTP))
 			prefixRouter.GET("/heap",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Handler("heap").ServeHTTP))
+				pprofHandler(pprof.Handler("heap").ServeHTTP))
 			prefixRouter.GET("/mutex",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Handler("mutex").ServeHTTP))
+				pprofHandler(pprof.Handler("mutex").ServeHTTP))
 			prefixRouter.GET("/threadcreate",
 				restrictIPAddresses,
-				handlers.Pprof(pprof.Handler("threadcreate").ServeHTTP))
+				pprofHandler(pprof.Handler("threadcreate").ServeHTTP))
 		}
 	}
 
