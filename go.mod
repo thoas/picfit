@@ -1,11 +1,11 @@
 module github.com/thoas/picfit
 
 require (
-	github.com/BurntSushi/toml v0.3.0 // indirect
+	cloud.google.com/go v0.39.0 // indirect
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/davecgh/go-spew v1.1.1
-	github.com/discordapp/lilliput v0.0.0-20180521175749-e611eea2a29a
+	github.com/discordapp/lilliput v0.0.0-20190402233613-eaffdc08248b
 	github.com/disintegration/imaging v1.5.0
 	github.com/djherbis/times v1.0.1 // indirect
 	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
@@ -42,20 +42,18 @@ require (
 	github.com/spf13/viper v0.0.0-20160806160649-346299ea79e4
 	github.com/stretchr/testify v1.3.0
 	github.com/thoas/go-funk v0.4.0
-	github.com/thoas/gokvstores v0.0.0-20171206131017-29c8500276db
+	github.com/thoas/gokvstores v0.0.0-20171206131017-29c8500276db // indirect
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ugorji/go/codec v0.0.0-20190128213124-ee1426cffec0 // indirect
 	github.com/ulule/gokvstores v0.0.0-20190522151009-afe9350f1dcd
-	github.com/ulule/gostorages v0.0.0-20171002152004-e2229fc2f445
+	github.com/ulule/gostorages v0.0.0-20190508132116-7b1387fcb001
 	github.com/urfave/cli v0.0.0-20180221051631-446f49e78f79
 	github.com/v2pro/plz v0.0.0-20180222231523-10fc95fad322 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/image v0.0.0-20171214225156-12117c17ca67
-	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
