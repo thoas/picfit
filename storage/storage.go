@@ -16,6 +16,7 @@ const (
 	httpFSStorageType = "http+fs"
 	fsStorageType     = "fs"
 	s3StorageType     = "s3"
+	gcsStorageType    = "gcs"
 )
 
 // New return destination and source storages from config
@@ -99,6 +100,13 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 			acl,
 			cfg.BaseURL,
 		), nil
+	case gcsStorageType:
+		return gostorages.NewGCSStorage(
+			cfg.SecretAccessKey,
+			cfg.BucketName,
+			cfg.Location,
+			cfg.BaseURL,
+			cfg.CacheControl)
 	case fsStorageType:
 		return gostorages.NewFileSystemStorage(cfg.Location, cfg.BaseURL), nil
 	case httpFSStorageType:
