@@ -1,4 +1,4 @@
-package kvstore
+package store
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 
 	"github.com/thoas/picfit/logger"
 )
+
+type Store gokvstores.KVStore
 
 const (
 	dummyKVStoreType        = "dummy"

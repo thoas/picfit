@@ -209,9 +209,9 @@ func TestUploadHandler(t *testing.T) {
 
 		assert.Equal(t, 200, res.Code)
 
-		assert.True(t, suite.FileExists("avatar.png"))
+		assert.True(t, suite.Processor.FileExists("avatar.png"))
 
-		file, err := suite.OpenFile("avatar.png")
+		file, err := suite.Processor.OpenFile("avatar.png")
 
 		assert.Nil(t, err)
 		assert.Equal(t, file.Size(), stats.Size())
@@ -303,7 +303,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 5, "after resize requests")
 		checkDirCount(tmpDstStorage, 7, "after resize requests")
-		assert.True(t, suite.FileExists("image1.jpg"))
+		assert.True(t, suite.Processor.FileExists("image1.jpg"))
 
 		// Delete image1.jpg and all of the derived images
 		req, err := http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
@@ -315,7 +315,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
 		checkDirCount(tmpDstStorage, 2, "after 1st delete request")
-		assert.False(t, suite.FileExists("image1.jpg"))
+		assert.False(t, suite.Processor.FileExists("image1.jpg"))
 
 		// Try to delete image1.jpg again
 		req, err = http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
@@ -328,9 +328,9 @@ func TestDeleteHandler(t *testing.T) {
 		checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
 		checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
 
-		assert.False(t, suite.FileExists("image1.jpg"))
+		assert.False(t, suite.Processor.FileExists("image1.jpg"))
 
-		assert.True(t, suite.FileExists("image2.jpg"))
+		assert.True(t, suite.Processor.FileExists("image2.jpg"))
 
 		// Delete image2.jpg and all of the derived images
 		req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
@@ -342,7 +342,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
 		checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
-		assert.False(t, suite.FileExists("image2.jpg"))
+		assert.False(t, suite.Processor.FileExists("image2.jpg"))
 	}, tests.WithConfig(cfg))
 }
 
@@ -412,11 +412,11 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		exists, err := suite.KeyExists(etag)
+		exists, err := suite.Processor.KeyExists(etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := suite.GetKey(etag)
+		raw, err := suite.Processor.GetKey(etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
@@ -428,7 +428,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 		assert.Equal(t, len(parts[0]), 1)
 		assert.Equal(t, len(parts[1]), 1)
 
-		assert.True(t, suite.FileExists(filepath))
+		assert.True(t, suite.Processor.FileExists(filepath))
 
 		location = "http://example.com/get/resize/100x100/avatar.png"
 
@@ -518,11 +518,11 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		exists, err := suite.KeyExists(etag)
+		exists, err := suite.Processor.KeyExists(etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := suite.GetKey(etag)
+		raw, err := suite.Processor.GetKey(etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
@@ -532,7 +532,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 		assert.Equal(t, len(parts), 1)
 
-		assert.True(t, suite.FileExists(filepath))
+		assert.True(t, suite.Processor.FileExists(filepath))
 	}, tests.WithConfig(content))
 }
 

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
@@ -70,22 +69,6 @@ func WithConfig(cfg string) Option {
 type Suite struct {
 	Processor *picfit.Processor
 	Config    *config.Config
-}
-
-func (s Suite) GetKey(key string) (interface{}, error) {
-	return s.Processor.KVStore.Get(key)
-}
-
-func (s Suite) KeyExists(key string) (bool, error) {
-	return s.Processor.KVStore.Exists(key)
-}
-
-func (s Suite) FileExists(name string) bool {
-	return s.Processor.SourceStorage.Exists(name)
-}
-
-func (s Suite) OpenFile(name string) (gostorages.File, error) {
-	return s.Processor.SourceStorage.Open(name)
 }
 
 type FuncTest func(t *testing.T, s *Suite)
