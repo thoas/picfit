@@ -77,6 +77,7 @@ Configuration should be stored in a readable file and in JSON format.
 - **fs** - generated images stored in your File system
 - **http+fs** - generated images stored in your File system and loaded using HTTP protocol
 - **s3** - generated images stored in Amazon S3
+- **gcs** - generated images stored in Google Cloud Storage
 - **http+s3** - generated images stored in Amazon S3 and loaded using HTTP protocol
 
 Basic
