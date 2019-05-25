@@ -24,6 +24,10 @@ func (h handlers) stats(c *gin.Context) {
 	c.JSON(http.StatusOK, api.GetStats())
 }
 
+func (h handlers) internalError(c *gin.Context) {
+	c.JSON(http.StatusInternalServerError, "KO")
+}
+
 // healthcheck displays an ok response for healthcheck
 func (h handlers) healthcheck(startedAt time.Time) func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -54,6 +58,8 @@ func (h handlers) display(c *gin.Context) error {
 	for k, v := range file.Headers {
 		c.Header(k, v)
 	}
+
+	c.Header("Cache-Control", "must-revalidate")
 
 	c.Data(http.StatusOK, file.ContentType(), file.Content())
 

@@ -164,6 +164,8 @@ func (s *HTTPServer) Init() error {
 			failure.Handle(handlers.delete))
 	}
 
+	router.GET("/error", handlers.internalError)
+
 	if s.config.Options.EnablePprof {
 		prefixRouter := router.Group("/debug/pprof")
 		{

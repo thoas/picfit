@@ -21,6 +21,11 @@ func Handle(h Handler) gin.HandlerFunc {
 				return
 			}
 
+			if cerr == ErrFileNotModified {
+				c.AbortWithStatus(http.StatusNotModified)
+				return
+			}
+
 			switch cerr.(type) {
 			case binding.Errors:
 				c.String(http.StatusBadRequest, cerr.Error())

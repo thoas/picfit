@@ -1,11 +1,15 @@
-package kvstore
+package store
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/ulule/gokvstores"
+
+	"github.com/thoas/picfit/logger"
 )
+
+type Store gokvstores.KVStore
 
 const (
 	dummyKVStoreType        = "dummy"
@@ -15,10 +19,13 @@ const (
 )
 
 // New returns a KVStore from config
-func New(cfg *Config) (gokvstores.KVStore, error) {
+func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	if cfg == nil {
 		return gokvstores.DummyStore{}, nil
 	}
+
+	log.Debug("KVStore configured",
+		logger.String("type", cfg.Type))
 
 	switch cfg.Type {
 	case dummyKVStoreType:

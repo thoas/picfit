@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
-
 	"github.com/ulule/gostorages"
+
+	"github.com/thoas/picfit/logger"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 )
 
 // New return destination and source storages from config
-func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
+func New(log logger.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 	if cfg == nil {
 		storage := &DummyStorage{}
 
@@ -36,9 +37,15 @@ func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+
+		log.Debug("Source storage configured",
+			logger.String("type", cfg.Source.Type))
 	}
 
 	if cfg.Destination == nil {
+		log.Debug("Destination storage not set, source storage will be used",
+			logger.String("type", cfg.Source.Type))
+
 		return sourceStorage, sourceStorage, nil
 	}
 
@@ -46,6 +53,9 @@ func New(cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
+	log.Debug("Destination storage configured",
+		logger.String("type", cfg.Destination.Type))
 
 	return sourceStorage, destinationStorage, nil
 }

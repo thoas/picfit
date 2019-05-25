@@ -10,7 +10,6 @@ import (
 	conv "github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"github.com/thoas/gokvstores"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/config"
@@ -20,6 +19,7 @@ import (
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/payload"
+	"github.com/thoas/picfit/store"
 )
 
 type Processor struct {
@@ -27,7 +27,7 @@ type Processor struct {
 	logger             logger.Logger
 	SourceStorage      gostorages.Storage
 	DestinationStorage gostorages.Storage
-	KVStore            gokvstores.KVStore
+	store              store.Store
 	engine             *engine.Engine
 }
 
@@ -66,15 +66,15 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 		return err
 	}
 
-	p.logger.Info("Save thumbnail to storage",
-		logger.String("thumbnail", i.Filepath))
+	p.logger.Info("Save file to storage",
+		logger.String("file", i.Filepath))
 
-	err = p.KVStore.Set(i.Key, i.Filepath)
+	err = p.store.Set(i.Key, i.Filepath)
 	if err != nil {
 		return err
 	}
 
-	p.logger.Info("Save key to kvstore",
+	p.logger.Info("Save key to store",
 		logger.String("key", i.Key),
 		logger.String("filepath", i.Filepath))
 
@@ -84,12 +84,12 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = p.KVStore.AppendSlice(parentKey, i.Key)
+		err = p.store.AppendSlice(parentKey, i.Key)
 		if err != nil {
 			return err
 		}
 
-		p.logger.Info("Put key into set in kvstore",
+		p.logger.Info("Put key into set in store",
 			logger.String("set", parentKey),
 			logger.String("value", filepath),
 			logger.String("key", i.Key))
@@ -98,11 +98,11 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 	return nil
 }
 
-// DeleteChild remove a child from kvstore and storage
+// DeleteChild remove a child from store and storage
 func (p *Processor) DeleteChild(key string) error {
 	// Now, every child is a hash which points to a key/value pair in
-	// KVStore which in turn points to a file in dst storage.
-	dstfileRaw, err := p.KVStore.Get(key)
+	// Store which in turn points to a file in dst storage.
+	dstfileRaw, err := p.store.Get(key)
 	if err != nil {
 		return errors.Wrapf(err, "unable to retrieve key %s", key)
 	}
@@ -120,7 +120,7 @@ func (p *Processor) DeleteChild(key string) error {
 		}
 	}
 
-	err = p.KVStore.Delete(key)
+	err = p.store.Delete(key)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", key)
 	}
@@ -131,7 +131,7 @@ func (p *Processor) DeleteChild(key string) error {
 	return nil
 }
 
-// Delete removes a file from kvstore and storage
+// Delete removes a file from store and storage
 func (p *Processor) Delete(filepath string) error {
 	p.logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
@@ -152,7 +152,7 @@ func (p *Processor) Delete(filepath string) error {
 
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
-	exists, err := p.KVStore.Exists(childrenKey)
+	exists, err := p.store.Exists(childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to verify if %s exists", childrenKey)
 	}
@@ -166,7 +166,7 @@ func (p *Processor) Delete(filepath string) error {
 	}
 
 	// Get the list of items to cleanup.
-	children, err := p.KVStore.GetSlice(childrenKey)
+	children, err := p.store.GetSlice(childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to retrieve children set %s", childrenKey)
 	}
@@ -194,7 +194,7 @@ func (p *Processor) Delete(filepath string) error {
 	p.logger.Info("Delete set %s",
 		logger.String("set", childrenKey))
 
-	err = p.KVStore.Delete(childrenKey)
+	err = p.store.Delete(childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", childrenKey)
 	}
@@ -204,31 +204,55 @@ func (p *Processor) Delete(filepath string) error {
 
 // ProcessContext processes a gin.Context generates and retrieves an ImageFile
 func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*image.ImageFile, error) {
-	storeKey := c.MustGet("key").(string)
+	var (
+		storeKey = c.MustGet("key").(string)
+		force    = c.Query("force")
+	)
 
-	// Image from the KVStore found
-	filepathRaw, err := p.KVStore.Get(storeKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if filepathRaw != nil {
-		filepath, err := conv.String(filepathRaw)
+	modifiedSince := c.Request.Header.Get("If-Modified-Since")
+	if modifiedSince != "" && force == "" {
+		exists, err := p.store.Exists(storeKey)
 		if err != nil {
 			return nil, err
 		}
 
-		p.logger.Info("Key found in kvstore",
-			logger.String("key", storeKey),
-			logger.String("filepath", filepath))
+		if exists {
+			p.logger.Info("Key already exists on store, file not modified",
+				logger.String("key", storeKey),
+				logger.String("modified-since", modifiedSince))
 
-		return p.fileFromStorage(storeKey, filepath, load)
+			return nil, failure.ErrFileNotModified
+		}
 	}
 
-	// Image not found from the KVStore, we need to process it
-	// URL available in Query String
-	p.logger.Info("Key not found in kvstore",
-		logger.String("key", storeKey))
+	if force == "" {
+		// try to retrieve image from the k/v rtore
+		filepathRaw, err := p.store.Get(storeKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if filepathRaw != nil {
+			filepath, err := conv.String(filepathRaw)
+			if err != nil {
+				return nil, err
+			}
+
+			p.logger.Info("Key found in store",
+				logger.String("key", storeKey),
+				logger.String("filepath", filepath))
+
+			return p.fileFromStorage(storeKey, filepath, load)
+		}
+
+		// Image not found from the Store, we need to process it
+		// URL available in Query String
+		p.logger.Info("Key not found in store",
+			logger.String("key", storeKey))
+	} else {
+		p.logger.Info("Force activated, key will be re-processed",
+			logger.String("key", storeKey))
+	}
 
 	return p.processImage(c, storeKey, async)
 }
@@ -320,4 +344,20 @@ func (p Processor) ShardFilename(filename string) string {
 	results := hash.Shard(filename, cfg.Shard.Width, cfg.Shard.Depth, cfg.Shard.RestOnly)
 
 	return strings.Join(results, "/")
+}
+
+func (p Processor) GetKey(key string) (interface{}, error) {
+	return p.store.Get(key)
+}
+
+func (p Processor) KeyExists(key string) (bool, error) {
+	return p.store.Exists(key)
+}
+
+func (p Processor) FileExists(name string) bool {
+	return p.SourceStorage.Exists(name)
+}
+
+func (p Processor) OpenFile(name string) (gostorages.File, error) {
+	return p.SourceStorage.Open(name)
 }
