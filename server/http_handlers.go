@@ -50,7 +50,9 @@ func (h handlers) healthcheck(startedAt time.Time) func(c *gin.Context) {
 
 // display displays and image using resizing parameters
 func (h handlers) display(c *gin.Context) error {
-	file, err := h.processor.ProcessContext(c, true, true)
+	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(true),
+		picfit.WithLoad(true))
 	if err != nil {
 		return err
 	}
@@ -118,7 +120,9 @@ func (h handlers) delete(c *gin.Context) error {
 
 // get generates an image synchronously and return its information from storages
 func (h handlers) get(c *gin.Context) error {
-	file, err := h.processor.ProcessContext(c, false, false)
+	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(false),
+		picfit.WithLoad(false))
 	if err != nil {
 		return err
 	}
@@ -135,7 +139,9 @@ func (h handlers) get(c *gin.Context) error {
 
 // redirect redirects to the image using base url from storage
 func (h handlers) redirect(c *gin.Context) error {
-	file, err := h.processor.ProcessContext(c, false, false)
+	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(false),
+		picfit.WithLoad(false))
 	if err != nil {
 		return err
 	}

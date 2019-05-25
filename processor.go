@@ -203,10 +203,11 @@ func (p *Processor) Delete(filepath string) error {
 }
 
 // ProcessContext processes a gin.Context generates and retrieves an ImageFile
-func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*image.ImageFile, error) {
+func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.ImageFile, error) {
 	var (
 		storeKey = c.MustGet("key").(string)
 		force    = c.Query("force")
+		options  = newOptions(opts...)
 	)
 
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
@@ -242,7 +243,7 @@ func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*imag
 				logger.String("key", storeKey),
 				logger.String("filepath", filepath))
 
-			return p.fileFromStorage(storeKey, filepath, load)
+			return p.fileFromStorage(storeKey, filepath, options.Load)
 		}
 
 		// Image not found from the Store, we need to process it
@@ -254,7 +255,7 @@ func (p *Processor) ProcessContext(c *gin.Context, async bool, load bool) (*imag
 			logger.String("key", storeKey))
 	}
 
-	return p.processImage(c, storeKey, async)
+	return p.processImage(c, storeKey, options.Async)
 }
 
 func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*image.ImageFile, error) {
