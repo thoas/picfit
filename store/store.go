@@ -16,6 +16,7 @@ const (
 	redisKVStoreType        = "redis"
 	redisClusterKVStoreType = "redis-cluster"
 	cacheKVStoreType        = "cache"
+	postgresKVStoreType     = "postgres"
 )
 
 // New returns a KVStore from config
@@ -50,6 +51,15 @@ func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 			DB:       redis.DB,
 			Password: redis.Password,
 		}, time.Duration(redis.Expiration)*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		return &kvstoreWrapper{s, cfg.Prefix}, nil
+	case postgresKVStoreType:
+		postgres := cfg.Postgres
+
+		s, err := gokvstores.NewPostgresStore(postgres.WriteDb, postgres.ReadDb)
 		if err != nil {
 			return nil, err
 		}

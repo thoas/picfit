@@ -6,9 +6,15 @@ import "fmt"
 type Config struct {
 	Type         string
 	Prefix       string
+	Postgres     PostgresConfig     `mapstructure:"postgres"`
 	Redis        RedisConfig        `mapstructure:"redis"`
 	Cache        CacheConfig        `mapstructure:"cache"`
 	RedisCluster RedisClusterConfig `mapstructure:"redis-cluster"`
+}
+
+type PostgresConfig struct {
+	WriteDb string `mapstructure:"write_db"`
+	ReadDb  string `mapstructure:"read_db"`
 }
 
 type RedisConfig struct {
