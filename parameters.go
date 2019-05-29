@@ -35,7 +35,7 @@ type Parameters struct {
 }
 
 // newParameters returns Parameters for engine.
-func (p *Processor) newParameters(input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
+func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -46,8 +46,8 @@ func (p *Processor) newParameters(input *image.ImageFile, qs map[string]interfac
 
 	}
 
-	if format == "" && p.engine.Format != "" {
-		format = p.engine.Format
+	if format == "" && p.Engine.Format != "" {
+		format = p.Engine.Format
 	}
 
 	if format == "" {
@@ -55,7 +55,7 @@ func (p *Processor) newParameters(input *image.ImageFile, qs map[string]interfac
 	}
 
 	if format == "" {
-		format = p.engine.DefaultFormat
+		format = p.Engine.DefaultFormat
 	}
 
 	if format != input.Format() {
@@ -170,7 +170,7 @@ func (p Processor) NewEngineOperationFromQuery(op string) (*engine.EngineOperati
 func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var (
 		err     error
-		quality = p.engine.DefaultQuality
+		quality = p.Engine.DefaultQuality
 		upscale = defaultUpscale
 		height  = defaultHeight
 		width   = defaultWidth

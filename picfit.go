@@ -36,6 +36,6 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 		SourceStorage:      sourceStorage,
 		DestinationStorage: destinationStorage,
 		store:              s,
-		engine:             e,
+		Engine:             e,
 	}, nil
 }

@@ -28,7 +28,7 @@ type Processor struct {
 	SourceStorage      gostorages.Storage
 	DestinationStorage gostorages.Storage
 	store              store.Store
-	engine             *engine.Engine
+	Engine             *engine.Engine
 }
 
 // Upload uploads a file to its storage
@@ -310,12 +310,12 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
-	parameters, err := p.newParameters(file, qs)
+	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
-	file, err = p.engine.Transform(parameters.Output, parameters.Operations)
+	file, err = p.Engine.Transform(parameters.Output, parameters.Operations)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
