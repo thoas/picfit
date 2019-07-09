@@ -31,18 +31,63 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 		}
 	}
 
+	// draw background
 	bg := image.NewRGBA(image.Rectangle{image.Point{}, background.Bounds().Size()})
 	draw.Draw(bg, background.Bounds(), background, image.Point{}, draw.Src)
 
+	if options.Stick != "" {
+		drawStickForeground(bg, images, options)
+	} else {
+		drawPosForeground(bg, images, options)
+	}
+
+	return e.ToBytes(bg, options.Format, options.Quality)
+}
+
+func drawStickForeground(bg *image.RGBA, images []image.Image, options *Options) {
+	for i := range images {
+		opts := &Options{
+			Upscale: true,
+			Width:   options.Width,
+			Height:  options.Height,
+		}
+
+		images[i] = scale(images[i], opts, imaging.Resize)
+
+		bounds := images[i].Bounds()
+		var position image.Point
+		switch options.Stick {
+		case "top-left":
+			position = bounds.Min
+		case "top-right":
+			position = image.Point{X: bg.Bounds().Dx() - bounds.Dx(), Y: 0}
+		case "bottom-left":
+			position = image.Point{X: 0, Y: bg.Bounds().Dy() - bounds.Dy()}
+		case "bottom-right":
+			position = image.Point{
+				X: bg.Bounds().Dx() - bounds.Dx(),
+				Y: bg.Bounds().Dy() - bounds.Dy(),
+			}
+		}
+
+		draw.Draw(bg, image.Rectangle{
+			position,
+			position.Add(bounds.Size()),
+		}, images[i], bounds.Min, draw.Over)
+	}
+}
+
+// drawPosForeground draw the given images on the given background inside the
+// section delimited by the options position.
+func drawPosForeground(bg *image.RGBA, images []image.Image, options *Options) {
 	dst := positionForeground(bg, options.Position)
 	fg := foregroundImage(dst, options.Color)
 	fg = drawForeground(fg, images, options)
 
 	draw.Draw(bg, dst, fg, fg.Bounds().Min, draw.Over)
-
-	return e.ToBytes(bg, options.Format, options.Quality)
 }
 
+// positionForeground creates a mask with the given position.
 func positionForeground(bg image.Image, pos string) image.Rectangle {
 	ratios := []int{100, 100, 100, 100}
 	val := strings.Split(pos, ".")
@@ -59,6 +104,7 @@ func positionForeground(bg image.Image, pos string) image.Rectangle {
 	}
 }
 
+// foregroundImage creates an Image with the given mask and the given color.
 func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 	fg := image.NewRGBA(image.Rectangle{image.ZP, rec.Size()})
 	if c == "" {
@@ -74,6 +120,9 @@ func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 	return fg
 }
 
+// drawForeground draw the given images inside the destination foreground.
+// if the foreground image has a height superior to its width, the images
+// are vertically aligned, else they are horizontally aligned.
 func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
 	n := len(images)
 	if n == 0 {
@@ -103,6 +152,9 @@ func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *ima
 	}
 }
 
+// foregroundHorizontal splits the fg according to the number of images  in
+// equal parts horizontally aligned and draw each images in the given order in
+// the center of each of theses parts.
 func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
 	position := fg.Bounds().Min
 	totalHeight := fg.Bounds().Dy()
@@ -120,6 +172,9 @@ func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options
 	return fg
 }
 
+// foregroundVertical splits the fg according to the number of images  in
+// equal parts vertically aligned and draw each images in the given order in
+// the center of each of theses parts.
 func foregroundVertical(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
 	position := fg.Bounds().Min
 	cellHeight := fg.Bounds().Dy() / len(images)

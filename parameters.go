@@ -194,6 +194,20 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 	}
 
+	stick, _ := qs["stick"].(string)
+	if stick != "" {
+		var exists bool
+		for i := range engine.StickPositions {
+			if stick == engine.StickPositions[i] {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			return nil, fmt.Errorf("Parameter \"stick\" has wrong value. Available values are: %v", engine.StickPositions)
+		}
+	}
+
 	color, _ := qs["color"].(string)
 
 	if deg, ok := qs["deg"].(string); ok {
@@ -229,6 +243,7 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 		Height:   height,
 		Upscale:  upscale,
 		Position: position,
+		Stick:    stick,
 		Quality:  quality,
 		Degree:   degree,
 		Color:    color,
