@@ -10,6 +10,7 @@ import (
 	"github.com/disintegration/imaging"
 	colorful "github.com/lucasb-eyer/go-colorful"
 
+	"github.com/thoas/picfit/constants"
 	imagefile "github.com/thoas/picfit/image"
 )
 
@@ -57,13 +58,13 @@ func drawStickForeground(bg *image.RGBA, images []image.Image, options *Options)
 		bounds := images[i].Bounds()
 		var position image.Point
 		switch options.Stick {
-		case "top-left":
+		case constants.TopLeft:
 			position = bounds.Min
-		case "top-right":
+		case constants.TopRight:
 			position = image.Point{X: bg.Bounds().Dx() - bounds.Dx(), Y: 0}
-		case "bottom-left":
+		case constants.BottomLeft:
 			position = image.Point{X: 0, Y: bg.Bounds().Dy() - bounds.Dy()}
-		case "bottom-right":
+		case constants.BottomRight:
 			position = image.Point{
 				X: bg.Bounds().Dx() - bounds.Dx(),
 				Y: bg.Bounds().Dy() - bounds.Dy(),

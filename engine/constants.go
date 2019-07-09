@@ -7,17 +7,3 @@ var ContentTypes = map[string]string{
 	"bmp":  "image/bmp",
 	"gif":  "image/gif",
 }
-
-const (
-	TopRight    = "top-right"
-	TopLeft     = "top-left"
-	BottomRight = "bottom-right"
-	BottomLeft  = "bottom-left"
-)
-
-var StickPositions = []string{
-	TopRight,
-	TopLeft,
-	BottomRight,
-	BottomLeft,
-}

@@ -8,6 +8,7 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
 
+	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/failure"
@@ -197,14 +198,14 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 	stick, _ := qs["stick"].(string)
 	if stick != "" {
 		var exists bool
-		for i := range engine.StickPositions {
-			if stick == engine.StickPositions[i] {
+		for i := range constants.StickPositions {
+			if stick == constants.StickPositions[i] {
 				exists = true
 				break
 			}
 		}
 		if !exists {
-			return nil, fmt.Errorf("Parameter \"stick\" has wrong value. Available values are: %v", engine.StickPositions)
+			return nil, fmt.Errorf("Parameter \"stick\" has wrong value. Available values are: %v", constants.StickPositions)
 		}
 	}
 
