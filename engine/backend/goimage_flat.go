@@ -1,13 +1,16 @@
 package backend
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/draw"
+	"image/gif"
 	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
+	"github.com/k0kubun/pp"
 	colorful "github.com/lucasb-eyer/go-colorful"
 
 	"github.com/thoas/picfit/constants"
@@ -15,15 +18,7 @@ import (
 )
 
 func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
-	if options.Format == imaging.GIF {
-		return e.TransformGIF(backgroundFile, options, imaging.Resize)
-	}
-
-	background, err := e.Source(backgroundFile)
-	if err != nil {
-		return nil, err
-	}
-
+	var err error
 	images := make([]image.Image, len(options.Images))
 	for i := range options.Images {
 		images[i], err = e.Source(&options.Images[i])
@@ -32,9 +27,39 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 		}
 	}
 
-	// draw background
-	bg := image.NewRGBA(image.Rectangle{image.Point{}, background.Bounds().Size()})
-	draw.Draw(bg, background.Bounds(), background, image.Point{}, draw.Src)
+	if options.Format == imaging.GIF {
+		g, err := gif.DecodeAll(bytes.NewReader(backgroundFile.Source))
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range g.Image {
+			if options.Stick != "" {
+				drawStickForeground(g.Image[i], images, options)
+			} else {
+				drawPosForeground(g.Image[i], images, options)
+			}
+		}
+		buf := bytes.Buffer{}
+
+		err = gif.EncodeAll(&buf, g)
+		if err != nil {
+			return nil, err
+		}
+
+		return buf.Bytes(), nil
+	}
+
+	background, err := e.Source(backgroundFile)
+	if err != nil {
+		return nil, err
+	}
+
+	bg, ok := background.(draw.Image)
+	if !ok {
+		bg = image.NewRGBA(image.Rectangle{image.Point{}, background.Bounds().Size()})
+		draw.Draw(bg, background.Bounds(), background, image.Point{}, draw.Src)
+	}
 
 	if options.Stick != "" {
 		drawStickForeground(bg, images, options)
@@ -45,8 +70,9 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 	return e.ToBytes(bg, options.Format, options.Quality)
 }
 
-func drawStickForeground(bg *image.RGBA, images []image.Image, options *Options) {
+func drawStickForeground(bg draw.Image, images []image.Image, options *Options) {
 	for i := range images {
+		pp.Println(images[i])
 		opts := &Options{
 			Upscale: true,
 			Width:   options.Width,
@@ -80,7 +106,7 @@ func drawStickForeground(bg *image.RGBA, images []image.Image, options *Options)
 
 // drawPosForeground draw the given images on the given background inside the
 // section delimited by the options position.
-func drawPosForeground(bg *image.RGBA, images []image.Image, options *Options) {
+func drawPosForeground(bg draw.Image, images []image.Image, options *Options) {
 	dst := positionForeground(bg, options.Position)
 	fg := foregroundImage(dst, options.Color)
 	fg = drawForeground(fg, images, options)
@@ -106,7 +132,7 @@ func positionForeground(bg image.Image, pos string) image.Rectangle {
 }
 
 // foregroundImage creates an Image with the given mask and the given color.
-func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
+func foregroundImage(rec image.Rectangle, c string) draw.Image {
 	fg := image.NewRGBA(image.Rectangle{image.ZP, rec.Size()})
 	if c == "" {
 		return fg
@@ -124,7 +150,7 @@ func foregroundImage(rec image.Rectangle, c string) *image.RGBA {
 // drawForeground draw the given images inside the destination foreground.
 // if the foreground image has a height superior to its width, the images
 // are vertically aligned, else they are horizontally aligned.
-func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
+func drawForeground(fg draw.Image, images []image.Image, options *Options) draw.Image {
 	n := len(images)
 	if n == 0 {
 		return fg
@@ -156,7 +182,7 @@ func drawForeground(fg *image.RGBA, images []image.Image, options *Options) *ima
 // foregroundHorizontal splits the fg according to the number of images  in
 // equal parts horizontally aligned and draw each images in the given order in
 // the center of each of theses parts.
-func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
+func foregroundHorizontal(fg draw.Image, images []image.Image, options *Options) draw.Image {
 	position := fg.Bounds().Min
 	totalHeight := fg.Bounds().Dy()
 	cellWidth := fg.Bounds().Dx() / len(images)
@@ -176,7 +202,7 @@ func foregroundHorizontal(fg *image.RGBA, images []image.Image, options *Options
 // foregroundVertical splits the fg according to the number of images  in
 // equal parts vertically aligned and draw each images in the given order in
 // the center of each of theses parts.
-func foregroundVertical(fg *image.RGBA, images []image.Image, options *Options) *image.RGBA {
+func foregroundVertical(fg draw.Image, images []image.Image, options *Options) draw.Image {
 	position := fg.Bounds().Min
 	cellHeight := fg.Bounds().Dy() / len(images)
 	totalWidth := fg.Bounds().Dx()
