@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/k0kubun/pp"
 	colorful "github.com/lucasb-eyer/go-colorful"
 
 	"github.com/thoas/picfit/constants"
@@ -72,7 +71,6 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 
 func drawStickForeground(bg draw.Image, images []image.Image, options *Options) {
 	for i := range images {
-		pp.Println(images[i])
 		opts := &Options{
 			Upscale: true,
 			Width:   options.Width,
