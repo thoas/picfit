@@ -29,7 +29,15 @@ func New(cfg config.Config) *Engine {
 	var b []Backend
 
 	if cfg.Backends == nil {
-		b = append(b, Backend{Backend: &backend.GoImage{}})
+		b = append(b, Backend{
+			Backend: &backend.GoImage{},
+			mimetypes: []string{
+				"image/jpeg",
+				"image/png",
+				"image/bmp",
+				"image/gif",
+			},
+		})
 	} else {
 		if cfg.Backends.Lilliput != nil {
 			b = append(b, Backend{
