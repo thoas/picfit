@@ -1,7 +1,7 @@
 picfit
 ======
 
-.. image:: https://secure.travis-ci.org/thoas/picfit.png?branch=master
+.. image:: https://secure.travis-ci.org/thoas/picfit.svg?branch=master
     :alt: Build Status
     :target: http://travis-ci.org/thoas/picfit
 
