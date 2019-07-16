@@ -7,3 +7,10 @@ var ContentTypes = map[string]string{
 	"bmp":  "image/bmp",
 	"gif":  "image/gif",
 }
+
+var MimeTypes = []string{
+	"image/jpeg",
+	"image/png",
+	"image/bmp",
+	"image/gif",
+}

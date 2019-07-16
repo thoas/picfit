@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/thoas/picfit/engine/backend"
@@ -14,40 +15,45 @@ type Engine struct {
 	Format         string
 	DefaultQuality int
 
-	backends  []backend.Backend
-	mimetypes map[string]backend.Backend
+	backends []Backend
+}
+
+type Backend struct {
+	backend.Backend
+	weight    int
+	mimetypes []string
 }
 
 // New initializes an Engine
 func New(cfg config.Config) *Engine {
-	var (
-		b         []backend.Backend
-		mimetypes = map[string]backend.Backend{}
-	)
+	var b []Backend
 
 	if cfg.Backends == nil {
-		b = append(b, &backend.GoImage{})
+		b = append(b, Backend{
+			Backend:   &backend.GoImage{},
+			mimetypes: MimeTypes,
+		})
 	} else {
 		if cfg.Backends.Lilliput != nil {
-			back := backend.NewLilliput(cfg)
-
-			b = append(b, back)
-
-			for _, mimetype := range cfg.Backends.Lilliput.Mimetypes {
-				mimetypes[mimetype] = back
-			}
+			b = append(b, Backend{
+				Backend:   backend.NewLilliput(cfg),
+				mimetypes: cfg.Backends.Lilliput.Mimetypes,
+				weight:    cfg.Backends.Lilliput.Weight,
+			})
 		}
 
 		if cfg.Backends.GoImage != nil {
-			back := &backend.GoImage{}
-
-			b = append(b, back)
-
-			for _, mimetype := range cfg.Backends.GoImage.Mimetypes {
-				mimetypes[mimetype] = back
-			}
+			b = append(b, Backend{
+				Backend:   &backend.GoImage{},
+				mimetypes: cfg.Backends.GoImage.Mimetypes,
+				weight:    cfg.Backends.GoImage.Weight,
+			})
 		}
 	}
+
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].weight < b[j].weight
+	})
 
 	quality := config.DefaultQuality
 	if cfg.Quality != 0 {
@@ -59,7 +65,6 @@ func New(cfg config.Config) *Engine {
 		Format:         cfg.Format,
 		DefaultQuality: quality,
 		backends:       b,
-		mimetypes:      mimetypes,
 	}
 }
 
@@ -79,16 +84,22 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 		source    = output.Source
 	)
 
+	ct := output.ContentType()
 	for i := range operations {
-		backends := e.backends
+		for j := range e.backends {
+			var processing bool
+			for k := range e.backends[j].mimetypes {
+				if ct == e.backends[j].mimetypes[k] {
+					processing = true
+					break
+				}
+			}
 
-		back, ok := e.mimetypes[output.ContentType()]
-		if ok {
-			backends = []backend.Backend{back}
-		}
+			if !processing {
+				continue
+			}
 
-		for j := range backends {
-			processed, err = operate(backends[j], output, operations[i].Operation, operations[i].Options)
+			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break

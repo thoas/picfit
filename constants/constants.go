@@ -18,3 +18,17 @@ var (
 	// Compiler is the compiler used during build
 	Compiler string
 )
+
+const (
+	TopRight    = "top-right"
+	TopLeft     = "top-left"
+	BottomRight = "bottom-right"
+	BottomLeft  = "bottom-left"
+)
+
+var StickPositions = []string{
+	TopRight,
+	TopLeft,
+	BottomRight,
+	BottomLeft,
+}

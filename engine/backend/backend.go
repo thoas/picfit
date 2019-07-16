@@ -17,6 +17,7 @@ type Options struct {
 	Width    int
 	Height   int
 	Position string
+	Stick    string
 	Color    string
 	Degree   int
 	Images   []image.ImageFile

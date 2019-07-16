@@ -6,6 +6,7 @@ type Backends struct {
 }
 
 type Backend struct {
+	Weight    int
 	Mimetypes []string
 }
 
