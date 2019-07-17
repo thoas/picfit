@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
 	"github.com/mholt/binding"
 
@@ -25,7 +27,7 @@ func (h handlers) stats(c *gin.Context) {
 }
 
 func (h handlers) internalError(c *gin.Context) {
-	c.JSON(http.StatusInternalServerError, "KO")
+	panic(errors.WithStack(fmt.Errorf("KO")))
 }
 
 // healthcheck displays an ok response for healthcheck

@@ -10,7 +10,8 @@ require (
 	github.com/djherbis/times v1.0.1 // indirect
 	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
 	github.com/franela/goreq v0.0.0-20141202194629-6d074b8384a4
-	github.com/getsentry/raven-go v0.2.0
+	github.com/getsentry/raven-go v0.2.0 // indirect
+	github.com/getsentry/sentry-go v0.1.3
 	github.com/gin-contrib/pprof v0.0.0-20181223171755-ea03ef73484d // indirect
 	github.com/gin-contrib/sse v0.0.0-20190125020943-a7658810eb74 // indirect
 	github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
@@ -29,7 +30,7 @@ require (
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.8.1
 	github.com/rubenfonseca/fastimage v0.0.0-20170112075114-7e006a27a95b
 	github.com/rwcarlsen/goexif v0.0.0-20180518182100-8d986c03457a
 	github.com/sirupsen/logrus v1.2.0 // indirect

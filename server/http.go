@@ -9,9 +9,10 @@ import (
 
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
-	raven "github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
+
 	"github.com/gin-gonic/contrib/cors"
-	"github.com/gin-gonic/contrib/sentry"
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
@@ -72,12 +73,13 @@ func (s *HTTPServer) Init() error {
 	}
 
 	if s.config.Sentry != nil {
-		client, err := raven.NewClient(s.config.Sentry.DSN, s.config.Sentry.Tags)
-		if err != nil {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn: s.config.Sentry.DSN,
+		}); err != nil {
 			return err
 		}
 
-		router.Use(sentry.Recovery(client, true))
+		router.Use(sentrygin.New(sentrygin.Options{}))
 	}
 
 	if s.config.AllowedOrigins != nil && s.config.AllowedMethods != nil {
