@@ -6,6 +6,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
+	_ "golang.org/x/image/webp"
 )
 
 //Decode is image.Decode handling orientation in EXIF tags if exists.
