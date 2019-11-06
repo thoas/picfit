@@ -60,3 +60,5 @@ require (
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
 	gopkg.in/redis.v5 v5.2.9 // indirect
 )
+
+go 1.13
