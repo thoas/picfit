@@ -77,8 +77,10 @@ Configuration should be stored in a readable file and in JSON format.
 - **fs** - generated images stored in your File system
 - **http+fs** - generated images stored in your File system and loaded using HTTP protocol
 - **s3** - generated images stored in Amazon S3
+- **dos3** - generated images stored in DigitalOcean S3
 - **gcs** - generated images stored in Google Cloud Storage
 - **http+s3** - generated images stored in Amazon S3 and loaded using HTTP protocol
+- **http+dos3** - generated images stored in DigitalOcean S3 and loaded using HTTP protocol
 
 Basic
 -----
@@ -125,6 +127,24 @@ a request only once.
         "type": "cache"
       },
     }
+
+Store images on DigitalOcean S3
+-----------------------------------------------------------
+
+It's mostly the same as Amazon S3 storage, the difference are accepted regions
+So, regions can be:
+- nyc1,
+- nyc2,
+- nyc3,
+- ams2,
+- ams3,
+- sfo1,
+- sfo2,
+- sgp1,
+- lon1,
+- fra1,
+- tor1,
+- blr1,
 
 Store images on Amazon S3, keys in Redis and shard filename
 -----------------------------------------------------------

@@ -11,12 +11,14 @@ import (
 )
 
 const (
-	httpStoragePrefix = "http+"
-	httpS3StorageType = "http+s3"
-	httpFSStorageType = "http+fs"
-	fsStorageType     = "fs"
-	s3StorageType     = "s3"
-	gcsStorageType    = "gcs"
+	httpStoragePrefix   = "http+"
+	httpS3StorageType   = "http+s3"
+	httpFSStorageType   = "http+fs"
+	fsStorageType       = "fs"
+	s3StorageType       = "s3"
+	DOs3StorageType     = "dos3"
+	httpDOs3StorageType = "http+dos3"
+	gcsStorageType      = "gcs"
 )
 
 // New return destination and source storages from config
@@ -87,6 +89,35 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 		}
 
 		region, ok := aws.Regions[cfg.Region]
+		if !ok {
+			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+		}
+
+		return gostorages.NewS3Storage(
+			cfg.AccessKeyID,
+			cfg.SecretAccessKey,
+			cfg.BucketName,
+			cfg.Location,
+			region,
+			acl,
+			cfg.BaseURL,
+		), nil
+	case httpDOs3StorageType:
+		cfg.Type = DOs3StorageType
+
+		storage, err := newStorage(cfg)
+		if err != nil {
+			return nil, err
+		}
+
+		return &HTTPStorage{storage, ""}, nil
+	case DOs3StorageType:
+		acl, ok := gostorages.ACLs[cfg.ACL]
+		if !ok {
+			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
+		}
+
+		region, ok := GetDOs3Region(cfg.Region)
 		if !ok {
 			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
 		}
