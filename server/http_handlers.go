@@ -85,7 +85,7 @@ func (h handlers) upload(c *gin.Context) error {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"filename": file.Filename(),
+		"filename": file.Filepath,
 		"path":     file.Path(),
 		"url":      file.URL(),
 	})

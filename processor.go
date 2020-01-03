@@ -48,13 +48,14 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 		return nil, errors.Wrapf(err, "unable to read data from uploaded file")
 	}
 
-	err = p.SourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
+	fileName := p.ShardFilename(payload.Data.Filename)
+	err = p.SourceStorage.Save(fileName, gostorages.NewContentFile(dataBytes.Bytes()))
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
 	}
 
 	return &image.ImageFile{
-		Filepath: payload.Data.Filename,
+		Filepath: fileName,
 		Storage:  p.SourceStorage,
 	}, nil
 }
