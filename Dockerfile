@@ -1,6 +1,4 @@
-FROM alpine:3.7
-
-RUN apk add --no-cache ca-certificates
+FROM ubuntu:18.04
 
 ADD bin/picfit /picfit
 
