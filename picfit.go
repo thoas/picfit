@@ -13,13 +13,13 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 	log := logger.New(cfg.Logger)
 
 	sourceStorage, destinationStorage, err := storage.New(
-		log.With(logger.String("logger", "storage")), cfg.Storage)
+		log.With(logger.String("Logger", "storage")), cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
 
 	s, err := store.New(
-		log.With(logger.String("logger", "store")),
+		log.With(logger.String("Logger", "store")),
 		cfg.KVStore)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 
 	return &Processor{
 		config:             cfg,
-		logger:             log,
+		Logger:             log,
 		SourceStorage:      sourceStorage,
 		DestinationStorage: destinationStorage,
 		store:              s,
