@@ -884,7 +884,10 @@ By default the logger level is `debug`, you can change it in your config:
 
     {
       "logger": {
-        "level": "info"
+        "app": "app_name",
+        "channel": "channel_name",
+        "level": "error",
+        "type": "json"
       }
     }
 
@@ -893,8 +896,14 @@ Levels available are:
 * debug
 * info
 * error
-* warning
+* warn
 * fatal
+
+Types available are:
+
+* console
+* json
+* howdoo_json
 
 Allowed sizes
 -------------
