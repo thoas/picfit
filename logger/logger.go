@@ -22,11 +22,6 @@ type Logger interface {
 
 func New(cfg Config) Logger {
 
-	initialFields := []Field{
-		String("app", cfg.App),
-		String("channel", cfg.Channel),
-		{Key: "extra", Type: zapcore.ObjectMarshalerType, Interface: encoder.ArrayFields([]Field{})},
-	}
 	sampling := &zap.SamplingConfig{
 		Initial:    100,
 		Thereafter: 100,
@@ -34,50 +29,12 @@ func New(cfg Config) Logger {
 	var config encoder.ConfigBuilder
 	if cfg.GetType() == HowdooJsonType {
 
-		config = encoder.Config{
-			Level:            GetAtomicLevel(cfg.GetLevel()),
-			Sampling:         sampling,
-			OutputPaths:      []string{"stderr"},
-			ErrorOutputPaths: []string{"stderr"},
-			InitialFields:    initialFields,
-			EncoderConfig: encoder.EncoderConfig{
-				TimeKey:        "datetime",
-				LevelKey:       "level_name",
-				LevelIntKey:    "level",
-				EnvKey:         "env",
-				CallerKey:      "script_name",
-				MessageKey:     "message",
-				StacktraceKey:  "stacktrace",
-				FieldsGroupKey: "context",
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.CapitalLevelEncoder,
-				EncodeDuration: zapcore.SecondsDurationEncoder,
-				EncodeTime:     zapcore.ISO8601TimeEncoder,
-				EncodeCaller:   zapcore.FullCallerEncoder,
-			},
-			EncoderConstructor: func(encoderConfig interface{}) (zapcore.Encoder, error) {
-				enc := encoder.NewEncoder(encoderConfig)
-				return enc, nil
-			},
-		}
+		config = getHoodooLoggerConfig(cfg, sampling)
+
 	} else {
 
-		var encoderConfig zapcore.EncoderConfig
-		if cfg.GetType() == JsonType {
-			encoderConfig = zap.NewProductionEncoderConfig()
-		} else {
-			encoderConfig = zap.NewDevelopmentEncoderConfig()
-		}
+		config = getLoggerConfig(cfg, sampling)
 
-		config = zap.Config{
-			Level:            GetAtomicLevel(cfg.GetLevel()),
-			Development:      cfg.GetLevel() == DebugLevel,
-			Sampling:         sampling,
-			Encoding:         cfg.GetType(),
-			EncoderConfig:    encoderConfig,
-			OutputPaths:      []string{"stderr"},
-			ErrorOutputPaths: []string{"stderr"},
-		}
 	}
 
 	logger, _ := config.Build()
@@ -129,4 +86,61 @@ func GetAtomicLevel(level string) zap.AtomicLevel {
 	}
 
 	return atomicLevel
+}
+
+func getHoodooLoggerConfig(cfg Config, sampling *zap.SamplingConfig) encoder.Config {
+
+	initialFields := []Field{
+		String("app", cfg.App),
+		String("channel", cfg.Channel),
+		{Key: "extra", Type: zapcore.ObjectMarshalerType, Interface: encoder.ArrayFields([]Field{})},
+	}
+
+	return encoder.Config{
+		Level:            GetAtomicLevel(cfg.GetLevel()),
+		Sampling:         sampling,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+		InitialFields:    initialFields,
+		EncoderConfig: encoder.EncoderConfig{
+			TimeKey:        "datetime",
+			LevelKey:       "level_name",
+			LevelIntKey:    "level",
+			EnvKey:         "env",
+			CallerKey:      "script_name",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			FieldsGroupKey: "context",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeCaller:   zapcore.FullCallerEncoder,
+		},
+		EncoderConstructor: func(encoderConfig interface{}) (zapcore.Encoder, error) {
+			enc := encoder.NewEncoder(encoderConfig)
+			return enc, nil
+		},
+	}
+
+}
+
+func getLoggerConfig(cfg Config, sampling *zap.SamplingConfig) zap.Config {
+
+	var encoderConfig zapcore.EncoderConfig
+	if cfg.GetType() == JsonType {
+		encoderConfig = zap.NewProductionEncoderConfig()
+	} else {
+		encoderConfig = zap.NewDevelopmentEncoderConfig()
+	}
+
+	return zap.Config{
+		Level:            GetAtomicLevel(cfg.GetLevel()),
+		Development:      cfg.GetLevel() == DebugLevel,
+		Sampling:         sampling,
+		Encoding:         cfg.GetType(),
+		EncoderConfig:    encoderConfig,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
 }
