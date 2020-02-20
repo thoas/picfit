@@ -4,20 +4,21 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+
 	"strconv"
 	"time"
 
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
 	"github.com/getsentry/sentry-go"
-	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/getsentry/sentry-go/gin"
 
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/ozhowdoo/howdoo-zap-encoder"
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/failure"
-	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/middleware"
 	"github.com/thoas/stats"
 )
@@ -66,11 +67,11 @@ func (s *HTTPServer) Init() error {
 
 	if s.config.Debug {
 		router.Use(gin.Recovery())
-	}
-
-	if s.config.Logger.GetLevel() == logger.DevelopmentLevel {
 		router.Use(gin.Logger())
 	}
+
+	router.Use(encoder.LoggerRequest(s.processor.Logger))
+	router.Use(encoder.LoggerRecovery(s.processor.Logger))
 
 	if s.config.Sentry != nil {
 		if err := sentry.Init(sentry.ClientOptions{

@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/ozhowdoo/howdoo-zap-encoder"
 	"time"
 
 	"go.uber.org/zap"
@@ -8,10 +9,10 @@ import (
 )
 
 type Field = zapcore.Field
-type ObjectEncoder = zapcore.ObjectEncoder
 
 type Logger interface {
 	Panic(string, ...Field)
+	Fatal(string, ...Field)
 	Info(string, ...Field)
 	Error(string, ...Field)
 	Sync() error
@@ -20,12 +21,23 @@ type Logger interface {
 }
 
 func New(cfg Config) Logger {
-	var logger Logger
-	if cfg.GetLevel() == DevelopmentLevel {
-		logger, _ = NewDevelopmentLogger()
-	} else {
-		logger, _ = NewProductionLogger()
+
+	sampling := &zap.SamplingConfig{
+		Initial:    100,
+		Thereafter: 100,
 	}
+	var config encoder.ConfigBuilder
+	if cfg.GetType() == HowdooJsonType {
+
+		config = getHoodooLoggerConfig(cfg, sampling)
+
+	} else {
+
+		config = getLoggerConfig(cfg, sampling)
+
+	}
+
+	logger, _ := config.Build()
 
 	return logger
 }
@@ -66,14 +78,69 @@ func Object(key string, val zapcore.ObjectMarshaler) Field {
 	return zap.Object(key, val)
 }
 
-func NewProductionLogger() (Logger, error) {
-	return zap.NewProduction()
+func GetAtomicLevel(level string) zap.AtomicLevel {
+
+	var atomicLevel zap.AtomicLevel
+	if err := atomicLevel.UnmarshalText([]byte(level)); err != nil {
+		atomicLevel.SetLevel(zap.DebugLevel)
+	}
+
+	return atomicLevel
 }
 
-func NewDevelopmentLogger() (Logger, error) {
-	return zap.NewDevelopment()
+func getHoodooLoggerConfig(cfg Config, sampling *zap.SamplingConfig) encoder.Config {
+
+	initialFields := []Field{
+		String("app", cfg.App),
+		String("channel", cfg.Channel),
+		{Key: "extra", Type: zapcore.ObjectMarshalerType, Interface: encoder.ArrayFields([]Field{})},
+	}
+
+	return encoder.Config{
+		Level:            GetAtomicLevel(cfg.GetLevel()),
+		Sampling:         sampling,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+		InitialFields:    initialFields,
+		EncoderConfig: encoder.EncoderConfig{
+			TimeKey:        "datetime",
+			LevelKey:       "level_name",
+			LevelIntKey:    "level",
+			EnvKey:         "env",
+			CallerKey:      "script_name",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			FieldsGroupKey: "context",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeCaller:   zapcore.FullCallerEncoder,
+		},
+		EncoderConstructor: func(encoderConfig interface{}) (zapcore.Encoder, error) {
+			enc := encoder.NewEncoder(encoderConfig)
+			return enc, nil
+		},
+	}
+
 }
 
-func NewNopLogger() (Logger, error) {
-	return zap.NewNop(), nil
+func getLoggerConfig(cfg Config, sampling *zap.SamplingConfig) zap.Config {
+
+	var encoderConfig zapcore.EncoderConfig
+	if cfg.GetType() == JsonType {
+		encoderConfig = zap.NewProductionEncoderConfig()
+	} else {
+		encoderConfig = zap.NewDevelopmentEncoderConfig()
+	}
+
+	return zap.Config{
+		Level:            GetAtomicLevel(cfg.GetLevel()),
+		Development:      cfg.GetLevel() == DebugLevel,
+		Sampling:         sampling,
+		Encoding:         cfg.GetType(),
+		EncoderConfig:    encoderConfig,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
 }

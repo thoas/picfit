@@ -24,7 +24,7 @@ import (
 
 type Processor struct {
 	config             *config.Config
-	logger             logger.Logger
+	Logger             logger.Logger
 	SourceStorage      gostorages.Storage
 	DestinationStorage gostorages.Storage
 	store              store.Store
@@ -67,7 +67,7 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 		return err
 	}
 
-	p.logger.Info("Save file to storage",
+	p.Logger.Info("Save file to storage",
 		logger.String("file", i.Filepath))
 
 	err = p.store.Set(i.Key, i.Filepath)
@@ -75,7 +75,7 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 		return err
 	}
 
-	p.logger.Info("Save key to store",
+	p.Logger.Info("Save key to store",
 		logger.String("key", i.Key),
 		logger.String("filepath", i.Filepath))
 
@@ -90,7 +90,7 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 			return err
 		}
 
-		p.logger.Info("Put key into set in store",
+		p.Logger.Info("Put key into set in store",
 			logger.String("set", parentKey),
 			logger.String("value", filepath),
 			logger.String("key", i.Key))
@@ -126,7 +126,7 @@ func (p *Processor) DeleteChild(key string) error {
 		return errors.Wrapf(err, "unable to delete key %s", key)
 	}
 
-	p.logger.Info("Deleting child",
+	p.Logger.Info("Deleting child",
 		logger.String("key", key))
 
 	return nil
@@ -134,11 +134,11 @@ func (p *Processor) DeleteChild(key string) error {
 
 // Delete removes a file from store and storage
 func (p *Processor) Delete(filepath string) error {
-	p.logger.Info("Deleting file on source storage",
+	p.Logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
 
 	if !p.SourceStorage.Exists(filepath) {
-		p.logger.Info("File does not exist anymore on source storage",
+		p.Logger.Info("File does not exist anymore on source storage",
 			logger.String("file", filepath))
 
 		return errors.Wrapf(failure.ErrFileNotExists, "unable to delete, file does not exist: %s", filepath)
@@ -159,7 +159,7 @@ func (p *Processor) Delete(filepath string) error {
 	}
 
 	if !exists {
-		p.logger.Info("Children key does not exist in set",
+		p.Logger.Info("Children key does not exist in set",
 			logger.String("key", childrenKey),
 			logger.String("set", parentKey))
 
@@ -173,7 +173,7 @@ func (p *Processor) Delete(filepath string) error {
 	}
 
 	if children == nil {
-		p.logger.Info("No children to delete in set",
+		p.Logger.Info("No children to delete in set",
 			logger.String("set", parentKey))
 
 		return nil
@@ -192,7 +192,7 @@ func (p *Processor) Delete(filepath string) error {
 	}
 
 	// Delete them right away, we don't care about them anymore.
-	p.logger.Info("Delete set %s",
+	p.Logger.Info("Delete set %s",
 		logger.String("set", childrenKey))
 
 	err = p.store.Delete(childrenKey)
@@ -219,7 +219,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		}
 
 		if exists {
-			p.logger.Info("Key already exists on store, file not modified",
+			p.Logger.Info("Key already exists on store, file not modified",
 				logger.String("key", storeKey),
 				logger.String("modified-since", modifiedSince))
 
@@ -240,7 +240,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				return nil, err
 			}
 
-			p.logger.Info("Key found in store",
+			p.Logger.Info("Key found in store",
 				logger.String("key", storeKey),
 				logger.String("filepath", filepath))
 
@@ -249,10 +249,10 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 
 		// Image not found from the Store, we need to process it
 		// URL available in Query String
-		p.logger.Info("Key not found in store",
+		p.Logger.Info("Key not found in store",
 			logger.String("key", storeKey))
 	} else {
-		p.logger.Info("Force activated, key will be re-processed",
+		p.Logger.Info("Force activated, key will be re-processed",
 			logger.String("key", storeKey))
 	}
 

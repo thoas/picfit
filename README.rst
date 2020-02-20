@@ -327,6 +327,12 @@ To run the application, issue the following command:
 
     $ picfit -c config.json
 
+For release version:
+
+::
+
+    $ GIN_MODE=release picfit -c config.json
+
 By default, this will run the application on port 3001 and
 can be accessed by visiting:
 
@@ -884,7 +890,10 @@ By default the logger level is `debug`, you can change it in your config:
 
     {
       "logger": {
-        "level": "info"
+        "app": "app_name",
+        "channel": "channel_name",
+        "level": "error",
+        "type": "json"
       }
     }
 
@@ -893,8 +902,14 @@ Levels available are:
 * debug
 * info
 * error
-* warning
+* warn
 * fatal
+
+Types available are:
+
+* console
+* json
+* howdoo_json
 
 Allowed sizes
 -------------
