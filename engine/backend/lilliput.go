@@ -155,3 +155,21 @@ func (e *Lilliput) String() string {
 func (e *Lilliput) Flat(background *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
+
+func (e *Lilliput) GetDimensions(buf []byte) (*imagefile.ImageDimensions, error) {
+	decoder, err := lilliput.NewDecoder(buf)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer decoder.Close()
+
+	header, err := decoder.Header()
+	if err != nil {
+		return nil, err
+	}
+
+	return &imagefile.ImageDimensions{
+		Width:  header.Height(),
+		Height: header.Width(),
+	}, nil
+}

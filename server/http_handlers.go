@@ -79,7 +79,6 @@ func (h handlers) upload(c *gin.Context) error {
 	}
 
 	file, err := h.processor.Upload(multipartPayload)
-
 	if err != nil {
 		return err
 	}
@@ -129,11 +128,18 @@ func (h handlers) get(c *gin.Context) error {
 		return err
 	}
 
+	imageDimensions, err := h.processor.GetDimensions(c, file)
+	if err != nil {
+		return err
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"filename": file.Filename(),
 		"path":     file.Path(),
 		"url":      file.URL(),
 		"key":      file.Key,
+		"width":    imageDimensions.Width,
+		"height":   imageDimensions.Height,
 	})
 
 	return nil

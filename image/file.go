@@ -8,6 +8,11 @@ import (
 	"github.com/ulule/gostorages"
 )
 
+type ImageDimensions struct {
+	Width  int
+	Height int
+}
+
 type ImageFile struct {
 	Source    []byte
 	Processed []byte

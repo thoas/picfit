@@ -230,6 +230,21 @@ func (e *GoImage) ToBytes(img image.Image, format imaging.Format, quality int) (
 	return buf.Bytes(), nil
 }
 
+func (e *GoImage) GetDimensions(buf []byte) (*imagefile.ImageDimensions, error) {
+
+	im, err := decode(bytes.NewReader(buf))
+	if err != nil {
+		return nil, err
+	}
+
+	width, height := imageSize(im)
+
+	return &imagefile.ImageDimensions{
+		Width:  width,
+		Height: height,
+	}, nil
+}
+
 func encode(w io.Writer, img image.Image, format imaging.Format, quality int) error {
 	var err error
 	switch format {

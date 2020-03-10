@@ -363,3 +363,86 @@ func (p Processor) FileExists(name string) bool {
 func (p Processor) OpenFile(name string) (gostorages.File, error) {
 	return p.SourceStorage.Open(name)
 }
+
+func (p Processor) GetDimensions(c *gin.Context, img *image.ImageFile) (*image.ImageDimensions, error) {
+	storeKey := c.MustGet("key").(string)
+	dimensionsStoreKey := fmt.Sprintf("%s:size", storeKey)
+
+	existDimensions, err := p.store.Exists(dimensionsStoreKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if !existDimensions {
+		p.Logger.Info("Dimensions key not found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		buf, err := p.getSource(storeKey, img)
+		if err != nil {
+			return nil, err
+		}
+
+		imageDimensions, err := p.Engine.GetDimensions(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		sizeMap := map[string]interface{}{}
+		sizeMap["width"] = imageDimensions.Width
+		sizeMap["height"] = imageDimensions.Height
+
+		p.Logger.Info("Save dimensions key to store",
+			logger.String("key", dimensionsStoreKey))
+
+		err = p.store.SetMap(dimensionsStoreKey, sizeMap)
+		if err != nil {
+			return nil, err
+		}
+
+		return imageDimensions, nil
+
+	} else {
+		p.Logger.Info("Dimensions key found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		demMap, err := p.store.GetMap(dimensionsStoreKey)
+		if err != nil {
+			return nil, err
+		}
+
+		return &image.ImageDimensions{
+			Width:  demMap["width"].(int),
+			Height: demMap["height"].(int),
+		}, nil
+	}
+}
+
+func (p Processor) getSource(storeKey string, img *image.ImageFile) ([]byte, error) {
+	buf := img.Processed
+	if buf == nil {
+		buf = img.Source
+	}
+
+	if buf == nil {
+		filepathRaw, err := p.store.Get(storeKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if filepathRaw != nil {
+			filepath, err := conv.String(filepathRaw)
+			if err != nil {
+				return nil, err
+			}
+
+			img, err = p.fileFromStorage(storeKey, filepath, true)
+			if err != nil {
+				return nil, err
+			}
+
+			buf = img.Source
+		}
+	}
+
+	return buf, nil
+}
