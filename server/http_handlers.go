@@ -165,3 +165,19 @@ func pprofHandler(h http.HandlerFunc) gin.HandlerFunc {
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
+
+func (h handlers) exist(c *gin.Context) error {
+
+	path := c.Query("path")
+
+	if path == "" {
+		c.String(http.StatusBadRequest, "Request should contains path string")
+		return nil
+	}
+
+	if !h.processor.FileExists(path) {
+		return failure.ErrFileNotExists
+	}
+
+	return nil
+}
