@@ -228,7 +228,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 	}
 
 	if force == "" {
-		// try to retrieve image from the k/v rtore
+		// try to retrieve image from the k/v store
 		filepathRaw, err := p.store.Get(storeKey)
 		if err != nil {
 			return nil, err
@@ -364,9 +364,9 @@ func (p Processor) OpenFile(name string) (gostorages.File, error) {
 	return p.SourceStorage.Open(name)
 }
 
-func (p Processor) GetDimensions(c *gin.Context, img *image.ImageFile) (*image.ImageDimensions, error) {
-	storeKey := c.MustGet("key").(string)
-	dimensionsStoreKey := fmt.Sprintf("%s:size", storeKey)
+func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
+
+	dimensionsStoreKey := fmt.Sprintf("%s:size", img.Filepath)
 
 	existDimensions, err := p.store.Exists(dimensionsStoreKey)
 	if err != nil {
@@ -377,12 +377,12 @@ func (p Processor) GetDimensions(c *gin.Context, img *image.ImageFile) (*image.I
 		p.Logger.Info("Dimensions key not found in store",
 			logger.String("key", dimensionsStoreKey))
 
-		buf, err := p.getSource(storeKey, img)
+		buf, err := p.getSource(img)
 		if err != nil {
 			return nil, err
 		}
 
-		imageDimensions, err := p.Engine.GetDimensions(buf)
+		imageDimensions, err := p.Engine.GetSizes(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -390,6 +390,7 @@ func (p Processor) GetDimensions(c *gin.Context, img *image.ImageFile) (*image.I
 		sizeMap := map[string]interface{}{}
 		sizeMap["width"] = imageDimensions.Width
 		sizeMap["height"] = imageDimensions.Height
+		sizeMap["bytes"] = imageDimensions.Bytes
 
 		p.Logger.Info("Save dimensions key to store",
 			logger.String("key", dimensionsStoreKey))
@@ -410,38 +411,28 @@ func (p Processor) GetDimensions(c *gin.Context, img *image.ImageFile) (*image.I
 			return nil, err
 		}
 
-		return &image.ImageDimensions{
+		return &image.ImageSizes{
 			Width:  demMap["width"].(int),
 			Height: demMap["height"].(int),
+			Bytes:  demMap["bytes"].(int),
 		}, nil
 	}
 }
 
-func (p Processor) getSource(storeKey string, img *image.ImageFile) ([]byte, error) {
+func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
 	buf := img.Processed
 	if buf == nil {
 		buf = img.Source
 	}
 
 	if buf == nil {
-		filepathRaw, err := p.store.Get(storeKey)
+
+		file, err := image.FromStorage(p.DestinationStorage, img.Filepath)
 		if err != nil {
 			return nil, err
 		}
 
-		if filepathRaw != nil {
-			filepath, err := conv.String(filepathRaw)
-			if err != nil {
-				return nil, err
-			}
-
-			img, err = p.fileFromStorage(storeKey, filepath, true)
-			if err != nil {
-				return nil, err
-			}
-
-			buf = img.Source
-		}
+		buf = file.Source
 	}
 
 	return buf, nil

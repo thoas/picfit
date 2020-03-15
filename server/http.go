@@ -167,6 +167,10 @@ func (s *HTTPServer) Init() error {
 			failure.Handle(handlers.delete))
 	}
 
+	router.GET("/info",
+		restrictIPAddresses,
+		failure.Handle(handlers.info))
+
 	router.GET("/exist",
 		restrictIPAddresses,
 		failure.Handle(handlers.exist))

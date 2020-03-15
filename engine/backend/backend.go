@@ -32,5 +32,5 @@ type Backend interface {
 	Rotate(img *image.ImageFile, options *Options) ([]byte, error)
 	Fit(img *image.ImageFile, options *Options) ([]byte, error)
 	Flat(background *image.ImageFile, options *Options) ([]byte, error)
-	GetDimensions(buf []byte) (*image.ImageDimensions, error)
+	GetSizes(buf []byte) (*image.ImageSizes, error)
 }

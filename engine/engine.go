@@ -117,16 +117,16 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 	return output, err
 }
 
-func (e Engine) GetDimensions(buf []byte) (*image.ImageDimensions, error) {
+func (e Engine) GetSizes(buf []byte) (*image.ImageSizes, error) {
 	for j := range e.backends {
-		imageDimensions, err := e.backends[j].GetDimensions(buf)
+		imageSizes, err := e.backends[j].GetSizes(buf)
 		if err != nil {
 			return nil, err
 		}
-		return imageDimensions, nil
+		return imageSizes, nil
 	}
 
-	return nil, errors.New("Image backend not configured")
+	return nil, errors.New("image backend not configured")
 }
 
 func operate(b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
