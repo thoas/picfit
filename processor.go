@@ -228,7 +228,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 	}
 
 	if force == "" {
-		// try to retrieve image from the k/v rtore
+		// try to retrieve image from the k/v store
 		filepathRaw, err := p.store.Get(storeKey)
 		if err != nil {
 			return nil, err
@@ -362,4 +362,78 @@ func (p Processor) FileExists(name string) bool {
 
 func (p Processor) OpenFile(name string) (gostorages.File, error) {
 	return p.SourceStorage.Open(name)
+}
+
+func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
+
+	dimensionsStoreKey := fmt.Sprintf("%s:size", img.Filepath)
+
+	existDimensions, err := p.store.Exists(dimensionsStoreKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if !existDimensions {
+		p.Logger.Info("Dimensions key not found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		buf, err := p.getSource(img)
+		if err != nil {
+			return nil, err
+		}
+
+		imageDimensions, err := p.Engine.GetSizes(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		sizeMap := map[string]interface{}{}
+		sizeMap["width"] = imageDimensions.Width
+		sizeMap["height"] = imageDimensions.Height
+		sizeMap["bytes"] = imageDimensions.Bytes
+
+		p.Logger.Info("Save dimensions key to store",
+			logger.String("key", dimensionsStoreKey))
+
+		err = p.store.SetMap(dimensionsStoreKey, sizeMap)
+		if err != nil {
+			return nil, err
+		}
+
+		return imageDimensions, nil
+
+	} else {
+		p.Logger.Info("Dimensions key found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		demMap, err := p.store.GetMap(dimensionsStoreKey)
+		if err != nil {
+			return nil, err
+		}
+
+		return &image.ImageSizes{
+			Width:  demMap["width"].(int),
+			Height: demMap["height"].(int),
+			Bytes:  demMap["bytes"].(int),
+		}, nil
+	}
+}
+
+func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
+	buf := img.Processed
+	if buf == nil {
+		buf = img.Source
+	}
+
+	if buf == nil {
+
+		file, err := image.FromStorage(p.DestinationStorage, img.Filepath)
+		if err != nil {
+			return nil, err
+		}
+
+		buf = file.Source
+	}
+
+	return buf, nil
 }
