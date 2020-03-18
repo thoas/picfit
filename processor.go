@@ -436,14 +436,21 @@ func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
 }
 
 func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
-	buf := img.Processed
-	if buf == nil {
-		buf = img.Source
-	}
+	buf := img.Content()
 
 	if buf == nil {
 
-		file, err := image.FromStorage(p.SourceStorage, img.Filepath)
+		var (
+			file *image.ImageFile
+			err  error
+		)
+
+		if img.Storage == nil {
+			file, err = p.FromStorage(img.Filepath)
+		} else {
+			file, err = image.FromStorage(img.Storage, img.Filepath)
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -452,4 +459,32 @@ func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
 	}
 
 	return buf, nil
+}
+
+func (p Processor) GetStorageByFileExist(filepath string) gostorages.Storage {
+
+	if p.SourceStorage.Exists(filepath) {
+		return p.SourceStorage
+	}
+
+	if p.DestinationStorage.Exists(filepath) {
+		return p.DestinationStorage
+	}
+
+	return nil
+}
+
+func (p Processor) FromStorage(filepath string) (*image.ImageFile, error) {
+
+	storage := p.GetStorageByFileExist(filepath)
+	if storage == nil {
+		return nil, errors.Wrapf(failure.ErrFileNotExists, "file does not exist: %s", filepath)
+	}
+
+	file, err := image.FromStorage(storage, filepath)
+	if err == nil {
+		return nil, err
+	}
+
+	return file, nil
 }

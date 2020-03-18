@@ -177,13 +177,14 @@ func (h handlers) info(c *gin.Context) error {
 		return nil
 	}
 
-	if !h.processor.FileExists(path) {
+	storage := h.processor.GetStorageByFileExist(path)
+	if storage == nil {
 		return failure.ErrFileNotExists
 	}
 
-	img, err := image.FromStorage(h.processor.DestinationStorage, path)
-	if err != nil {
-		return err
+	img := &image.ImageFile{
+		Filepath: path,
+		Storage:  storage,
 	}
 
 	imgSizes, err := h.processor.GetSizes(img)
@@ -212,7 +213,8 @@ func (h handlers) exist(c *gin.Context) error {
 		return nil
 	}
 
-	if !h.processor.FileExists(path) {
+	storage := h.processor.GetStorageByFileExist(path)
+	if storage == nil {
 		return failure.ErrFileNotExists
 	}
 
