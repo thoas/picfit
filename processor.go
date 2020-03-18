@@ -395,10 +395,10 @@ func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
 		p.Logger.Info("Save dimensions key to store",
 			logger.String("key", dimensionsStoreKey))
 
-		err = p.store.SetMap(dimensionsStoreKey, sizeMap)
-		if err != nil {
-			return nil, err
-		}
+		//err = p.store.SetMap(dimensionsStoreKey, sizeMap)
+		//if err != nil {
+		//	return nil, err
+		//}
 
 		return imageDimensions, nil
 
