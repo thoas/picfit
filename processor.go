@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strconv"
 	"strings"
 
 	conv "github.com/cstockton/go-conv"
@@ -395,10 +396,10 @@ func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
 		p.Logger.Info("Save dimensions key to store",
 			logger.String("key", dimensionsStoreKey))
 
-		//err = p.store.SetMap(dimensionsStoreKey, sizeMap)
-		//if err != nil {
-		//	return nil, err
-		//}
+		err = p.store.SetMap(dimensionsStoreKey, sizeMap)
+		if err != nil {
+			return nil, err
+		}
 
 		return imageDimensions, nil
 
@@ -411,10 +412,25 @@ func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
 			return nil, err
 		}
 
+		width, err := strconv.Atoi(demMap["width"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		height, err := strconv.Atoi(demMap["height"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		bts, err := strconv.Atoi(demMap["bytes"].(string))
+		if err != nil {
+			return nil, err
+		}
+
 		return &image.ImageSizes{
-			Width:  demMap["width"].(int),
-			Height: demMap["height"].(int),
-			Bytes:  demMap["bytes"].(int),
+			Width:  width,
+			Height: height,
+			Bytes:  bts,
 		}, nil
 	}
 }
@@ -427,7 +443,7 @@ func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
 
 	if buf == nil {
 
-		file, err := image.FromStorage(p.DestinationStorage, img.Filepath)
+		file, err := image.FromStorage(p.SourceStorage, img.Filepath)
 		if err != nil {
 			return nil, err
 		}
