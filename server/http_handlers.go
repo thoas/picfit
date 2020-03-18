@@ -218,3 +218,14 @@ func (h handlers) exist(c *gin.Context) error {
 
 	return nil
 }
+
+func (h handlers) version(c *gin.Context) error {
+
+	c.JSON(http.StatusOK, gin.H{
+		"branch":    constants.Branch,
+		"revision":  constants.Revision,
+		"buildTime": constants.BuildTime,
+	})
+
+	return nil
+}

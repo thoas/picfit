@@ -366,7 +366,7 @@ func (p Processor) OpenFile(name string) (gostorages.File, error) {
 
 func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
 
-	dimensionsStoreKey := fmt.Sprintf("%s:size", img.Filepath)
+	dimensionsStoreKey := fmt.Sprintf("%s:size", hash.Tokey(img.Filepath))
 
 	existDimensions, err := p.store.Exists(dimensionsStoreKey)
 	if err != nil {
