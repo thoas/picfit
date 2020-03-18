@@ -175,6 +175,10 @@ func (s *HTTPServer) Init() error {
 		restrictIPAddresses,
 		failure.Handle(handlers.exist))
 
+	router.GET("/version",
+		restrictIPAddresses,
+		failure.Handle(handlers.version))
+
 	router.GET("/error", handlers.internalError)
 
 	if s.config.Options.EnablePprof {
