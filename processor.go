@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strconv"
 	"strings"
 
 	conv "github.com/cstockton/go-conv"
@@ -228,7 +229,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 	}
 
 	if force == "" {
-		// try to retrieve image from the k/v rtore
+		// try to retrieve image from the k/v store
 		filepathRaw, err := p.store.Get(storeKey)
 		if err != nil {
 			return nil, err
@@ -362,4 +363,128 @@ func (p Processor) FileExists(name string) bool {
 
 func (p Processor) OpenFile(name string) (gostorages.File, error) {
 	return p.SourceStorage.Open(name)
+}
+
+func (p Processor) GetSizes(img *image.ImageFile) (*image.ImageSizes, error) {
+
+	dimensionsStoreKey := fmt.Sprintf("%s:size", hash.Tokey(img.Filepath))
+
+	existDimensions, err := p.store.Exists(dimensionsStoreKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if !existDimensions {
+		p.Logger.Info("Dimensions key not found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		buf, err := p.getSource(img)
+		if err != nil {
+			return nil, err
+		}
+
+		imageDimensions, err := p.Engine.GetSizes(buf)
+		if err != nil {
+			return nil, err
+		}
+
+		sizeMap := map[string]interface{}{}
+		sizeMap["width"] = imageDimensions.Width
+		sizeMap["height"] = imageDimensions.Height
+		sizeMap["bytes"] = imageDimensions.Bytes
+
+		p.Logger.Info("Save dimensions key to store",
+			logger.String("key", dimensionsStoreKey))
+
+		err = p.store.SetMap(dimensionsStoreKey, sizeMap)
+		if err != nil {
+			return nil, err
+		}
+
+		return imageDimensions, nil
+
+	} else {
+		p.Logger.Info("Dimensions key found in store",
+			logger.String("key", dimensionsStoreKey))
+
+		demMap, err := p.store.GetMap(dimensionsStoreKey)
+		if err != nil {
+			return nil, err
+		}
+
+		width, err := strconv.Atoi(demMap["width"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		height, err := strconv.Atoi(demMap["height"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		bts, err := strconv.Atoi(demMap["bytes"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		return &image.ImageSizes{
+			Width:  width,
+			Height: height,
+			Bytes:  bts,
+		}, nil
+	}
+}
+
+func (p Processor) getSource(img *image.ImageFile) ([]byte, error) {
+	buf := img.Content()
+
+	if buf == nil {
+
+		var (
+			file *image.ImageFile
+			err  error
+		)
+
+		if img.Storage == nil {
+			file, err = p.FromStorage(img.Filepath)
+		} else {
+			file, err = image.FromStorage(img.Storage, img.Filepath)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		buf = file.Source
+	}
+
+	return buf, nil
+}
+
+func (p Processor) GetStorageByFileExist(filepath string) gostorages.Storage {
+
+	if p.SourceStorage.Exists(filepath) {
+		return p.SourceStorage
+	}
+
+	if p.DestinationStorage.Exists(filepath) {
+		return p.DestinationStorage
+	}
+
+	return nil
+}
+
+func (p Processor) FromStorage(filepath string) (*image.ImageFile, error) {
+
+	storage := p.GetStorageByFileExist(filepath)
+	if storage == nil {
+		return nil, errors.Wrapf(failure.ErrFileNotExists, "file does not exist: %s", filepath)
+	}
+
+	file, err := image.FromStorage(storage, filepath)
+	if err == nil {
+		return nil, err
+	}
+
+	return file, nil
 }

@@ -741,6 +741,41 @@ By default the format will be chosen in this order:
 Options
 =======
 
+File exist
+----------
+
+Check if file exists in storage
+
+::
+
+   GET https://localhost:3001/exist?path=foo/bar.png
+
+Status codes:
+200 - File exist
+404 - File not found
+
+File info
+---------
+
+Get information about an existing file by path
+
+::
+
+   GET https://localhost:3001/info?path=foo/bar.png
+
+Example result:
+
+.. code-block:: json
+
+    {
+        "bytes":18400,
+        "filename":"foo/bar.png",
+        "height":298,
+        "path":"/cache/foo/bar.png",
+        "url":"",
+        "width":360
+    }
+
 Deletion
 --------
 

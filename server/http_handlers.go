@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/thoas/picfit/image"
 	"net/http"
 	"time"
 
@@ -79,7 +80,6 @@ func (h handlers) upload(c *gin.Context) error {
 	}
 
 	file, err := h.processor.Upload(multipartPayload)
-
 	if err != nil {
 		return err
 	}
@@ -129,11 +129,19 @@ func (h handlers) get(c *gin.Context) error {
 		return err
 	}
 
+	imageSizes, err := h.processor.GetSizes(file)
+	if err != nil {
+		return err
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"filename": file.Filename(),
 		"path":     file.Path(),
 		"url":      file.URL(),
 		"key":      file.Key,
+		"width":    imageSizes.Width,
+		"height":   imageSizes.Height,
+		"bytes":    imageSizes.Bytes,
 	})
 
 	return nil
@@ -158,4 +166,57 @@ func pprofHandler(h http.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+func (h handlers) info(c *gin.Context) error {
+
+	path := c.Query("path")
+
+	if path == "" {
+		c.String(http.StatusBadRequest, "Request should contains path string")
+		return nil
+	}
+
+	storage := h.processor.GetStorageByFileExist(path)
+	if storage == nil {
+		return failure.ErrFileNotExists
+	}
+
+	img := &image.ImageFile{
+		Filepath: path,
+		Storage:  storage,
+	}
+
+	imgSizes, err := h.processor.GetSizes(img)
+	if err != nil {
+		return err
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"filename": img.Filename(),
+		"path":     img.Path(),
+		"url":      img.URL(),
+		"width":    imgSizes.Width,
+		"height":   imgSizes.Height,
+		"bytes":    imgSizes.Bytes,
+	})
+
+	return nil
+}
+
+func (h handlers) exist(c *gin.Context) error {
+
+	path := c.Query("path")
+
+	if path == "" {
+		c.String(http.StatusBadRequest, "Request should contains path string")
+		return nil
+	}
+
+	storage := h.processor.GetStorageByFileExist(path)
+	if storage == nil {
+		return failure.ErrFileNotExists
+	}
+
+	return nil
 }
