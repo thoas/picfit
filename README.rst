@@ -51,6 +51,8 @@ Configuration
 
 Configuration should be stored in a readable file and in JSON format.
 
+The location of the configuration is specified by --config or the PICFIT_CONFIG_PATH environment variable.
+
 ``config.json``
 
 .. code-block:: json
