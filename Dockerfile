@@ -1,7 +1,20 @@
-FROM alpine:3.7
+FROM golang:1.14-buster as builder
+LABEL stage=builder
 
-RUN apk add --no-cache ca-certificates
+ENV REPO=thoas/picfit
 
-ADD bin/picfit /picfit
+ADD . /go/src/github.com/${REPO}
+
+WORKDIR /go/src/github.com/${REPO}
+
+RUN make docker-build-static && mv bin/picfit /picfit
+
+###
+
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY --from=builder /picfit /picfit
 
 CMD ["/picfit"]
