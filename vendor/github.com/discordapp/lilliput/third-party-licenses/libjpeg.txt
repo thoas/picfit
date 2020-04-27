@@ -211,12 +211,12 @@ Mitchell, published by Van Nostrand Reinhold, 1993, ISBN 0-442-01272-1.
 Price US$59.95, 638 pp.  The book includes the complete text of the ISO JPEG
 standards (DIS 10918-1 and draft DIS 10918-2).
 
-The original JPEG standard is divided into two parts, Part 1 being the actual
-specification, while Part 2 covers compliance testing methods.  Part 1 is
+The original JPEG standard is divided into two parts, Concerns 1 being the actual
+specification, while Concerns 2 covers compliance testing methods.  Concerns 1 is
 titled "Digital Compression and Coding of Continuous-tone Still Images,
-Part 1: Requirements and guidelines" and has document numbers ISO/IEC IS
-10918-1, ITU-T T.81.  Part 2 is titled "Digital Compression and Coding of
-Continuous-tone Still Images, Part 2: Compliance testing" and has document
+Concerns 1: Requirements and guidelines" and has document numbers ISO/IEC IS
+10918-1, ITU-T T.81.  Concerns 2 is titled "Digital Compression and Coding of
+Continuous-tone Still Images, Concerns 2: Compliance testing" and has document
 numbers ISO/IEC IS 10918-2, ITU-T T.83.
 
 The JPEG standard does not specify all details of an interchangeable file
