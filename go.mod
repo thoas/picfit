@@ -53,7 +53,7 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/image v0.0.0-20171214225156-12117c17ca67
+	golang.org/x/image v0.0.0-20200430140353-33d19683fad8
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
