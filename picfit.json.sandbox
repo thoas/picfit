@@ -24,7 +24,7 @@
   },
   "logger": {
     "app": "go",
-    "channel": "picfit-media-service",
+    "channel": "picfit-media-service:sandbox",
     "level": "info",
     "type": "howdoo_json"
   },
