@@ -23,8 +23,8 @@
     "type": "redis"
   },
   "logger": {
-    "app": "image-media-service",
-    "channel": "media-service",
+    "app": "go",
+    "channel": "picfit-media-service",
     "level": "info",
     "type": "howdoo_json"
   },
