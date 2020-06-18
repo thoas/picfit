@@ -2,7 +2,6 @@ package picfit
 
 import (
 	"fmt"
-	"github.com/thoas/picfit/logger"
 	"strconv"
 	"strings"
 
@@ -98,9 +97,6 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 	ops, ok := qs["op"].([]string)
 	if ok {
 		for i := range ops {
-
-			p.Logger.Info("ops[i]", logger.String("set", ops[i]))
-
 			var err error
 			engineOperation := &engine.EngineOperation{}
 			operation, k := engine.Operations[ops[i]]
