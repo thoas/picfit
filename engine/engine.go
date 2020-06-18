@@ -145,6 +145,8 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 		return b.Fit(img, options)
 	case Flat:
 		return b.Flat(img, options)
+	case Blur:
+		return b.Blur(img, options)
 	default:
 		return nil, fmt.Errorf("Operation not found for %s", operation)
 	}
