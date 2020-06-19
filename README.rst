@@ -653,12 +653,12 @@ more information on this configuration.
 Secure file path
 ----------------
 To use the methods ``securedisplay``, ``secureredirect`` and ``secureget``
-need encode file path by aes-256-cbc and 32 bytes key ``secure_path_key`` from config
+need encode file path by aes-256-cbc and 48 bytes key ``secure_path_key`` from config
 
 .. code-block:: json
 
     {
-        "secure_path_key": "32_bytes_utf8_string_password_12"
+        "secure_path_key": "48B_utf8_string_where_16B_vector_&&_32B_password"
     }
 
 
