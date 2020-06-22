@@ -30,6 +30,7 @@ type Processor struct {
 	DestinationStorage gostorages.Storage
 	store              store.Store
 	Engine             *engine.Engine
+	SecurePathKey      string
 }
 
 // Upload uploads a file to its storage
@@ -487,4 +488,26 @@ func (p Processor) FromStorage(filepath string) (*image.ImageFile, error) {
 	}
 
 	return file, nil
+}
+
+func (p Processor) SetSecuredOptions(c *gin.Context, path string, blur string) {
+
+	parameters := c.MustGet("parameters").(map[string]interface{})
+
+	parameters["path"] = path
+
+	ops, ok := parameters["op"].([]string)
+	if ok {
+		parameters["op"] = append([]string{engine.Blur.String()}, ops...)
+	}
+
+	op, ok := parameters["op"].(string)
+	if ok {
+		parameters["op"] = append([]string{engine.Blur.String()}, op)
+	}
+
+	parameters["blur"] = blur
+
+	c.Set("parameters", parameters)
+
 }

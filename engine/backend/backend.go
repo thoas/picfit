@@ -21,6 +21,7 @@ type Options struct {
 	Color    string
 	Degree   int
 	Images   []image.ImageFile
+	Blur     float64
 }
 
 // Engine is an interface to define an image engine
@@ -33,4 +34,5 @@ type Backend interface {
 	Fit(img *image.ImageFile, options *Options) ([]byte, error)
 	Flat(background *image.ImageFile, options *Options) ([]byte, error)
 	GetSizes(buf []byte) (*image.ImageSizes, error)
+	Blur(img *image.ImageFile, options *Options) ([]byte, error)
 }

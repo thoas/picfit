@@ -37,5 +37,6 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 		DestinationStorage: destinationStorage,
 		store:              s,
 		Engine:             e,
+		SecurePathKey:      cfg.SecurePathKey,
 	}, nil
 }

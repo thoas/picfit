@@ -2,7 +2,9 @@ package server
 
 import (
 	"fmt"
+	"github.com/thoas/picfit/crypt/aes256cbc"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/logger"
 	"net/http"
 	"time"
 
@@ -69,6 +71,16 @@ func (h handlers) display(c *gin.Context) error {
 	c.Data(http.StatusOK, file.ContentType(), file.Content())
 
 	return nil
+}
+
+func (h handlers) secureDisplay(c *gin.Context) error {
+
+	err := h.securePath(c)
+	if err != nil {
+		return err
+	}
+
+	return h.display(c)
 }
 
 // upload uploads an image to the destination storage
@@ -147,6 +159,16 @@ func (h handlers) get(c *gin.Context) error {
 	return nil
 }
 
+func (h handlers) secureGet(c *gin.Context) error {
+
+	err := h.securePath(c)
+	if err != nil {
+		return err
+	}
+
+	return h.get(c)
+}
+
 // redirect redirects to the image using base url from storage
 func (h handlers) redirect(c *gin.Context) error {
 	file, err := h.processor.ProcessContext(c,
@@ -159,6 +181,16 @@ func (h handlers) redirect(c *gin.Context) error {
 	c.Redirect(http.StatusMovedPermanently, file.URL())
 
 	return nil
+}
+
+func (h handlers) secureRedirect(c *gin.Context) error {
+
+	err := h.securePath(c)
+	if err != nil {
+		return err
+	}
+
+	return h.redirect(c)
 }
 
 func pprofHandler(h http.HandlerFunc) gin.HandlerFunc {
@@ -217,6 +249,24 @@ func (h handlers) exist(c *gin.Context) error {
 	if storage == nil {
 		return failure.ErrFileNotExists
 	}
+
+	return nil
+}
+
+func (h handlers) securePath(c *gin.Context) error {
+
+	parameters := c.MustGet("parameters").(map[string]interface{})
+	encodedPath := parameters["path"].(string)
+
+	path, err := aes256cbc.Decode(encodedPath, h.processor.SecurePathKey)
+	if err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return err
+	}
+
+	h.processor.Logger.Info("Path decoded", logger.String("path", path))
+
+	h.processor.SetSecuredOptions(c, path, "25")
 
 	return nil
 }

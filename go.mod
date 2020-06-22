@@ -33,7 +33,7 @@ require (
 	github.com/motain/gocheck v0.0.0-20131023154940-9beb271d26e6 // indirect
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
-	github.com/ozhowdoo/howdoo-zap-encoder v0.0.0-20200218130928-d02ca1418ce9 // indirect
+	github.com/ozhowdoo/howdoo-zap-encoder v0.0.0-20200218130928-d02ca1418ce9
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/rubenfonseca/fastimage v0.0.0-20170112075114-7e006a27a95b
