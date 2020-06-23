@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/aes"
 	"fmt"
 	"github.com/thoas/picfit/crypt/aes256cbc"
 	"github.com/thoas/picfit/image"
@@ -258,7 +259,11 @@ func (h handlers) securePath(c *gin.Context) error {
 	parameters := c.MustGet("parameters").(map[string]interface{})
 	encodedPath := parameters["path"].(string)
 
-	path, err := aes256cbc.Decode(encodedPath, h.processor.SecurePathKey)
+	path, err := aes256cbc.Decode(
+		encodedPath,
+		h.processor.SecurePathKey[:aes.BlockSize],
+		h.processor.SecurePathKey[aes.BlockSize:],
+	)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return err

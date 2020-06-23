@@ -8,21 +8,17 @@ import (
 	"fmt"
 )
 
-func Decode(encrypted string, password string) (string, error) {
+func Decode(cipherHexText string, vector string, password string) (string, error) {
 
 	key := []byte(password)
-	cipherText, _ := hex.DecodeString(encrypted)
+	iv := []byte(vector)
+	cipherText, _ := hex.DecodeString(cipherHexText)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 
-	if len(cipherText) < aes.BlockSize {
-		return "", errors.New("cipherText too short")
-	}
-	iv := cipherText[:aes.BlockSize]
-	cipherText = cipherText[aes.BlockSize:]
 	if len(cipherText)%aes.BlockSize != 0 {
 		return "", errors.New("cipherText is not a multiple of the block size")
 	}
