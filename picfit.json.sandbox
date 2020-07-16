@@ -1,0 +1,233 @@
+{
+  "allowed_headers": [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "Accept-Encoding",
+    "Accept-Language"
+  ],
+  "allowed_methods": [
+    "GET",
+    "HEAD"
+  ],
+  "allowed_origins": [
+    "*"
+  ],
+  "kvstore": {
+    "redis": {
+      "db": 0,
+      "host": "redis",
+      "password": "",
+      "port": 6379
+    },
+    "type": "redis"
+  },
+  "logger": {
+    "app": "go",
+    "channel": "picfit-media-service:sandbox",
+    "level": "info",
+    "type": "howdoo_json"
+  },
+  "options": {
+    "allowed_sizes": [
+      {
+        "height": 1080,
+        "width": 1920
+      },
+      {
+        "height": 0,
+        "width": 1920
+      },
+      {
+        "height": 10,
+        "width": 10
+      },
+      {
+        "height": 0,
+        "width": 100
+      },
+      {
+        "height": 100,
+        "width": 100
+      },
+      {
+        "height": 0,
+        "width": 300
+      },
+      {
+        "height": 300,
+        "width": 300
+      },
+      {
+        "height": 0,
+        "width": 900
+      },
+      {
+        "height": 900,
+        "width": 900
+      },
+      {
+        "height": 0,
+        "width": 294
+      },
+      {
+        "height": 240,
+        "width": 294
+      },
+      {
+        "height": 0,
+        "width": 370
+      },
+      {
+        "height": 209,
+        "width": 370
+      },
+      {
+        "height": 0,
+        "width": 1600
+      },
+      {
+        "height": 900,
+        "width": 1600
+      },
+      {
+        "height": 0,
+        "width": 940
+      },
+      {
+        "height": 350,
+        "width": 940
+      },
+      {
+        "height": 0,
+        "width": 295
+      },
+      {
+        "height": 240,
+        "width": 295
+      },
+      {
+        "height": 0,
+        "width": 600
+      },
+      {
+        "height": 362,
+        "width": 600
+      },
+      {
+        "height": 364,
+        "width": 600
+      },
+      {
+        "height": 411,
+        "width": 600
+      },
+      {
+        "height": 1086,
+        "width": 600
+      },
+      {
+        "height": 0,
+        "width": 960
+      },
+      {
+        "height": 579,
+        "width": 960
+      },
+      {
+        "height": 0,
+        "width": 120
+      },
+      {
+        "height": 80,
+        "width": 120
+      },
+      {
+        "height": 0,
+        "width": 240
+      },
+      {
+        "height": 160,
+        "width": 240
+      },
+      {
+        "height": 1920,
+        "width": 1080
+      },
+      {
+        "height": 720,
+        "width": 1320
+      },
+      {
+        "height": 1320,
+        "width": 720
+      },
+      {
+        "height": 540,
+        "width": 980
+      },
+      {
+        "height": 980,
+        "width": 540
+      },
+      {
+        "height": 360,
+        "width": 640
+      },
+      {
+        "height": 640,
+        "width": 360
+      },
+      {
+        "height": 0,
+        "width": 0
+      },
+      {
+        "height": 540,
+        "width": 960
+      },
+      {
+        "height": 960,
+        "width": 540
+      },
+      {
+        "height": 360,
+        "width": 640
+      },
+      {
+        "height": 640,
+        "width": 360
+      },
+      {
+        "height": 720,
+        "width": 1320
+      },
+      {
+        "height": 1320,
+        "width": 720
+      }
+    ],
+    "enable_cascade_delete": true,
+    "enable_delete": true,
+    "enable_stats": true,
+    "enable_upload": true
+  },
+  "port": 3001,
+  "shard": {
+    "depth": 2,
+    "restonly": true,
+    "width": 1
+  },
+  "storage": {
+    "dst": {
+      "base_url": "http://localhost:3001",
+      "location": "cache/",
+      "type": "fs"
+    },
+    "prefix": "files:",
+    "src": {
+      "location": "upload/",
+      "type": "fs"
+    }
+  }
+}

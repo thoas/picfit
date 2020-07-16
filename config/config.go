@@ -61,6 +61,7 @@ type Config struct {
 	Storage        *storage.Config
 	KVStore        *store.Config
 	Logger         logger.Config
+	SecurePathKey  string `mapstructure:"secure_path_key"`
 }
 
 // DefaultConfig returns a default config instance

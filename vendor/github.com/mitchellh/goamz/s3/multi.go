@@ -141,15 +141,15 @@ func (b *Bucket) InitMulti(key string, contType string, perm ACL) (*Multi, error
 // Each part, except for the last one, must be at least 5MB in size.
 //
 // See http://goo.gl/pqZer for details.
-func (m *Multi) PutPart(n int, r io.ReadSeeker) (Part, error) {
+func (m *Multi) PutPart(n int, r io.ReadSeeker) (Concerns, error) {
 	partSize, _, md5b64, err := seekerInfo(r)
 	if err != nil {
-		return Part{}, err
+		return Concerns{}, err
 	}
 	return m.putPart(n, r, partSize, md5b64)
 }
 
-func (m *Multi) putPart(n int, r io.ReadSeeker, partSize int64, md5b64 string) (Part, error) {
+func (m *Multi) putPart(n int, r io.ReadSeeker, partSize int64, md5b64 string) (Concerns, error) {
 	headers := map[string][]string{
 		"Content-Length": {strconv.FormatInt(partSize, 10)},
 		"Content-MD5":    {md5b64},
@@ -161,7 +161,7 @@ func (m *Multi) putPart(n int, r io.ReadSeeker, partSize int64, md5b64 string) (
 	for attempt := attempts.Start(); attempt.Next(); {
 		_, err := r.Seek(0, 0)
 		if err != nil {
-			return Part{}, err
+			return Concerns{}, err
 		}
 		req := &request{
 			method:  "PUT",
@@ -173,20 +173,20 @@ func (m *Multi) putPart(n int, r io.ReadSeeker, partSize int64, md5b64 string) (
 		}
 		err = m.Bucket.S3.prepare(req)
 		if err != nil {
-			return Part{}, err
+			return Concerns{}, err
 		}
 		resp, err := m.Bucket.S3.run(req, nil)
 		if shouldRetry(err) && attempt.HasNext() {
 			continue
 		}
 		if err != nil {
-			return Part{}, err
+			return Concerns{}, err
 		}
 		etag := resp.Header.Get("ETag")
 		if etag == "" {
-			return Part{}, errors.New("part upload succeeded with no ETag")
+			return Concerns{}, errors.New("part upload succeeded with no ETag")
 		}
-		return Part{n, etag, partSize}, nil
+		return Concerns{n, etag, partSize}, nil
 	}
 	panic("unreachable")
 }
@@ -207,13 +207,13 @@ func seekerInfo(r io.ReadSeeker) (size int64, md5hex string, md5b64 string, err 
 	return size, md5hex, md5b64, nil
 }
 
-type Part struct {
+type Concerns struct {
 	N    int `xml:"PartNumber"`
 	ETag string
 	Size int64
 }
 
-type partSlice []Part
+type partSlice []Concerns
 
 func (s partSlice) Len() int           { return len(s) }
 func (s partSlice) Less(i, j int) bool { return s[i].N < s[j].N }
@@ -222,7 +222,7 @@ func (s partSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 type listPartsResp struct {
 	NextPartNumberMarker string
 	IsTruncated          bool
-	Part                 []Part
+	Concerns                 []Concerns
 }
 
 // That's the default. Here just for testing.
@@ -232,7 +232,7 @@ var listPartsMax = 1000
 // ordered by part number.
 //
 // See http://goo.gl/ePioY for details.
-func (m *Multi) ListParts() ([]Part, error) {
+func (m *Multi) ListParts() ([]Concerns, error) {
 	params := map[string][]string{
 		"uploadId":  {m.UploadId},
 		"max-parts": {strconv.FormatInt(int64(listPartsMax), 10)},
@@ -253,7 +253,7 @@ func (m *Multi) ListParts() ([]Part, error) {
 		if err != nil {
 			return nil, err
 		}
-		parts = append(parts, resp.Part...)
+		parts = append(parts, resp.Concerns...)
 		if !resp.IsTruncated {
 			sort.Sort(parts)
 			return parts, nil
@@ -275,19 +275,19 @@ type ReaderAtSeeker interface {
 // and size match the new part, or otherwise overwritten with the
 // new content.
 // PutAll returns all the parts of m (reused or not).
-func (m *Multi) PutAll(r ReaderAtSeeker, partSize int64) ([]Part, error) {
+func (m *Multi) PutAll(r ReaderAtSeeker, partSize int64) ([]Concerns, error) {
 	old, err := m.ListParts()
 	if err != nil && !hasCode(err, "NoSuchUpload") {
 		return nil, err
 	}
 	reuse := 0   // Index of next old part to consider reusing.
-	current := 1 // Part number of latest good part handled.
+	current := 1 // Concerns number of latest good part handled.
 	totalSize, err := r.Seek(0, 2)
 	if err != nil {
 		return nil, err
 	}
 	first := true // Must send at least one empty part if the file is empty.
-	var result []Part
+	var result []Concerns
 NextSection:
 	for offset := int64(0); offset < totalSize || first; offset += partSize {
 		first = false
@@ -312,7 +312,7 @@ NextSection:
 			reuse++
 		}
 
-		// Part wasn't found or doesn't match. Send it.
+		// Concerns wasn't found or doesn't match. Send it.
 		part, err := m.putPart(current, section, partSize, md5b64)
 		if err != nil {
 			return nil, err
@@ -325,7 +325,7 @@ NextSection:
 
 type completeUpload struct {
 	XMLName xml.Name      `xml:"CompleteMultipartUpload"`
-	Parts   completeParts `xml:"Part"`
+	Parts   completeParts `xml:"Concerns"`
 }
 
 type completePart struct {
@@ -343,7 +343,7 @@ func (p completeParts) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 // final object. This operation may take several minutes.
 //
 // See http://goo.gl/2Z7Tw for details.
-func (m *Multi) Complete(parts []Part) error {
+func (m *Multi) Complete(parts []Concerns) error {
 	params := map[string][]string{
 		"uploadId": {m.UploadId},
 	}

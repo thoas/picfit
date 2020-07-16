@@ -473,6 +473,12 @@ Flat can be used only with the [multiple operation system].
 
 In order to undersand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
 
+Blur
+----
+Blur image by gaussian sigma
+
+- **blur** - Gaussian sigma, float
+
 Methods
 =======
 
@@ -487,6 +493,11 @@ destination storage backend.
 A couple of headers (``Content-Type``, ``If-Modified-Since``) will be set
 to allow you to use an http cache system.
 
+Secured display
+-------
+``securedisplay``
+
+``Display`` method with encoded path by aes-256-cbc and blur image
 
 Redirect
 --------
@@ -498,6 +509,12 @@ will be performed.
 
 The first query will be slower but next ones will be faster because the name
 of the generated file will be stored in your key/value store.
+
+Secured redirect
+-------
+``secureredirect``
+
+``Redirect`` method with encoded path by aes-256-cbc and blur image
 
 Get
 ---
@@ -522,6 +539,12 @@ Expect the following result:
         "path":"cache/6/7/a661f8d197a42d21d0190d33e629e4.png",
         "url":"https://ds9xhxfkunhky.cloudfront.net/cache/6/7/a661f8d197a42d21d0190d33e629e4.png"
     }
+
+Secured get
+-------
+``secureget``
+
+``Get`` method with encoded path by aes-256-cbc and blur image
 
 Upload
 ------
@@ -626,6 +649,18 @@ Limiting allowed sizes
 Depending on your use case it may be more appropriate to simply restrict the
 image sizes picfit is allowed to generate. See the `Allowed sizes`_ section for
 more information on this configuration.
+
+Secure file path
+----------------
+To use the methods ``securedisplay``, ``secureredirect`` and ``secureget``
+need encode file path by aes-256-cbc and 48 bytes key ``secure_path_key`` from config
+
+.. code-block:: json
+
+    {
+        "secure_path_key": "48B_utf8_string_where_16B_vector_&&_32B_password"
+    }
+
 
 Tools
 =====

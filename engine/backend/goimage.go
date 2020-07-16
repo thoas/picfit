@@ -247,6 +247,24 @@ func (e *GoImage) GetSizes(buf []byte) (*imagefile.ImageSizes, error) {
 	}, nil
 }
 
+func (e *GoImage) Blur(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
+	imageSource, err := e.Source(img)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.ToBytes(imaging.Blur(imageSource, options.Blur), options.Format, options.Quality)
+}
+
 func encode(w io.Writer, img image.Image, format imaging.Format, quality int) error {
 	var err error
 	switch format {

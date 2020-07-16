@@ -53,13 +53,28 @@ func (s *HTTPServer) Init() error {
 				method:  router.GET,
 			},
 			{
+				pattern: "secureredirect",
+				handler: failure.Handle(handlers.secureRedirect),
+				method:  router.GET,
+			},
+			{
 				pattern: "display",
 				handler: failure.Handle(handlers.display),
 				method:  router.GET,
 			},
 			{
+				pattern: "securedisplay",
+				handler: failure.Handle(handlers.secureDisplay),
+				method:  router.GET,
+			},
+			{
 				pattern: "get",
 				handler: failure.Handle(handlers.get),
+				method:  router.GET,
+			},
+			{
+				pattern: "secureget",
+				handler: failure.Handle(handlers.secureGet),
 				method:  router.GET,
 			},
 		}

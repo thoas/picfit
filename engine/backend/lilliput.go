@@ -175,3 +175,7 @@ func (e *Lilliput) GetSizes(buf []byte) (*imagefile.ImageSizes, error) {
 		Bytes:  binary.Size(buf),
 	}, nil
 }
+
+func (e *Lilliput) Blur(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}
