@@ -35,4 +35,5 @@ type Backend interface {
 	Flat(background *image.ImageFile, options *Options) ([]byte, error)
 	GetSizes(buf []byte) (*image.ImageSizes, error)
 	Blur(img *image.ImageFile, options *Options) ([]byte, error)
+	BlurHash(img *image.ImageFile, options *Options) ([]byte, error)
 }
