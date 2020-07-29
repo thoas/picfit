@@ -5,6 +5,7 @@ var Extensions = map[string]string{
 	"image/png":  "png",
 	"image/bmp":  "bmp",
 	"image/gif":  "gif",
+	"image/webp": "webp",
 }
 
 var HeaderKeys = []string{
