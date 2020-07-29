@@ -271,7 +271,7 @@ func (h handlers) securePath(c *gin.Context) error {
 
 	h.processor.Logger.Info("Path decoded", logger.String("path", path))
 
-	h.processor.SetSecuredOptions(c, path, "25")
+	h.processor.SetSecuredOptions(c, path)
 
 	return nil
 }

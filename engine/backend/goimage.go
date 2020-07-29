@@ -19,6 +19,8 @@ import (
 
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
+
+	"github.com/buckket/go-blurhash"
 )
 
 type GoImage struct{}
@@ -263,6 +265,44 @@ func (e *GoImage) Blur(img *imagefile.ImageFile, options *Options) ([]byte, erro
 	}
 
 	return e.ToBytes(imaging.Blur(imageSource, options.Blur), options.Format, options.Quality)
+}
+
+func (e *GoImage) BlurHash(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	if options.Format == imaging.GIF {
+		content, err := e.TransformGIF(img, options, imaging.Thumbnail)
+		if err != nil {
+			return nil, err
+		}
+
+		return content, nil
+	}
+
+	imageSource, err := e.Source(img)
+	if err != nil {
+		return nil, err
+	}
+
+	str, err := blurhash.Encode(5, 4, &imageSource)
+	if err != nil {
+		return nil, err
+	}
+
+	width := options.Width
+	if width == 0 {
+		width = imageSource.Bounds().Max.X
+	}
+
+	height := options.Height
+	if height == 0 {
+		height = imageSource.Bounds().Max.Y
+	}
+
+	newImg, err := blurhash.Decode(str, width, height, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.ToBytes(newImg, options.Format, options.Quality)
 }
 
 func encode(w io.Writer, img image.Image, format imaging.Format, quality int) error {

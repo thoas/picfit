@@ -17,6 +17,7 @@ const (
 	Noop      = Operation("noop")
 	Flat      = Operation("flat")
 	Blur      = Operation("blur")
+	BlurHash  = Operation("blurhash")
 )
 
 var Operations = map[string]Operation{
@@ -28,6 +29,7 @@ var Operations = map[string]Operation{
 	Noop.String():      Noop,
 	Flat.String():      Flat,
 	Blur.String():      Blur,
+	BlurHash.String():  BlurHash,
 }
 
 type EngineOperation struct {

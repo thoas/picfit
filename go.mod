@@ -2,6 +2,7 @@ module github.com/thoas/picfit
 
 require (
 	cloud.google.com/go v0.39.0 // indirect
+	github.com/buckket/go-blurhash v1.0.3
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/davecgh/go-spew v1.1.1

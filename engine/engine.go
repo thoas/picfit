@@ -147,6 +147,8 @@ func operate(b backend.Backend, img *image.ImageFile, operation Operation, optio
 		return b.Flat(img, options)
 	case Blur:
 		return b.Blur(img, options)
+	case BlurHash:
+		return b.BlurHash(img, options)
 	default:
 		return nil, fmt.Errorf("Operation not found for %s", operation)
 	}
