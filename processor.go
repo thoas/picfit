@@ -490,7 +490,7 @@ func (p Processor) FromStorage(filepath string) (*image.ImageFile, error) {
 	return file, nil
 }
 
-func (p Processor) SetSecuredOptions(c *gin.Context, path string, blur string) {
+func (p Processor) SetSecuredOptions(c *gin.Context, path string) {
 
 	parameters := c.MustGet("parameters").(map[string]interface{})
 
@@ -498,16 +498,13 @@ func (p Processor) SetSecuredOptions(c *gin.Context, path string, blur string) {
 
 	ops, ok := parameters["op"].([]string)
 	if ok {
-		parameters["op"] = append([]string{engine.Blur.String()}, ops...)
+		parameters["op"] = append([]string{engine.BlurHash.String()}, ops...)
 	}
 
 	op, ok := parameters["op"].(string)
 	if ok {
-		parameters["op"] = append([]string{engine.Blur.String()}, op)
+		parameters["op"] = append([]string{engine.BlurHash.String()}, op)
 	}
 
-	parameters["blur"] = blur
-
 	c.Set("parameters", parameters)
-
 }

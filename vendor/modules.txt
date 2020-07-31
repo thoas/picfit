@@ -16,6 +16,9 @@ github.com/cstockton/go-conv/internal/refutil
 github.com/davecgh/go-spew/spew
 # github.com/discordapp/lilliput v0.0.0-20190402233613-eaffdc08248b
 github.com/discordapp/lilliput
+# github.com/buckket/go-blurhash v1.0.3
+github.com/buckket/go-blurhash
+github.com/buckket/go-blurhash/base83
 # github.com/disintegration/imaging v1.5.0
 github.com/disintegration/imaging
 # github.com/djherbis/times v1.0.1
