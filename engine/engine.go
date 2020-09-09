@@ -36,9 +36,14 @@ func New(cfg config.Config) *Engine {
 		})
 	} else {
 		if cfg.Backends.Gifsicle != nil {
-			if _, err := exec.LookPath("gifsicle"); err == nil {
+			path := cfg.Backends.Gifsicle.Path
+			if path == "" {
+				path = "gifsicle"
+			}
+
+			if _, err := exec.LookPath(path); err == nil {
 				b = append(b, Backend{
-					Backend:   &backend.Gifsicle{},
+					Backend:   &backend.Gifsicle{Path: path},
 					mimetypes: cfg.Backends.Gifsicle.Mimetypes,
 					weight:    cfg.Backends.Gifsicle.Weight,
 				})

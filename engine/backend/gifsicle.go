@@ -11,7 +11,9 @@ import (
 )
 
 // Gifsicle is the gifsicle backend.
-type Gifsicle struct{}
+type Gifsicle struct {
+	Path string
+}
 
 func (b *Gifsicle) String() string {
 	return "gifsicle"
@@ -34,7 +36,7 @@ func (b *Gifsicle) Flip(*image.ImageFile, *Options) ([]byte, error) {
 
 // Resize implements Backend.
 func (b *Gifsicle) Resize(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
-	cmd := exec.Command("gifsicle",
+	cmd := exec.Command(b.Path,
 		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
 	)
 	cmd.Stdin = bytes.NewReader(imgfile.Source)
@@ -66,7 +68,7 @@ func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, e
 	bounds := img.Bounds()
 	left, top, cropw, croph := computecrop(bounds.Dx(), bounds.Dy(), opts.Width, opts.Height)
 
-	cmd := exec.Command("gifsicle",
+	cmd := exec.Command(b.Path,
 		"--crop", fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph),
 		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
 	)
