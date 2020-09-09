@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -34,19 +35,27 @@ func New(cfg config.Config) *Engine {
 			mimetypes: MimeTypes,
 		})
 	} else {
-		if cfg.Backends.Lilliput != nil {
-			b = append(b, Backend{
-				Backend:   backend.NewLilliput(cfg),
-				mimetypes: cfg.Backends.Lilliput.Mimetypes,
-				weight:    cfg.Backends.Lilliput.Weight,
-			})
+		if cfg.Backends.Gifsicle != nil {
+			if _, err := exec.LookPath("gifsicle"); err == nil {
+				b = append(b, Backend{
+					Backend:   &backend.Gifsicle{},
+					mimetypes: cfg.Backends.Gifsicle.Mimetypes,
+					weight:    cfg.Backends.Gifsicle.Weight,
+				})
+			}
 		}
-
 		if cfg.Backends.GoImage != nil {
 			b = append(b, Backend{
 				Backend:   &backend.GoImage{},
 				mimetypes: cfg.Backends.GoImage.Mimetypes,
 				weight:    cfg.Backends.GoImage.Weight,
+			})
+		}
+		if cfg.Backends.Lilliput != nil {
+			b = append(b, Backend{
+				Backend:   backend.NewLilliput(cfg),
+				mimetypes: cfg.Backends.Lilliput.Mimetypes,
+				weight:    cfg.Backends.Lilliput.Weight,
 			})
 		}
 	}

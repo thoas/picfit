@@ -1,8 +1,9 @@
 package config
 
 type Backends struct {
-	Lilliput *Backend `mapstructure:"lilliput"`
+	Gifsicle *Backend `mapstructure:"gifsicle"`
 	GoImage  *Backend `mapstructure:"goimage"`
+	Lilliput *Backend `mapstructure:"lilliput"`
 }
 
 type Backend struct {
