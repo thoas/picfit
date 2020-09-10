@@ -1,13 +1,20 @@
 package config
 
 type Backends struct {
-	Lilliput *Backend `mapstructure:"lilliput"`
-	GoImage  *Backend `mapstructure:"goimage"`
+	Gifsicle *CommandBackend `mapstructure:"gifsicle"`
+	GoImage  *Backend        `mapstructure:"goimage"`
+	Lilliput *Backend        `mapstructure:"lilliput"`
 }
 
 type Backend struct {
 	Weight    int
 	Mimetypes []string
+}
+
+type CommandBackend struct {
+	Path      string
+	Mimetypes []string
+	Weight    int
 }
 
 // Config is the engine config
