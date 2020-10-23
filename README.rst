@@ -135,18 +135,19 @@ Store images on DigitalOcean S3
 
 It's mostly the same as Amazon S3 storage, the difference are accepted regions
 So, regions can be:
-- nyc1,
-- nyc2,
-- nyc3,
-- ams2,
-- ams3,
-- sfo1,
-- sfo2,
-- sgp1,
-- lon1,
-- fra1,
-- tor1,
-- blr1,
+
+- nyc1
+- nyc2
+- nyc3
+- ams2
+- ams3
+- sfo1
+- sfo2
+- sgp1
+- lon1
+- fra1
+- tor1
+- blr1
 
 Store images on Amazon S3, keys in Redis and shard filename
 -----------------------------------------------------------
