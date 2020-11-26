@@ -353,7 +353,7 @@ General parameters
 
 Parameters to call the picfit service are:
 
-::
+.. code-block:: html
 
     <img src="http://localhost:3001/{method}?url={url}&path={path}&w={width}&h={height}&upscale={upscale}&sig={sig}&op={operation}&fmt={format}&q={quality}&deg={degree}&pos={position}"
 
@@ -373,13 +373,13 @@ Parameters to call the picfit service are:
 To use this service, include the service url as replacement
 for your images, for example:
 
-::
+.. code-block:: html
 
     <img src="https://www.google.fr/images/srpr/logo11w.png" />
 
 will become:
 
-::
+.. code-block:: html
 
     <img src="http://localhost:3001/display?url=https%3A%2F%2Fwww.google.fr%2Fimages%2Fsrpr%2Flogo11w.png&w=100&h=100&op=resize&upscale=0"
 
@@ -392,7 +392,7 @@ Using source storage
 If an image is stored in your source storage at the location ``path/to/file.png``,
 then you can call the service to load this file:
 
-::
+.. code-block:: html
 
     <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize"
 
@@ -571,7 +571,7 @@ Each options of the operation must be described with subparameters separed by
 
 Example of a resize followed by a rotation:
 
-::
+.. code-block:: html
 
     <img src="http://localhost:3001/display?w=100&h=100&path=path/to/file.png&op=resize&op=op:rotate+deg:180"
 
@@ -589,7 +589,9 @@ The signature is an hexadecimal digest generated from the client
 key and the query string using the HMAC-SHA1 message authentication code
 (MAC) algorithm.
 
-The below python code provides an implementation example::
+The below python code provides an implementation example:
+
+.. code-block:: python
 
     import hashlib
     import hmac
