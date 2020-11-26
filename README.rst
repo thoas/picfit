@@ -466,9 +466,9 @@ Flat can be used only with the [multiple operation system].
 
 - **path** - the foreground image path
 - **color** - the foreground color in Hex (without ``#``), default is transparent
-- **pos** - the destination rectange
+- **pos** - the destination rectangle
 
-In order to undersand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
+In order to understand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
 
 Methods
 =======
@@ -566,7 +566,7 @@ Multiple operations can be done on the same image following a given order.
 First operation must be described as above then other operation are described in parameters ``op``.
 The order of ``op`` parameters is the order used.
 
-Each options of the operation must be described with subparameters separed by
+Each options of the operation must be described with subparameters separated by
 ``:`` with the operation name as argument to ``op``.
 
 Example of a resize followed by a rotation:
@@ -607,7 +607,7 @@ The below python code provides an implementation example::
 
         return m.hexdigest()
 
-The implemention has to sort and encode query string to generate a proper signature.
+The implementation has to sort and encode query string to generate a proper signature.
 
 The signature is passed to the application by appending the ``sig``
 parameter to the query string; e.g.
