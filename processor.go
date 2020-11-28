@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strings"
 
 	conv "github.com/cstockton/go-conv"
@@ -243,7 +244,12 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				logger.String("key", storeKey),
 				logger.String("filepath", filepath))
 
-			return p.fileFromStorage(storeKey, filepath, options.Load)
+			img, err := p.fileFromStorage(storeKey, filepath, options.Load)
+			//no such file, just reprocess (maybe file cache was purged)
+			if err != nil && os.IsNotExist(err) {
+				return p.processImage(c, storeKey, options.Async)
+			}
+			return img, err
 		}
 
 		// Image not found from the Store, we need to process it
