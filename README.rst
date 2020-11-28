@@ -635,7 +635,7 @@ use the command::
     $ picfit signature --key=abcdef "w=100&h=100&op=resize"
     Query String: w=100&h=100&op=resize
     Signature: 6f7a667559990dee9c30fb459b88c23776fad25e
-    Signed Query String: w=100&h=100&op=resize&sig=6f7a667559990dee9c30fb459b88c23776fad2
+    Signed Query String: w=100&h=100&op=resize&sig=6f7a667559990dee9c30fb459b88c23776fad25e
 
 Error reporting
 ===============
