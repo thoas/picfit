@@ -73,9 +73,9 @@ func (h handlers) display(c *gin.Context) error {
 // upload uploads an image to the destination storage
 func (h handlers) upload(c *gin.Context) error {
 	multipartPayload := new(payload.Multipart)
-	errs := binding.Bind(c.Request, multipartPayload)
-	if errs != nil {
-		return errs
+	err := binding.Bind(c.Request, multipartPayload)
+	if err != nil {
+		return err
 	}
 
 	file, err := h.processor.Upload(multipartPayload)
@@ -154,8 +154,7 @@ func (h handlers) redirect(c *gin.Context) error {
 }
 
 func pprofHandler(h http.HandlerFunc) gin.HandlerFunc {
-	handler := http.HandlerFunc(h)
 	return func(c *gin.Context) {
-		handler.ServeHTTP(c.Writer, c.Request)
+		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
