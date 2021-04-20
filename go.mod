@@ -4,7 +4,6 @@ require (
 	cloud.google.com/go v0.39.0 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/davecgh/go-spew v1.1.1
-	github.com/discordapp/lilliput v0.0.0-20190402233613-eaffdc08248b
 	github.com/disintegration/imaging v1.5.0
 	github.com/djherbis/times v1.0.1 // indirect
 	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
@@ -61,7 +60,6 @@ require (
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
 	gopkg.in/redis.v5 v5.2.9 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
-	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
 
 go 1.16

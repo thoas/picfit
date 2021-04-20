@@ -56,13 +56,6 @@ func New(cfg config.Config) *Engine {
 				weight:    cfg.Backends.GoImage.Weight,
 			})
 		}
-		if cfg.Backends.Lilliput != nil {
-			b = append(b, Backend{
-				Backend:   backend.NewLilliput(cfg),
-				mimetypes: cfg.Backends.Lilliput.Mimetypes,
-				weight:    cfg.Backends.Lilliput.Weight,
-			})
-		}
 	}
 
 	sort.Slice(b, func(i, j int) bool {

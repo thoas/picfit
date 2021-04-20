@@ -3,7 +3,6 @@ package config
 type Backends struct {
 	Gifsicle *CommandBackend `mapstructure:"gifsicle"`
 	GoImage  *Backend        `mapstructure:"goimage"`
-	Lilliput *Backend        `mapstructure:"lilliput"`
 }
 
 type Backend struct {
