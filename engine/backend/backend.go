@@ -1,6 +1,8 @@
 package backend
 
 import (
+	"fmt"
+
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
@@ -11,16 +13,21 @@ var MethodNotImplementedError = errors.New("Not implemented")
 
 // Options is the engine options
 type Options struct {
-	Upscale  bool
-	Format   imaging.Format
-	Quality  int
-	Width    int
-	Height   int
-	Position string
-	Stick    string
 	Color    string
 	Degree   int
+	Format   imaging.Format
+	Height   int
 	Images   []image.ImageFile
+	Position string
+	Quality  int
+	Stick    string
+	Upscale  bool
+	Width    int
+}
+
+func (o Options) String() string {
+	return fmt.Sprintf("width:%d height:%d quality:%d upscale:%t",
+		o.Width, o.Height, o.Quality, o.Upscale)
 }
 
 // Engine is an interface to define an image engine

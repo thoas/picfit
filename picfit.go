@@ -25,7 +25,7 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 		return nil, err
 	}
 
-	e := engine.New(*cfg.Engine)
+	e := engine.New(*cfg.Engine, log.With(logger.String("logger", "engine")))
 
 	log.Debug("Image engine configured",
 		logger.String("engine", e.String()))

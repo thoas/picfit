@@ -4,25 +4,25 @@ import "fmt"
 
 // Config is a struct to represent a key/value store (redis, cache)
 type Config struct {
-	Type         string
+	Cache        CacheConfig `mapstructure:"cache"`
 	Prefix       string
 	Redis        RedisConfig        `mapstructure:"redis"`
-	Cache        CacheConfig        `mapstructure:"cache"`
 	RedisCluster RedisClusterConfig `mapstructure:"redis-cluster"`
+	Type         string
 }
 
 type RedisConfig struct {
-	Host       string
-	Port       int
-	Password   string
 	DB         int
 	Expiration int
+	Host       string
+	Password   string
+	Port       int
 }
 
 type RedisClusterConfig struct {
+	Addrs      []string
 	Expiration int
 	Password   string
-	Addrs      []string
 }
 
 func (r RedisConfig) Addr() string {
@@ -30,6 +30,6 @@ func (r RedisConfig) Addr() string {
 }
 
 type CacheConfig struct {
-	Expiration      int
 	CleanupInterval int `mapstructure:"cleanup_interval"`
+	Expiration      int
 }

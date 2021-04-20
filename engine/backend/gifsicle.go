@@ -110,3 +110,5 @@ func computecrop(srcw, srch, destw, desth int) (left, top, cropw, croph int) {
 	}
 	return
 }
+
+var _ Backend = (*Gifsicle)(nil)

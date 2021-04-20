@@ -38,7 +38,7 @@ all: picfit
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
-	@(go build -mod=vendor -o $(BIN_DIR)/picfit ./cmd/picfit/main.go)
+	@(CGO_CFLAGS_ALLOW=-Xpreprocessor go build -mod=vendor -o $(BIN_DIR)/picfit ./cmd/picfit/main.go)
 	@(echo "-> picfit binary created")
 
 format:

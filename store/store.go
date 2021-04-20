@@ -12,10 +12,10 @@ import (
 type Store gokvstores.KVStore
 
 const (
-	dummyKVStoreType        = "dummy"
-	redisKVStoreType        = "redis"
-	redisClusterKVStoreType = "redis-cluster"
 	cacheKVStoreType        = "cache"
+	dummyKVStoreType        = "dummy"
+	redisClusterKVStoreType = "redis-cluster"
+	redisKVStoreType        = "redis"
 )
 
 // New returns a KVStore from config

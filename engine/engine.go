@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"sort"
@@ -9,24 +10,25 @@ import (
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/logger"
 )
 
 type Engine struct {
 	DefaultFormat  string
-	Format         string
 	DefaultQuality int
-
-	backends []Backend
+	Format         string
+	backends       []Backend
+	logger         logger.Logger
 }
 
 type Backend struct {
 	backend.Backend
-	weight    int
 	mimetypes []string
+	weight    int
 }
 
 // New initializes an Engine
-func New(cfg config.Config) *Engine {
+func New(cfg config.Config, log logger.Logger) *Engine {
 	var b []Backend
 
 	if cfg.Backends == nil {
@@ -56,6 +58,14 @@ func New(cfg config.Config) *Engine {
 				weight:    cfg.Backends.GoImage.Weight,
 			})
 		}
+
+		if cfg.Backends.Libvips != nil {
+			b = append(b, Backend{
+				Backend:   &backend.Libvips{},
+				mimetypes: cfg.Backends.Libvips.Mimetypes,
+				weight:    cfg.Backends.Libvips.Weight,
+			})
+		}
 	}
 
 	sort.Slice(b, func(i, j int) bool {
@@ -72,6 +82,7 @@ func New(cfg config.Config) *Engine {
 		Format:         cfg.Format,
 		DefaultQuality: quality,
 		backends:       b,
+		logger:         log,
 	}
 }
 
@@ -106,12 +117,17 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 				continue
 			}
 
+			e.logger.Debug("Processing image...",
+				logger.String("backend", e.backends[j].String()),
+				logger.String("operation", operations[i].Operation.String()),
+				logger.String("options", operations[i].Options.String()),
+			)
 			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break
 			}
-			if err != backend.MethodNotImplementedError {
+			if !errors.Is(err, backend.MethodNotImplementedError) {
 				return nil, err
 			}
 		}

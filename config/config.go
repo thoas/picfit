@@ -16,8 +16,8 @@ import (
 // Shard is a struct to allow shard location when files are uploaded
 type Shard struct {
 	Depth    int
-	Width    int
 	RestOnly bool
+	Width    int
 }
 
 // AllowedSize is a struct used in the allowed_sizes option
@@ -29,14 +29,14 @@ type AllowedSize struct {
 // Options is a struct to add options to the application
 type Options struct {
 	AllowedIPAddresses  []string      `mapstructure:"allowed_ip_addresses"`
-	EnablePprof         bool          `mapstructure:"enable_pprof"`
-	EnableUpload        bool          `mapstructure:"enable_upload"`
-	EnableDelete        bool          `mapstructure:"enable_delete"`
-	EnableCascadeDelete bool          `mapstructure:"enable_cascade_delete"`
-	EnableStats         bool          `mapstructure:"enable_stats"`
-	EnableHealth        bool          `mapstructure:"enable_health"`
 	AllowedSizes        []AllowedSize `mapstructure:"allowed_sizes"`
 	DefaultUserAgent    string        `mapstructure:"default_user_agent"`
+	EnableCascadeDelete bool          `mapstructure:"enable_cascade_delete"`
+	EnableDelete        bool          `mapstructure:"enable_delete"`
+	EnableHealth        bool          `mapstructure:"enable_health"`
+	EnablePprof         bool          `mapstructure:"enable_pprof"`
+	EnableStats         bool          `mapstructure:"enable_stats"`
+	EnableUpload        bool          `mapstructure:"enable_upload"`
 	MimetypeDetector    string        `mapstructure:"mimetype_detector"`
 }
 
@@ -48,19 +48,19 @@ type Sentry struct {
 
 // Config is a struct to load configuration flags
 type Config struct {
+	AllowedHeaders []string `mapstructure:"allowed_headers"`
+	AllowedMethods []string `mapstructure:"allowed_methods"`
+	AllowedOrigins []string `mapstructure:"allowed_origins"`
 	Debug          bool
 	Engine         *engineconfig.Config
-	Sentry         *Sentry
-	SecretKey      string `mapstructure:"secret_key"`
-	Shard          *Shard
-	Port           int
-	Options        *Options
-	AllowedOrigins []string `mapstructure:"allowed_origins"`
-	AllowedMethods []string `mapstructure:"allowed_methods"`
-	AllowedHeaders []string `mapstructure:"allowed_headers"`
-	Storage        *storage.Config
 	KVStore        *store.Config
 	Logger         logger.Config
+	Options        *Options
+	Port           int
+	SecretKey      string `mapstructure:"secret_key"`
+	Sentry         *Sentry
+	Shard          *Shard
+	Storage        *storage.Config
 }
 
 // DefaultConfig returns a default config instance
