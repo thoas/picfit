@@ -9,11 +9,11 @@ import (
 )
 
 type ImageFile struct {
-	Source    []byte
-	Processed []byte
-	Key       string
-	Headers   map[string]string
 	Filepath  string
+	Headers   map[string]string
+	Key       string
+	Processed []byte
+	Source    []byte
 	Storage   gostorages.Storage
 }
 

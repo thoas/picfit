@@ -13,25 +13,24 @@ import (
 
 type Engine struct {
 	DefaultFormat  string
-	Format         string
 	DefaultQuality int
-
-	backends []Backend
+	Format         string
+	backends       []*BackendWrapper
 }
 
-type Backend struct {
-	backend.Backend
-	weight    int
+type BackendWrapper struct {
+	backend   backend.Backend
 	mimetypes []string
+	weight    int
 }
 
 // New initializes an Engine
 func New(cfg config.Config) *Engine {
-	var b []Backend
+	var b []*BackendWrapper
 
 	if cfg.Backends == nil {
-		b = append(b, Backend{
-			Backend:   &backend.GoImage{},
+		b = append(b, &BackendWrapper{
+			backend:   &backend.GoImage{},
 			mimetypes: MimeTypes,
 		})
 	} else {
@@ -42,16 +41,16 @@ func New(cfg config.Config) *Engine {
 			}
 
 			if _, err := exec.LookPath(path); err == nil {
-				b = append(b, Backend{
-					Backend:   &backend.Gifsicle{Path: path},
+				b = append(b, &BackendWrapper{
+					backend:   &backend.Gifsicle{Path: path},
 					mimetypes: cfg.Backends.Gifsicle.Mimetypes,
 					weight:    cfg.Backends.Gifsicle.Weight,
 				})
 			}
 		}
 		if cfg.Backends.GoImage != nil {
-			b = append(b, Backend{
-				Backend:   &backend.GoImage{},
+			b = append(b, &BackendWrapper{
+				backend:   &backend.GoImage{},
 				mimetypes: cfg.Backends.GoImage.Mimetypes,
 				weight:    cfg.Backends.GoImage.Weight,
 			})
@@ -69,8 +68,8 @@ func New(cfg config.Config) *Engine {
 
 	return &Engine{
 		DefaultFormat:  cfg.DefaultFormat,
-		Format:         cfg.Format,
 		DefaultQuality: quality,
+		Format:         cfg.Format,
 		backends:       b,
 	}
 }
@@ -78,7 +77,7 @@ func New(cfg config.Config) *Engine {
 func (e Engine) String() string {
 	backendNames := []string{}
 	for _, backend := range e.backends {
-		backendNames = append(backendNames, backend.String())
+		backendNames = append(backendNames, backend.backend.String())
 	}
 
 	return strings.Join(backendNames, " ")
@@ -106,7 +105,7 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 				continue
 			}
 
-			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
+			processed, err = operate(e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break

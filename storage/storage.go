@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	httpStoragePrefix   = "http+"
-	httpS3StorageType   = "http+s3"
-	httpFSStorageType   = "http+fs"
-	fsStorageType       = "fs"
-	s3StorageType       = "s3"
 	DOs3StorageType     = "dos3"
-	httpDOs3StorageType = "http+dos3"
+	fsStorageType       = "fs"
 	gcsStorageType      = "gcs"
+	httpDOs3StorageType = "http+dos3"
+	httpFSStorageType   = "http+fs"
+	httpS3StorageType   = "http+s3"
+	httpStoragePrefix   = "http+"
+	s3StorageType       = "s3"
 )
 
 // New return destination and source storages from config

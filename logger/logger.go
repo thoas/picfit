@@ -11,11 +11,11 @@ type Field = zapcore.Field
 type ObjectEncoder = zapcore.ObjectEncoder
 
 type Logger interface {
-	Panic(string, ...Field)
-	Info(string, ...Field)
-	Error(string, ...Field)
-	Sync() error
 	Debug(string, ...Field)
+	Error(string, ...Field)
+	Info(string, ...Field)
+	Panic(string, ...Field)
+	Sync() error
 	With(fields ...Field) *zap.Logger
 }
 

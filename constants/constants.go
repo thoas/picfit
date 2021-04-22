@@ -20,15 +20,15 @@ var (
 )
 
 const (
-	TopRight    = "top-right"
-	TopLeft     = "top-left"
-	BottomRight = "bottom-right"
 	BottomLeft  = "bottom-left"
+	BottomRight = "bottom-right"
+	TopLeft     = "top-left"
+	TopRight    = "top-right"
 )
 
 var StickPositions = []string{
-	TopRight,
-	TopLeft,
-	BottomRight,
 	BottomLeft,
+	BottomRight,
+	TopLeft,
+	TopRight,
 }

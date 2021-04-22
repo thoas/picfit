@@ -31,7 +31,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.http.ServeHTTP(w, req)
+	s.http.engine.ServeHTTP(w, req)
 }
 
 // Run runs the application and launch servers

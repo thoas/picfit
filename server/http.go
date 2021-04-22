@@ -23,8 +23,8 @@ import (
 )
 
 type HTTPServer struct {
-	*gin.Engine
 	config    *config.Config
+	engine    *gin.Engine
 	processor *picfit.Processor
 }
 
@@ -207,14 +207,14 @@ func (s *HTTPServer) Init() error {
 		}
 	}
 
-	s.Engine = router
+	s.engine = router
 
 	return nil
 }
 
 // Run loads a new http server
 func (s *HTTPServer) Run() error {
-	s.Engine.Run(fmt.Sprintf(":%s", strconv.Itoa(s.config.Port)))
+	s.engine.Run(fmt.Sprintf(":%s", strconv.Itoa(s.config.Port)))
 
 	return nil
 }
