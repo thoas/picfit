@@ -19,24 +19,51 @@ func (b *Gifsicle) String() string {
 	return "gifsicle"
 }
 
-// Fit implements Backend.
-func (b *Gifsicle) Fit(*image.ImageFile, *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
-}
-
-// Flat implements Backend.
-func (b *Gifsicle) Flat(*image.ImageFile, *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
-}
-
-// Flip implements Backend.
-func (b *Gifsicle) Flip(*image.ImageFile, *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
-}
-
 // Resize implements Backend.
 func (b *Gifsicle) Resize(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
+	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
+	if err != nil {
+		return nil, err
+	}
+	factor := scalingFactorImage(img, opts.Width, opts.Height)
+	if factor > 1 && !opts.Upscale {
+		return imgfile.Source, nil
+	}
+
 	cmd := exec.Command(b.Path,
+		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
+	)
+	cmd.Stdin = bytes.NewReader(imgfile.Source)
+	stdout := new(bytes.Buffer)
+	cmd.Stdout = stdout
+	stderr := new(bytes.Buffer)
+	cmd.Stderr = stderr
+
+	var target *exec.ExitError
+	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
+		return nil, errors.New(stderr.String())
+	} else if err != nil {
+		return nil, err
+	}
+	return stdout.Bytes(), nil
+}
+
+// Thumbnail implements Backend.
+func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
+	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
+	if err != nil {
+		return nil, err
+	}
+	factor := scalingFactorImage(img, opts.Width, opts.Height)
+	if factor > 1 && !opts.Upscale {
+		return imgfile.Source, nil
+	}
+
+	bounds := img.Bounds()
+	left, top, cropw, croph := computecrop(bounds.Dx(), bounds.Dy(), opts.Width, opts.Height)
+
+	cmd := exec.Command(b.Path,
+		"--crop", fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph),
 		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
 	)
 	cmd.Stdin = bytes.NewReader(imgfile.Source)
@@ -59,32 +86,19 @@ func (b *Gifsicle) Rotate(*image.ImageFile, *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
-// Thumbnail implements Backend.
-func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
-	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
-	if err != nil {
-		return nil, err
-	}
-	bounds := img.Bounds()
-	left, top, cropw, croph := computecrop(bounds.Dx(), bounds.Dy(), opts.Width, opts.Height)
+// Fit implements Backend.
+func (b *Gifsicle) Fit(*image.ImageFile, *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}
 
-	cmd := exec.Command(b.Path,
-		"--crop", fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph),
-		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
-	)
-	cmd.Stdin = bytes.NewReader(imgfile.Source)
-	stdout := new(bytes.Buffer)
-	cmd.Stdout = stdout
-	stderr := new(bytes.Buffer)
-	cmd.Stderr = stderr
+// Flat implements Backend.
+func (b *Gifsicle) Flat(*image.ImageFile, *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}
 
-	var target *exec.ExitError
-	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
-		return nil, errors.New(stderr.String())
-	} else if err != nil {
-		return nil, err
-	}
-	return stdout.Bytes(), nil
+// Flip implements Backend.
+func (b *Gifsicle) Flip(*image.ImageFile, *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
 }
 
 func computecrop(srcw, srch, destw, desth int) (left, top, cropw, croph int) {
