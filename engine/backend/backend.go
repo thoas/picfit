@@ -1,6 +1,8 @@
 package backend
 
 import (
+	"fmt"
+
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
@@ -21,6 +23,11 @@ type Options struct {
 	Stick    string
 	Upscale  bool
 	Width    int
+}
+
+func (o Options) String() string {
+	return fmt.Sprintf("width:%d height:%d quality:%d upscale:%t",
+		o.Width, o.Height, o.Quality, o.Upscale)
 }
 
 // Engine is an interface to define an image engine

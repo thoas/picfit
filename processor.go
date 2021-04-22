@@ -25,11 +25,11 @@ import (
 
 type Processor struct {
 	config             *config.Config
+	destinationStorage gostorages.Storage
+	engine             *engine.Engine
 	logger             logger.Logger
-	SourceStorage      gostorages.Storage
-	DestinationStorage gostorages.Storage
+	sourceStorage      gostorages.Storage
 	store              store.Store
-	Engine             *engine.Engine
 }
 
 // Upload uploads a file to its storage
@@ -49,14 +49,14 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 		return nil, errors.Wrapf(err, "unable to read data from uploaded file")
 	}
 
-	err = p.SourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
+	err = p.sourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
 	}
 
 	return &image.ImageFile{
 		Filepath: payload.Data.Filename,
-		Storage:  p.SourceStorage,
+		Storage:  p.sourceStorage,
 	}, nil
 }
 
@@ -115,7 +115,7 @@ func (p *Processor) DeleteChild(key string) error {
 		}
 
 		// And try to delete it all.
-		err = p.DestinationStorage.Delete(dstfile)
+		err = p.destinationStorage.Delete(dstfile)
 		if err != nil {
 			return errors.Wrapf(err, "unable to delete %s on storage", dstfile)
 		}
@@ -137,14 +137,14 @@ func (p *Processor) Delete(filepath string) error {
 	p.logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
 
-	if !p.SourceStorage.Exists(filepath) {
+	if !p.sourceStorage.Exists(filepath) {
 		p.logger.Info("File does not exist anymore on source storage",
 			logger.String("file", filepath))
 
 		return errors.Wrapf(failure.ErrFileNotExists, "unable to delete, file does not exist: %s", filepath)
 	}
 
-	err := p.SourceStorage.Delete(filepath)
+	err := p.sourceStorage.Delete(filepath)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete %s on source storage", filepath)
 	}
@@ -268,7 +268,7 @@ func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*im
 	var (
 		file = &image.ImageFile{
 			Key:      key,
-			Storage:  p.DestinationStorage,
+			Storage:  p.destinationStorage,
 			Filepath: filepath,
 			Headers:  map[string]string{},
 		}
@@ -276,7 +276,7 @@ func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*im
 	)
 
 	if load {
-		file, err = image.FromStorage(p.DestinationStorage, filepath)
+		file, err = image.FromStorage(p.destinationStorage, filepath)
 		if err != nil {
 			return nil, err
 		}
@@ -294,7 +294,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 	file := &image.ImageFile{
 		Key:     storeKey,
-		Storage: p.DestinationStorage,
+		Storage: p.destinationStorage,
 		Headers: map[string]string{},
 	}
 
@@ -306,11 +306,11 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	} else {
 		// URL provided we use http protocol to retrieve it
 		filepath = qs["path"].(string)
-		if !p.SourceStorage.Exists(filepath) {
+		if !p.sourceStorage.Exists(filepath) {
 			return nil, errors.Wrapf(failure.ErrFileNotExists, "unable to process image, file does exist: %s", filepath)
 		}
 
-		file, err = image.FromStorage(p.SourceStorage, filepath)
+		file, err = image.FromStorage(p.sourceStorage, filepath)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
@@ -321,14 +321,14 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
-	file, err = p.Engine.Transform(parameters.Output, parameters.Operations)
+	file, err = p.engine.Transform(parameters.output, parameters.operations)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
 	filename := p.ShardFilename(storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
-	file.Storage = p.DestinationStorage
+	file.Storage = p.destinationStorage
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
@@ -362,9 +362,9 @@ func (p Processor) KeyExists(key string) (bool, error) {
 }
 
 func (p Processor) FileExists(name string) bool {
-	return p.SourceStorage.Exists(name)
+	return p.sourceStorage.Exists(name)
 }
 
 func (p Processor) OpenFile(name string) (gostorages.File, error) {
-	return p.SourceStorage.Open(name)
+	return p.sourceStorage.Open(name)
 }

@@ -20,7 +20,7 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 	var err error
 	images := make([]image.Image, len(options.Images))
 	for i := range options.Images {
-		images[i], err = e.Source(&options.Images[i])
+		images[i], err = e.source(&options.Images[i])
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 		return buf.Bytes(), nil
 	}
 
-	background, err := e.Source(backgroundFile)
+	background, err := e.source(backgroundFile)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 		drawPosForeground(bg, images, options)
 	}
 
-	return e.ToBytes(bg, options.Format, options.Quality)
+	return e.toBytes(bg, options.Format, options.Quality)
 }
 
 func drawStickForeground(bg draw.Image, images []image.Image, options *Options) {

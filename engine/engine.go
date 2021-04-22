@@ -9,27 +9,29 @@ import (
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
+	"github.com/thoas/picfit/logger"
 )
 
 type Engine struct {
 	DefaultFormat  string
 	DefaultQuality int
 	Format         string
-	backends       []*BackendWrapper
+	backends       []*backendWrapper
+	logger         logger.Logger
 }
 
-type BackendWrapper struct {
+type backendWrapper struct {
 	backend   backend.Backend
 	mimetypes []string
 	weight    int
 }
 
 // New initializes an Engine
-func New(cfg config.Config) *Engine {
-	var b []*BackendWrapper
+func New(cfg config.Config, logger logger.Logger) *Engine {
+	var b []*backendWrapper
 
 	if cfg.Backends == nil {
-		b = append(b, &BackendWrapper{
+		b = append(b, &backendWrapper{
 			backend:   &backend.GoImage{},
 			mimetypes: MimeTypes,
 		})
@@ -41,7 +43,7 @@ func New(cfg config.Config) *Engine {
 			}
 
 			if _, err := exec.LookPath(path); err == nil {
-				b = append(b, &BackendWrapper{
+				b = append(b, &backendWrapper{
 					backend:   &backend.Gifsicle{Path: path},
 					mimetypes: cfg.Backends.Gifsicle.Mimetypes,
 					weight:    cfg.Backends.Gifsicle.Weight,
@@ -49,7 +51,7 @@ func New(cfg config.Config) *Engine {
 			}
 		}
 		if cfg.Backends.GoImage != nil {
-			b = append(b, &BackendWrapper{
+			b = append(b, &backendWrapper{
 				backend:   &backend.GoImage{},
 				mimetypes: cfg.Backends.GoImage.Mimetypes,
 				weight:    cfg.Backends.GoImage.Weight,
@@ -71,6 +73,7 @@ func New(cfg config.Config) *Engine {
 		DefaultQuality: quality,
 		Format:         cfg.Format,
 		backends:       b,
+		logger:         logger,
 	}
 }
 
@@ -104,6 +107,12 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 			if !processing {
 				continue
 			}
+
+			e.logger.Debug("Processing image...",
+				logger.String("backend", e.backends[j].backend.String()),
+				logger.String("operation", operations[i].Operation.String()),
+				logger.String("options", operations[i].Options.String()),
+			)
 
 			processed, err = operate(e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {

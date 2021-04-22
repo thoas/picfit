@@ -1,17 +1,19 @@
 package engine
 
-var ContentTypes = map[string]string{
-	"bmp":  "image/bmp",
-	"gif":  "image/gif",
-	"jpeg": "image/jpeg",
-	"jpg":  "image/jpeg",
-	"png":  "image/png",
-	"webp": "image/webp",
-}
+var (
+	ContentTypes = map[string]string{
+		"bmp":  "image/bmp",
+		"gif":  "image/gif",
+		"jpeg": "image/jpeg",
+		"jpg":  "image/jpeg",
+		"png":  "image/png",
+		"webp": "image/webp",
+	}
 
-var MimeTypes = []string{
-	"image/bmp",
-	"image/gif",
-	"image/jpeg",
-	"image/png",
-}
+	MimeTypes = []string{
+		"image/bmp",
+		"image/gif",
+		"image/jpeg",
+		"image/png",
+	}
+)
