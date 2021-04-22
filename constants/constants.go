@@ -12,6 +12,9 @@ var (
 	// Revision is the compiled revision
 	Revision string
 
+	// LatestCommitMessage is the latest commit message
+	LatestCommitMessage string
+
 	// BuildTime is the compiled build time
 	BuildTime string
 

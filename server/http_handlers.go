@@ -38,14 +38,15 @@ func (h handlers) healthcheck(startedAt time.Time) func(c *gin.Context) {
 		uptime := now.Sub(startedAt)
 
 		c.JSON(http.StatusOK, gin.H{
-			"started_at": startedAt.String(),
-			"uptime":     uptime.String(),
-			"status":     "Ok",
-			"version":    constants.Version,
-			"revision":   constants.Revision,
-			"build_time": constants.BuildTime,
-			"compiler":   constants.Compiler,
-			"ip_address": c.ClientIP(),
+			"started_at":            startedAt.String(),
+			"uptime":                uptime.String(),
+			"status":                "Ok",
+			"version":               constants.Version,
+			"revision":              constants.Revision,
+			"build_time":            constants.BuildTime,
+			"compiler":              constants.Compiler,
+			"latest_commit_message": constants.LatestCommitMessage,
+			"ip_address":            c.ClientIP(),
 		})
 	}
 }
