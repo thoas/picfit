@@ -57,6 +57,9 @@ github.com/golang/protobuf/ptypes/timestamp
 github.com/googleapis/gax-go/v2
 # github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e
 ## explicit
+# github.com/h2non/bimg v1.1.5
+## explicit
+github.com/h2non/bimg
 # github.com/hashicorp/golang-lru v0.5.0
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb

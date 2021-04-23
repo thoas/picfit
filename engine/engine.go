@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"sort"
@@ -55,6 +56,14 @@ func New(cfg config.Config, logger logger.Logger) *Engine {
 				backend:   &backend.GoImage{},
 				mimetypes: cfg.Backends.GoImage.Mimetypes,
 				weight:    cfg.Backends.GoImage.Weight,
+			})
+		}
+
+		if cfg.Backends.Libvips != nil {
+			b = append(b, &backendWrapper{
+				backend:   &backend.Libvips{},
+				mimetypes: cfg.Backends.Libvips.Mimetypes,
+				weight:    cfg.Backends.Libvips.Weight,
 			})
 		}
 	}
@@ -119,7 +128,7 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 				output.Source = processed
 				break
 			}
-			if err != backend.MethodNotImplementedError {
+			if !errors.Is(err, backend.MethodNotImplementedError) {
 				return nil, err
 			}
 		}

@@ -13,6 +13,7 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20170226152426-ffa12cf90b52
 	github.com/gin-gonic/gin v1.3.0
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
+	github.com/h2non/bimg v1.1.5
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect

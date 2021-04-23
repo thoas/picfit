@@ -8,7 +8,6 @@ import (
 
 type kvstoreWrapper struct {
 	gokvstores.KVStore
-
 	Prefix string
 }
 

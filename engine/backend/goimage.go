@@ -254,3 +254,5 @@ func encode(w io.Writer, img image.Image, format imaging.Format, quality int) er
 	}
 	return err
 }
+
+var _ Backend = (*GoImage)(nil)
