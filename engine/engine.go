@@ -60,8 +60,8 @@ func New(cfg config.Config, logger logger.Logger) *Engine {
 		}
 
 		if cfg.Backends.Libvips != nil {
-			b = append(b, Backend{
-				Backend:   &backend.Libvips{},
+			b = append(b, &backendWrapper{
+				backend:   &backend.Libvips{},
 				mimetypes: cfg.Backends.Libvips.Mimetypes,
 				weight:    cfg.Backends.Libvips.Weight,
 			})
