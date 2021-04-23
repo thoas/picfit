@@ -32,10 +32,10 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 
 	return &Processor{
 		config:             cfg,
+		destinationStorage: destinationStorage,
+		engine:             e,
 		logger:             log,
-		SourceStorage:      sourceStorage,
-		DestinationStorage: destinationStorage,
+		sourceStorage:      sourceStorage,
 		store:              s,
-		Engine:             e,
 	}, nil
 }

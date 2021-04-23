@@ -68,18 +68,18 @@ func DefaultConfig() *Config {
 	return &Config{
 		Engine: &engineconfig.Config{
 			DefaultFormat:   DefaultFormat,
-			Quality:         DefaultQuality,
-			JpegQuality:     DefaultQuality,
-			WebpQuality:     DefaultQuality,
-			PngCompression:  engineconfig.DefaultPngCompression,
-			MaxBufferSize:   engineconfig.DefaultMaxBufferSize,
-			ImageBufferSize: engineconfig.DefaultImageBufferSize,
 			Format:          "",
+			ImageBufferSize: engineconfig.DefaultImageBufferSize,
+			JpegQuality:     DefaultQuality,
+			MaxBufferSize:   engineconfig.DefaultMaxBufferSize,
+			PngCompression:  engineconfig.DefaultPngCompression,
+			Quality:         DefaultQuality,
+			WebpQuality:     DefaultQuality,
 		},
 		Options: &Options{
+			DefaultUserAgent: fmt.Sprint(DefaultUserAgent, "/", constants.Version),
 			EnableDelete:     false,
 			EnableUpload:     false,
-			DefaultUserAgent: fmt.Sprint(DefaultUserAgent, "/", constants.Version),
 			MimetypeDetector: DefaultMimetypeDetector,
 		},
 		Port: DefaultPort,
@@ -87,9 +87,9 @@ func DefaultConfig() *Config {
 			Type: "dummy",
 		},
 		Shard: &Shard{
-			Width:    DefaultShardWidth,
 			Depth:    DefaultShardDepth,
 			RestOnly: DefaultShardRestOnly,
+			Width:    DefaultShardWidth,
 		},
 	}
 }

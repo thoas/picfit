@@ -32,11 +32,11 @@ func (o Options) String() string {
 
 // Engine is an interface to define an image engine
 type Backend interface {
-	String() string
-	Resize(img *image.ImageFile, options *Options) ([]byte, error)
-	Thumbnail(img *image.ImageFile, options *Options) ([]byte, error)
-	Flip(img *image.ImageFile, options *Options) ([]byte, error)
-	Rotate(img *image.ImageFile, options *Options) ([]byte, error)
 	Fit(img *image.ImageFile, options *Options) ([]byte, error)
 	Flat(background *image.ImageFile, options *Options) ([]byte, error)
+	Flip(img *image.ImageFile, options *Options) ([]byte, error)
+	Resize(img *image.ImageFile, options *Options) ([]byte, error)
+	Rotate(img *image.ImageFile, options *Options) ([]byte, error)
+	String() string
+	Thumbnail(img *image.ImageFile, options *Options) ([]byte, error)
 }

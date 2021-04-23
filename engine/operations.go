@@ -9,26 +9,26 @@ func (o Operation) String() string {
 }
 
 const (
-	Resize    = Operation("resize")
-	Thumbnail = Operation("thumbnail")
-	Rotate    = Operation("rotate")
-	Flip      = Operation("flip")
 	Fit       = Operation("fit")
-	Noop      = Operation("noop")
 	Flat      = Operation("flat")
+	Flip      = Operation("flip")
+	Noop      = Operation("noop")
+	Resize    = Operation("resize")
+	Rotate    = Operation("rotate")
+	Thumbnail = Operation("thumbnail")
 )
 
 var Operations = map[string]Operation{
-	Resize.String():    Resize,
-	Thumbnail.String(): Thumbnail,
-	Flip.String():      Flip,
-	Rotate.String():    Rotate,
 	Fit.String():       Fit,
-	Noop.String():      Noop,
 	Flat.String():      Flat,
+	Flip.String():      Flip,
+	Noop.String():      Noop,
+	Resize.String():    Resize,
+	Rotate.String():    Rotate,
+	Thumbnail.String(): Thumbnail,
 }
 
 type EngineOperation struct {
-	Options   *backend.Options
 	Operation Operation
+	Options   *backend.Options
 }

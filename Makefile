@@ -2,6 +2,7 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
 
 branch = $(shell git rev-parse --abbrev-ref HEAD)
+commitMessage = $(shell git log -1 --pretty=%B)
 commit = $(shell git log --pretty=format:'%h' -n 1)
 now = $(shell date "+%Y-%m-%d %T UTC%z")
 compiler = $(shell go version)
@@ -38,7 +39,12 @@ all: picfit
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
-	@(CGO_CFLAGS_ALLOW=-Xpreprocessor go build -mod=vendor -o $(BIN_DIR)/picfit ./cmd/picfit/main.go)
+	go build -mod=vendor -ldflags "\
+		-X github.com/thoas/picfit/constants.Branch=$(branch) \
+		-X github.com/thoas/picfit/constants.Revision=$(commit) \
+		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
+		-X 'github.com/thoas/picfit/constants.LatestCommitMessage=$(commitMessage)' \
+		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -o $(BIN_DIR)/picfit ./cmd/picfit/main.go
 	@(echo "-> picfit binary created")
 
 format:
@@ -52,6 +58,7 @@ build-static:
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
+		-X 'github.com/thoas/picfit/constants.LatestCommitMessage=$(commitMessage)' \
 		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit ./cmd/picfit/main.go
 
 docker-build-static: build-static

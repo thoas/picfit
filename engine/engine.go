@@ -17,23 +17,23 @@ type Engine struct {
 	DefaultFormat  string
 	DefaultQuality int
 	Format         string
-	backends       []Backend
+	backends       []*backendWrapper
 	logger         logger.Logger
 }
 
-type Backend struct {
-	backend.Backend
+type backendWrapper struct {
+	backend   backend.Backend
 	mimetypes []string
 	weight    int
 }
 
 // New initializes an Engine
-func New(cfg config.Config, log logger.Logger) *Engine {
-	var b []Backend
+func New(cfg config.Config, logger logger.Logger) *Engine {
+	var b []*backendWrapper
 
 	if cfg.Backends == nil {
-		b = append(b, Backend{
-			Backend:   &backend.GoImage{},
+		b = append(b, &backendWrapper{
+			backend:   &backend.GoImage{},
 			mimetypes: MimeTypes,
 		})
 	} else {
@@ -44,16 +44,16 @@ func New(cfg config.Config, log logger.Logger) *Engine {
 			}
 
 			if _, err := exec.LookPath(path); err == nil {
-				b = append(b, Backend{
-					Backend:   &backend.Gifsicle{Path: path},
+				b = append(b, &backendWrapper{
+					backend:   &backend.Gifsicle{Path: path},
 					mimetypes: cfg.Backends.Gifsicle.Mimetypes,
 					weight:    cfg.Backends.Gifsicle.Weight,
 				})
 			}
 		}
 		if cfg.Backends.GoImage != nil {
-			b = append(b, Backend{
-				Backend:   &backend.GoImage{},
+			b = append(b, &backendWrapper{
+				backend:   &backend.GoImage{},
 				mimetypes: cfg.Backends.GoImage.Mimetypes,
 				weight:    cfg.Backends.GoImage.Weight,
 			})
@@ -79,17 +79,17 @@ func New(cfg config.Config, log logger.Logger) *Engine {
 
 	return &Engine{
 		DefaultFormat:  cfg.DefaultFormat,
-		Format:         cfg.Format,
 		DefaultQuality: quality,
+		Format:         cfg.Format,
 		backends:       b,
-		logger:         log,
+		logger:         logger,
 	}
 }
 
 func (e Engine) String() string {
 	backendNames := []string{}
 	for _, backend := range e.backends {
-		backendNames = append(backendNames, backend.String())
+		backendNames = append(backendNames, backend.backend.String())
 	}
 
 	return strings.Join(backendNames, " ")
@@ -118,11 +118,12 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 			}
 
 			e.logger.Debug("Processing image...",
-				logger.String("backend", e.backends[j].String()),
+				logger.String("backend", e.backends[j].backend.String()),
 				logger.String("operation", operations[i].Operation.String()),
 				logger.String("options", operations[i].Options.String()),
 			)
-			processed, err = operate(e.backends[j], output, operations[i].Operation, operations[i].Options)
+
+			processed, err = operate(e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break

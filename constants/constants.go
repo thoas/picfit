@@ -2,7 +2,7 @@ package constants
 
 const (
 	// Version is the current version of picfit
-	Version = "0.8.0"
+	Version = "0.9.0"
 )
 
 var (
@@ -11,6 +11,9 @@ var (
 
 	// Revision is the compiled revision
 	Revision string
+
+	// LatestCommitMessage is the latest commit message
+	LatestCommitMessage string
 
 	// BuildTime is the compiled build time
 	BuildTime string

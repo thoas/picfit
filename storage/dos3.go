@@ -7,18 +7,18 @@ import (
 )
 
 var regions = map[string]struct{}{
+	"ams2": {},
+	"ams3": {},
+	"blr1": {},
+	"fra1": {},
+	"lon1": {},
 	"nyc1": {},
 	"nyc2": {},
 	"nyc3": {},
-	"ams2": {},
-	"ams3": {},
 	"sfo1": {},
 	"sfo2": {},
 	"sgp1": {},
-	"lon1": {},
-	"fra1": {},
 	"tor1": {},
-	"blr1": {},
 }
 
 var GetDOs3Region = func(region string) (aws.Region, bool) {

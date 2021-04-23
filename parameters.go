@@ -16,23 +16,23 @@ import (
 )
 
 const (
+	defaultDegree  = 90
+	defaultHeight  = 0
 	defaultUpscale = true
 	defaultWidth   = 0
-	defaultHeight  = 0
-	defaultDegree  = 90
 )
 
 var formats = map[string]imaging.Format{
+	"bmp":  imaging.BMP,
+	"gif":  imaging.GIF,
 	"jpeg": imaging.JPEG,
 	"jpg":  imaging.JPEG,
 	"png":  imaging.PNG,
-	"gif":  imaging.GIF,
-	"bmp":  imaging.BMP,
 }
 
 type Parameters struct {
-	Output     *image.ImageFile
-	Operations []engine.EngineOperation
+	output     *image.ImageFile
+	operations []engine.EngineOperation
 }
 
 // newParameters returns Parameters for engine.
@@ -47,8 +47,8 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 
 	}
 
-	if format == "" && p.Engine.Format != "" {
-		format = p.Engine.Format
+	if format == "" && p.engine.Format != "" {
+		format = p.engine.Format
 	}
 
 	if format == "" {
@@ -56,7 +56,7 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 	}
 
 	if format == "" {
-		format = p.Engine.DefaultFormat
+		format = p.engine.DefaultFormat
 	}
 
 	if format != input.Format() {
@@ -120,8 +120,8 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 	}
 
 	return &Parameters{
-		Output:     output,
-		Operations: operations,
+		output:     output,
+		operations: operations,
 	}, nil
 }
 
@@ -151,11 +151,11 @@ func (p Processor) NewEngineOperationFromQuery(op string) (*engine.EngineOperati
 	}
 
 	for i := range imagePaths {
-		if !p.SourceStorage.Exists(imagePaths[i]) {
+		if !p.sourceStorage.Exists(imagePaths[i]) {
 			return nil, errors.Wrapf(failure.ErrFileNotExists, "file does not exist: %s", imagePaths[i])
 		}
 
-		file, err := image.FromStorage(p.SourceStorage, imagePaths[i])
+		file, err := image.FromStorage(p.sourceStorage, imagePaths[i])
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to load file from storage: %s", imagePaths[i])
 		}
@@ -171,7 +171,7 @@ func (p Processor) NewEngineOperationFromQuery(op string) (*engine.EngineOperati
 func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
 	var (
 		err     error
-		quality = p.Engine.DefaultQuality
+		quality = p.engine.DefaultQuality
 		upscale = defaultUpscale
 		height  = defaultHeight
 		width   = defaultWidth
