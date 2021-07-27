@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
+var _ Lstater = (*CopyOnWriteFs)(nil)
+
 // The CopyOnWriteFs is a union filesystem: a read only base file system with
 // a possibly writeable layer on top. Changes to the file system will only
 // be made in the overlay: Changing an existing file in the base layer which
 // is not present in the overlay will copy the file to the overlay ("changing"
-// includes also calls to e.g. Chtimes() and Chmod()).
+// includes also calls to e.g. Chtimes(), Chmod() and Chown()).
 //
 // Reading directories is currently only supported via Open(), not OpenFile().
 type CopyOnWriteFs struct {
@@ -73,19 +75,89 @@ func (u *CopyOnWriteFs) Chmod(name string, mode os.FileMode) error {
 	return u.layer.Chmod(name, mode)
 }
 
+func (u *CopyOnWriteFs) Chown(name string, uid, gid int) error {
+	b, err := u.isBaseFile(name)
+	if err != nil {
+		return err
+	}
+	if b {
+		if err := u.copyToLayer(name); err != nil {
+			return err
+		}
+	}
+	return u.layer.Chown(name, uid, gid)
+}
+
 func (u *CopyOnWriteFs) Stat(name string) (os.FileInfo, error) {
 	fi, err := u.layer.Stat(name)
 	if err != nil {
-		origErr := err
-		if e, ok := err.(*os.PathError); ok {
-			err = e.Err
-		}
-		if err == os.ErrNotExist || err == syscall.ENOENT || err == syscall.ENOTDIR {
+		isNotExist := u.isNotExist(err)
+		if isNotExist {
 			return u.base.Stat(name)
 		}
-		return nil, origErr
+		return nil, err
 	}
 	return fi, nil
+}
+
+func (u *CopyOnWriteFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
+	llayer, ok1 := u.layer.(Lstater)
+	lbase, ok2 := u.base.(Lstater)
+
+	if ok1 {
+		fi, b, err := llayer.LstatIfPossible(name)
+		if err == nil {
+			return fi, b, nil
+		}
+
+		if !u.isNotExist(err) {
+			return nil, b, err
+		}
+	}
+
+	if ok2 {
+		fi, b, err := lbase.LstatIfPossible(name)
+		if err == nil {
+			return fi, b, nil
+		}
+		if !u.isNotExist(err) {
+			return nil, b, err
+		}
+	}
+
+	fi, err := u.Stat(name)
+
+	return fi, false, err
+}
+
+func (u *CopyOnWriteFs) SymlinkIfPossible(oldname, newname string) error {
+	if slayer, ok := u.layer.(Linker); ok {
+		return slayer.SymlinkIfPossible(oldname, newname)
+	}
+
+	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrNoSymlink}
+}
+
+func (u *CopyOnWriteFs) ReadlinkIfPossible(name string) (string, error) {
+	if rlayer, ok := u.layer.(LinkReader); ok {
+		return rlayer.ReadlinkIfPossible(name)
+	}
+
+	if rbase, ok := u.base.(LinkReader); ok {
+		return rbase.ReadlinkIfPossible(name)
+	}
+
+	return "", &os.PathError{Op: "readlink", Path: name, Err: ErrNoReadlink}
+}
+
+func (u *CopyOnWriteFs) isNotExist(err error) bool {
+	if e, ok := err.(*os.PathError); ok {
+		err = e.Err
+	}
+	if err == os.ErrNotExist || err == syscall.ENOENT || err == syscall.ENOTDIR {
+		return true
+	}
+	return false
 }
 
 // Renaming files present only in the base layer is not permitted
@@ -219,7 +291,7 @@ func (u *CopyOnWriteFs) Open(name string) (File, error) {
 		return nil, fmt.Errorf("BaseErr: %v\nOverlayErr: %v", bErr, lErr)
 	}
 
-	return &UnionFile{base: bfile, layer: lfile}, nil
+	return &UnionFile{Base: bfile, Layer: lfile}, nil
 }
 
 func (u *CopyOnWriteFs) Mkdir(name string, perm os.FileMode) error {
@@ -228,7 +300,7 @@ func (u *CopyOnWriteFs) Mkdir(name string, perm os.FileMode) error {
 		return u.layer.MkdirAll(name, perm)
 	}
 	if dir {
-		return syscall.EEXIST
+		return ErrFileExists
 	}
 	return u.layer.MkdirAll(name, perm)
 }
@@ -243,7 +315,8 @@ func (u *CopyOnWriteFs) MkdirAll(name string, perm os.FileMode) error {
 		return u.layer.MkdirAll(name, perm)
 	}
 	if dir {
-		return syscall.EEXIST
+		// This is in line with how os.MkdirAll behaves.
+		return nil
 	}
 	return u.layer.MkdirAll(name, perm)
 }

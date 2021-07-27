@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+var _ Lstater = (*OsFs)(nil)
+
 // OsFs is a Fs implementation that uses functions provided by the os package.
 //
 // For details in any method, check the documentation of the os package
@@ -89,6 +91,23 @@ func (OsFs) Chmod(name string, mode os.FileMode) error {
 	return os.Chmod(name, mode)
 }
 
+func (OsFs) Chown(name string, uid, gid int) error {
+	return os.Chown(name, uid, gid)
+}
+
 func (OsFs) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return os.Chtimes(name, atime, mtime)
+}
+
+func (OsFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
+	fi, err := os.Lstat(name)
+	return fi, true, err
+}
+
+func (OsFs) SymlinkIfPossible(oldname, newname string) error {
+	return os.Symlink(oldname, newname)
+}
+
+func (OsFs) ReadlinkIfPossible(name string) (string, error) {
+	return os.Readlink(name)
 }
