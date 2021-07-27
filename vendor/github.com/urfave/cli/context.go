@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -86,6 +87,14 @@ func (c *Context) IsSet(name string) bool {
 		for _, f := range flags {
 			eachName(f.GetName(), func(name string) {
 				if isSet, ok := c.setFlags[name]; isSet || !ok {
+					// Check if a flag is set
+					if isSet {
+						// If the flag is set, also set its other aliases
+						eachName(f.GetName(), func(name string) {
+							c.setFlags[name] = true
+						})
+					}
+
 					return
 				}
 
@@ -138,8 +147,8 @@ func (c *Context) GlobalIsSet(name string) bool {
 
 // FlagNames returns a slice of flag names used in this context.
 func (c *Context) FlagNames() (names []string) {
-	for _, flag := range c.Command.Flags {
-		name := strings.Split(flag.GetName(), ",")[0]
+	for _, f := range c.Command.Flags {
+		name := strings.Split(f.GetName(), ",")[0]
 		if name == "help" {
 			continue
 		}
@@ -150,8 +159,8 @@ func (c *Context) FlagNames() (names []string) {
 
 // GlobalFlagNames returns a slice of global flag names used by the app.
 func (c *Context) GlobalFlagNames() (names []string) {
-	for _, flag := range c.App.Flags {
-		name := strings.Split(flag.GetName(), ",")[0]
+	for _, f := range c.App.Flags {
+		name := strings.Split(f.GetName(), ",")[0]
 		if name == "help" || name == "version" {
 			continue
 		}
@@ -249,7 +258,7 @@ func copyFlag(name string, ff *flag.Flag, set *flag.FlagSet) {
 	switch ff.Value.(type) {
 	case *StringSlice:
 	default:
-		set.Set(name, ff.Value.String())
+		_ = set.Set(name, ff.Value.String())
 	}
 }
 
@@ -283,5 +292,57 @@ func normalizeFlags(flags []Flag, set *flag.FlagSet) error {
 			}
 		}
 	}
+	return nil
+}
+
+type requiredFlagsErr interface {
+	error
+	getMissingFlags() []string
+}
+
+type errRequiredFlags struct {
+	missingFlags []string
+}
+
+func (e *errRequiredFlags) Error() string {
+	numberOfMissingFlags := len(e.missingFlags)
+	if numberOfMissingFlags == 1 {
+		return fmt.Sprintf("Required flag %q not set", e.missingFlags[0])
+	}
+	joinedMissingFlags := strings.Join(e.missingFlags, ", ")
+	return fmt.Sprintf("Required flags %q not set", joinedMissingFlags)
+}
+
+func (e *errRequiredFlags) getMissingFlags() []string {
+	return e.missingFlags
+}
+
+func checkRequiredFlags(flags []Flag, context *Context) requiredFlagsErr {
+	var missingFlags []string
+	for _, f := range flags {
+		if rf, ok := f.(RequiredFlag); ok && rf.IsRequired() {
+			var flagPresent bool
+			var flagName string
+			for _, key := range strings.Split(f.GetName(), ",") {
+				key = strings.TrimSpace(key)
+				if len(key) > 1 {
+					flagName = key
+				}
+
+				if context.IsSet(key) {
+					flagPresent = true
+				}
+			}
+
+			if !flagPresent && flagName != "" {
+				missingFlags = append(missingFlags, flagName)
+			}
+		}
+	}
+
+	if len(missingFlags) != 0 {
+		return &errRequiredFlags{missingFlags: missingFlags}
+	}
+
 	return nil
 }

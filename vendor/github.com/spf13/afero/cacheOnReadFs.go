@@ -117,6 +117,27 @@ func (u *CacheOnReadFs) Chmod(name string, mode os.FileMode) error {
 	return u.layer.Chmod(name, mode)
 }
 
+func (u *CacheOnReadFs) Chown(name string, uid, gid int) error {
+	st, _, err := u.cacheStatus(name)
+	if err != nil {
+		return err
+	}
+	switch st {
+	case cacheLocal:
+	case cacheHit:
+		err = u.base.Chown(name, uid, gid)
+	case cacheStale, cacheMiss:
+		if err := u.copyToLayer(name); err != nil {
+			return err
+		}
+		err = u.base.Chown(name, uid, gid)
+	}
+	if err != nil {
+		return err
+	}
+	return u.layer.Chown(name, uid, gid)
+}
+
 func (u *CacheOnReadFs) Stat(name string) (os.FileInfo, error) {
 	st, fi, err := u.cacheStatus(name)
 	if err != nil {
@@ -205,7 +226,7 @@ func (u *CacheOnReadFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 			bfi.Close() // oops, what if O_TRUNC was set and file opening in the layer failed...?
 			return nil, err
 		}
-		return &UnionFile{base: bfi, layer: lfi}, nil
+		return &UnionFile{Base: bfi, Layer: lfi}, nil
 	}
 	return u.layer.OpenFile(name, flag, perm)
 }
@@ -251,7 +272,7 @@ func (u *CacheOnReadFs) Open(name string) (File, error) {
 	if err != nil && bfile == nil {
 		return nil, err
 	}
-	return &UnionFile{base: bfile, layer: lfile}, nil
+	return &UnionFile{Base: bfile, Layer: lfile}, nil
 }
 
 func (u *CacheOnReadFs) Mkdir(name string, perm os.FileMode) error {
@@ -286,5 +307,5 @@ func (u *CacheOnReadFs) Create(name string) (File, error) {
 		bfh.Close()
 		return nil, err
 	}
-	return &UnionFile{base: bfh, layer: lfh}, nil
+	return &UnionFile{Base: bfh, Layer: lfh}, nil
 }

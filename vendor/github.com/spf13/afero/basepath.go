@@ -1,13 +1,14 @@
 package afero
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 )
+
+var _ Lstater = (*BasePathFs)(nil)
 
 // The BasePathFs restricts all operations to a given path within an Fs.
 // The given file name to the operations on this Fs will be prepended with
@@ -22,6 +23,16 @@ type BasePathFs struct {
 	path   string
 }
 
+type BasePathFile struct {
+	File
+	path string
+}
+
+func (f *BasePathFile) Name() string {
+	sourcename := f.File.Name()
+	return strings.TrimPrefix(sourcename, filepath.Clean(f.path))
+}
+
 func NewBasePathFs(source Fs, path string) Fs {
 	return &BasePathFs{source: source, path: path}
 }
@@ -30,7 +41,7 @@ func NewBasePathFs(source Fs, path string) Fs {
 // else the given file with the base path prepended
 func (b *BasePathFs) RealPath(name string) (path string, err error) {
 	if err := validateBasePathName(name); err != nil {
-		return "", err
+		return name, err
 	}
 
 	bpath := filepath.Clean(b.path)
@@ -52,7 +63,7 @@ func validateBasePathName(name string) error {
 	// On Windows a common mistake would be to provide an absolute OS path
 	// We could strip out the base part, but that would not be very portable.
 	if filepath.IsAbs(name) {
-		return &os.PathError{Op: "realPath", Path: name, Err: errors.New("got a real OS path instead of a virtual")}
+		return os.ErrNotExist
 	}
 
 	return nil
@@ -70,6 +81,13 @@ func (b *BasePathFs) Chmod(name string, mode os.FileMode) (err error) {
 		return &os.PathError{Op: "chmod", Path: name, Err: err}
 	}
 	return b.source.Chmod(name, mode)
+}
+
+func (b *BasePathFs) Chown(name string, uid, gid int) (err error) {
+	if name, err = b.RealPath(name); err != nil {
+		return &os.PathError{Op: "chown", Path: name, Err: err}
+	}
+	return b.source.Chown(name, uid, gid)
 }
 
 func (b *BasePathFs) Name() string {
@@ -111,14 +129,22 @@ func (b *BasePathFs) OpenFile(name string, flag int, mode os.FileMode) (f File, 
 	if name, err = b.RealPath(name); err != nil {
 		return nil, &os.PathError{Op: "openfile", Path: name, Err: err}
 	}
-	return b.source.OpenFile(name, flag, mode)
+	sourcef, err := b.source.OpenFile(name, flag, mode)
+	if err != nil {
+		return nil, err
+	}
+	return &BasePathFile{sourcef, b.path}, nil
 }
 
 func (b *BasePathFs) Open(name string) (f File, err error) {
 	if name, err = b.RealPath(name); err != nil {
 		return nil, &os.PathError{Op: "open", Path: name, Err: err}
 	}
-	return b.source.Open(name)
+	sourcef, err := b.source.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return &BasePathFile{File: sourcef, path: b.path}, nil
 }
 
 func (b *BasePathFs) Mkdir(name string, mode os.FileMode) (err error) {
@@ -139,7 +165,47 @@ func (b *BasePathFs) Create(name string) (f File, err error) {
 	if name, err = b.RealPath(name); err != nil {
 		return nil, &os.PathError{Op: "create", Path: name, Err: err}
 	}
-	return b.source.Create(name)
+	sourcef, err := b.source.Create(name)
+	if err != nil {
+		return nil, err
+	}
+	return &BasePathFile{File: sourcef, path: b.path}, nil
 }
 
-// vim: ts=4 sw=4 noexpandtab nolist syn=go
+func (b *BasePathFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
+	name, err := b.RealPath(name)
+	if err != nil {
+		return nil, false, &os.PathError{Op: "lstat", Path: name, Err: err}
+	}
+	if lstater, ok := b.source.(Lstater); ok {
+		return lstater.LstatIfPossible(name)
+	}
+	fi, err := b.source.Stat(name)
+	return fi, false, err
+}
+
+func (b *BasePathFs) SymlinkIfPossible(oldname, newname string) error {
+	oldname, err := b.RealPath(oldname)
+	if err != nil {
+		return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: err}
+	}
+	newname, err = b.RealPath(newname)
+	if err != nil {
+		return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: err}
+	}
+	if linker, ok := b.source.(Linker); ok {
+		return linker.SymlinkIfPossible(oldname, newname)
+	}
+	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrNoSymlink}
+}
+
+func (b *BasePathFs) ReadlinkIfPossible(name string) (string, error) {
+	name, err := b.RealPath(name)
+	if err != nil {
+		return "", &os.PathError{Op: "readlink", Path: name, Err: err}
+	}
+	if reader, ok := b.source.(LinkReader); ok {
+		return reader.ReadlinkIfPossible(name)
+	}
+	return "", &os.PathError{Op: "readlink", Path: name, Err: ErrNoReadlink}
+}

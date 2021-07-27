@@ -1,3 +1,5 @@
 module github.com/ugorji/go/codec
 
-require github.com/ugorji/go v1.1.2
+go 1.11
+
+require github.com/ugorji/go v1.2.6

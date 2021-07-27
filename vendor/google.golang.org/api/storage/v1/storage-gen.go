@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC.
+// Copyright 2021 Google LLC.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -55,9 +55,10 @@ import (
 	"strconv"
 	"strings"
 
-	gensupport "google.golang.org/api/gensupport"
 	googleapi "google.golang.org/api/googleapi"
+	gensupport "google.golang.org/api/internal/gensupport"
 	option "google.golang.org/api/option"
+	internaloption "google.golang.org/api/option/internaloption"
 	htransport "google.golang.org/api/transport/http"
 )
 
@@ -74,11 +75,13 @@ var _ = googleapi.Version
 var _ = errors.New
 var _ = strings.Replace
 var _ = context.Canceled
+var _ = internaloption.WithDefaultEndpoint
 
 const apiId = "storage:v1"
 const apiName = "storage"
 const apiVersion = "v1"
-const basePath = "https://www.googleapis.com/storage/v1/"
+const basePath = "https://storage.googleapis.com/storage/v1/"
+const mtlsBasePath = "https://storage.mtls.googleapis.com/storage/v1/"
 
 // OAuth2 scopes used by this API.
 const (
@@ -109,6 +112,8 @@ func NewService(ctx context.Context, opts ...option.ClientOption) (*Service, err
 	)
 	// NOTE: prepend, so we don't override user-specified scopes.
 	opts = append([]option.ClientOption{scopesOption}, opts...)
+	opts = append(opts, internaloption.WithDefaultEndpoint(basePath))
+	opts = append(opts, internaloption.WithDefaultMTLSEndpoint(mtlsBasePath))
 	client, endpoint, err := htransport.NewClient(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -364,6 +369,9 @@ type Bucket struct {
 	// PERMISSION_DENIED error.
 	RetentionPolicy *BucketRetentionPolicy `json:"retentionPolicy,omitempty"`
 
+	// SatisfiesPZS: Reserved for future use.
+	SatisfiesPZS bool `json:"satisfiesPZS,omitempty"`
+
 	// SelfLink: The URI of this bucket.
 	SelfLink string `json:"selfLink,omitempty"`
 
@@ -371,9 +379,9 @@ type Bucket struct {
 	// storageClass is specified for a newly-created object. This defines
 	// how objects in the bucket are stored and determines the SLA and the
 	// cost of storage. Values include MULTI_REGIONAL, REGIONAL, STANDARD,
-	// NEARLINE, COLDLINE, and DURABLE_REDUCED_AVAILABILITY. If this value
-	// is not specified when the bucket is created, it will default to
-	// STANDARD. For more information, see storage classes.
+	// NEARLINE, COLDLINE, ARCHIVE, and DURABLE_REDUCED_AVAILABILITY. If
+	// this value is not specified when the bucket is created, it will
+	// default to STANDARD. For more information, see storage classes.
 	StorageClass string `json:"storageClass,omitempty"`
 
 	// TimeCreated: The creation time of the bucket in RFC 3339 format.
@@ -389,6 +397,13 @@ type Bucket struct {
 	// service behaves when accessing bucket contents as a web site. See the
 	// Static Website Examples for more information.
 	Website *BucketWebsite `json:"website,omitempty"`
+
+	// ZoneAffinity: The zone or zones from which the bucket is intended to
+	// use zonal quota. Requests for data from outside the specified
+	// affinities are still allowed but won't be able to use zonal quota.
+	// The zone or zones need to be within the bucket location otherwise the
+	// requests will fail with a 400 Bad Request response.
+	ZoneAffinity []string `json:"zoneAffinity,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -522,8 +537,21 @@ func (s *BucketEncryption) MarshalJSON() ([]byte, error) {
 
 // BucketIamConfiguration: The bucket's IAM configuration.
 type BucketIamConfiguration struct {
-	// BucketPolicyOnly: The bucket's Bucket Policy Only configuration.
+	// BucketPolicyOnly: The bucket's uniform bucket-level access
+	// configuration. The feature was formerly known as Bucket Policy Only.
+	// For backward compatibility, this field will be populated with
+	// identical information as the uniformBucketLevelAccess field. We
+	// recommend using the uniformBucketLevelAccess field to enable and
+	// disable the feature.
 	BucketPolicyOnly *BucketIamConfigurationBucketPolicyOnly `json:"bucketPolicyOnly,omitempty"`
+
+	// PublicAccessPrevention: The bucket's Public Access Prevention
+	// configuration. Currently, 'unspecified' and 'enforced' are supported.
+	PublicAccessPrevention string `json:"publicAccessPrevention,omitempty"`
+
+	// UniformBucketLevelAccess: The bucket's uniform bucket-level access
+	// configuration.
+	UniformBucketLevelAccess *BucketIamConfigurationUniformBucketLevelAccess `json:"uniformBucketLevelAccess,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "BucketPolicyOnly") to
 	// unconditionally include in API requests. By default, fields with
@@ -549,14 +577,18 @@ func (s *BucketIamConfiguration) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// BucketIamConfigurationBucketPolicyOnly: The bucket's Bucket Policy
-// Only configuration.
+// BucketIamConfigurationBucketPolicyOnly: The bucket's uniform
+// bucket-level access configuration. The feature was formerly known as
+// Bucket Policy Only. For backward compatibility, this field will be
+// populated with identical information as the uniformBucketLevelAccess
+// field. We recommend using the uniformBucketLevelAccess field to
+// enable and disable the feature.
 type BucketIamConfigurationBucketPolicyOnly struct {
-	// Enabled: If set, access checks only use bucket-level IAM policies or
-	// above.
+	// Enabled: If set, access is controlled only by bucket-level or above
+	// IAM policies.
 	Enabled bool `json:"enabled,omitempty"`
 
-	// LockedTime: The deadline time for changing
+	// LockedTime: The deadline for changing
 	// iamConfiguration.bucketPolicyOnly.enabled from true to false in RFC
 	// 3339 format. iamConfiguration.bucketPolicyOnly.enabled may be changed
 	// from true to false until the locked time, after which the field is
@@ -582,6 +614,44 @@ type BucketIamConfigurationBucketPolicyOnly struct {
 
 func (s *BucketIamConfigurationBucketPolicyOnly) MarshalJSON() ([]byte, error) {
 	type NoMethod BucketIamConfigurationBucketPolicyOnly
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// BucketIamConfigurationUniformBucketLevelAccess: The bucket's uniform
+// bucket-level access configuration.
+type BucketIamConfigurationUniformBucketLevelAccess struct {
+	// Enabled: If set, access is controlled only by bucket-level or above
+	// IAM policies.
+	Enabled bool `json:"enabled,omitempty"`
+
+	// LockedTime: The deadline for changing
+	// iamConfiguration.uniformBucketLevelAccess.enabled from true to false
+	// in RFC 3339  format.
+	// iamConfiguration.uniformBucketLevelAccess.enabled may be changed from
+	// true to false until the locked time, after which the field is
+	// immutable.
+	LockedTime string `json:"lockedTime,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Enabled") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Enabled") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *BucketIamConfigurationUniformBucketLevelAccess) MarshalJSON() ([]byte, error) {
+	type NoMethod BucketIamConfigurationUniformBucketLevelAccess
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -691,6 +761,25 @@ type BucketLifecycleRuleCondition struct {
 	// is created before midnight of the specified date in UTC.
 	CreatedBefore string `json:"createdBefore,omitempty"`
 
+	// CustomTimeBefore: A date in RFC 3339 format with only the date part
+	// (for instance, "2013-01-15"). This condition is satisfied when the
+	// custom time on an object is before this date in UTC.
+	CustomTimeBefore string `json:"customTimeBefore,omitempty"`
+
+	// DaysSinceCustomTime: Number of days elapsed since the user-specified
+	// timestamp set on an object. The condition is satisfied if the days
+	// elapsed is at least this number. If no custom timestamp is specified
+	// on an object, the condition does not apply.
+	DaysSinceCustomTime int64 `json:"daysSinceCustomTime,omitempty"`
+
+	// DaysSinceNoncurrentTime: Number of days elapsed since the noncurrent
+	// timestamp of an object. The condition is satisfied if the days
+	// elapsed is at least this number. This condition is relevant only for
+	// versioned objects. The value of the field must be a nonnegative
+	// integer. If it's zero, the object version will become eligible for
+	// Lifecycle action as soon as it becomes noncurrent.
+	DaysSinceNoncurrentTime int64 `json:"daysSinceNoncurrentTime,omitempty"`
+
 	// IsLive: Relevant only for versioned objects. If the value is true,
 	// this condition matches live objects; if the value is false, it
 	// matches archived objects.
@@ -706,9 +795,15 @@ type BucketLifecycleRuleCondition struct {
 
 	// MatchesStorageClass: Objects having any of the storage classes
 	// specified by this condition will be matched. Values include
-	// MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, STANDARD, and
+	// MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, ARCHIVE, STANDARD, and
 	// DURABLE_REDUCED_AVAILABILITY.
 	MatchesStorageClass []string `json:"matchesStorageClass,omitempty"`
+
+	// NoncurrentTimeBefore: A date in RFC 3339 format with only the date
+	// part (for instance, "2013-01-15"). This condition is satisfied when
+	// the noncurrent time on an object is before this date in UTC. This
+	// condition is relevant only for versioned objects.
+	NoncurrentTimeBefore string `json:"noncurrentTimeBefore,omitempty"`
 
 	// NumNewerVersions: Relevant only for versioned objects. If the value
 	// is N, this condition is satisfied when there are at least N versions
@@ -1122,7 +1217,7 @@ type Channel struct {
 	Id string `json:"id,omitempty"`
 
 	// Kind: Identifies this as a notification channel used to watch for
-	// changes to a resource. Value: the fixed string "api#channel".
+	// changes to a resource, which is "api#channel".
 	Kind string `json:"kind,omitempty"`
 
 	// Params: Additional parameters controlling delivery channel behavior.
@@ -1290,10 +1385,6 @@ type Expr struct {
 	// Expression Language syntax. The application context of the containing
 	// message determines which well-known feature set of CEL is supported.
 	Expression string `json:"expression,omitempty"`
-
-	// Kind: The kind of item this is. For storage, this is always
-	// storage#expr. This field is ignored on input.
-	Kind string `json:"kind,omitempty"`
 
 	// Location: An optional string indicating the location of the
 	// expression for error reporting, e.g. a file name and a position in
@@ -1612,6 +1703,10 @@ type Object struct {
 	// Practices.
 	Crc32c string `json:"crc32c,omitempty"`
 
+	// CustomTime: A timestamp in RFC 3339 format specified by the user for
+	// an object.
+	CustomTime string `json:"customTime,omitempty"`
+
 	// CustomerEncryption: Metadata of customer-supplied encryption key, if
 	// the object is encrypted by such a key.
 	CustomerEncryption *ObjectCustomerEncryption `json:"customerEncryption,omitempty"`
@@ -1646,8 +1741,8 @@ type Object struct {
 	// storage#object.
 	Kind string `json:"kind,omitempty"`
 
-	// KmsKeyName: Cloud KMS Key used to encrypt this object, if the object
-	// is encrypted by such a key.
+	// KmsKeyName: Not currently supported. Specifying the parameter causes
+	// the request to fail with status code 400 - Bad Request.
 	KmsKeyName string `json:"kmsKeyName,omitempty"`
 
 	// Md5Hash: MD5 hash of the data; encoded using base64. For more
@@ -2030,6 +2125,9 @@ type Policy struct {
 	// generation can be denoted with #0. This field is ignored on input.
 	ResourceId string `json:"resourceId,omitempty"`
 
+	// Version: The IAM policy format version.
+	Version int64 `json:"version,omitempty"`
+
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
@@ -2302,6 +2400,11 @@ type BucketAccessControlsDeleteCall struct {
 
 // Delete: Permanently deletes the ACL entry for the specified entity on
 // the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *BucketAccessControlsService) Delete(bucket string, entity string) *BucketAccessControlsDeleteCall {
 	c := &BucketAccessControlsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2351,6 +2454,7 @@ func (c *BucketAccessControlsDeleteCall) Header() http.Header {
 
 func (c *BucketAccessControlsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -2439,6 +2543,11 @@ type BucketAccessControlsGetCall struct {
 
 // Get: Returns the ACL entry for the specified entity on the specified
 // bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *BucketAccessControlsService) Get(bucket string, entity string) *BucketAccessControlsGetCall {
 	c := &BucketAccessControlsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2498,6 +2607,7 @@ func (c *BucketAccessControlsGetCall) Header() http.Header {
 
 func (c *BucketAccessControlsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -2615,6 +2725,8 @@ type BucketAccessControlsInsertCall struct {
 }
 
 // Insert: Creates a new ACL entry on the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketAccessControlsService) Insert(bucket string, bucketaccesscontrol *BucketAccessControl) *BucketAccessControlsInsertCall {
 	c := &BucketAccessControlsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2664,6 +2776,7 @@ func (c *BucketAccessControlsInsertCall) Header() http.Header {
 
 func (c *BucketAccessControlsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -2778,6 +2891,8 @@ type BucketAccessControlsListCall struct {
 }
 
 // List: Retrieves ACL entries on the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketAccessControlsService) List(bucket string) *BucketAccessControlsListCall {
 	c := &BucketAccessControlsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2836,6 +2951,7 @@ func (c *BucketAccessControlsListCall) Header() http.Header {
 
 func (c *BucketAccessControlsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -2946,6 +3062,11 @@ type BucketAccessControlsPatchCall struct {
 }
 
 // Patch: Patches an ACL entry on the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *BucketAccessControlsService) Patch(bucket string, entity string, bucketaccesscontrol *BucketAccessControl) *BucketAccessControlsPatchCall {
 	c := &BucketAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2996,6 +3117,7 @@ func (c *BucketAccessControlsPatchCall) Header() http.Header {
 
 func (c *BucketAccessControlsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3119,6 +3241,11 @@ type BucketAccessControlsUpdateCall struct {
 }
 
 // Update: Updates an ACL entry on the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *BucketAccessControlsService) Update(bucket string, entity string, bucketaccesscontrol *BucketAccessControl) *BucketAccessControlsUpdateCall {
 	c := &BucketAccessControlsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -3169,6 +3296,7 @@ func (c *BucketAccessControlsUpdateCall) Header() http.Header {
 
 func (c *BucketAccessControlsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3290,6 +3418,8 @@ type BucketsDeleteCall struct {
 }
 
 // Delete: Permanently deletes an empty bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) Delete(bucket string) *BucketsDeleteCall {
 	c := &BucketsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -3354,6 +3484,7 @@ func (c *BucketsDeleteCall) Header() http.Header {
 
 func (c *BucketsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3445,6 +3576,8 @@ type BucketsGetCall struct {
 }
 
 // Get: Returns metadata for the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) Get(bucket string) *BucketsGetCall {
 	c := &BucketsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -3532,6 +3665,7 @@ func (c *BucketsGetCall) Header() http.Header {
 
 func (c *BucketsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3669,9 +3803,21 @@ type BucketsGetIamPolicyCall struct {
 }
 
 // GetIamPolicy: Returns an IAM policy for the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) GetIamPolicy(bucket string) *BucketsGetIamPolicyCall {
 	c := &BucketsGetIamPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
+	return c
+}
+
+// OptionsRequestedPolicyVersion sets the optional parameter
+// "optionsRequestedPolicyVersion": The IAM policy format version to be
+// returned. If the optionsRequestedPolicyVersion is for an older
+// version that doesn't support part of the requested IAM policy, the
+// request fails.
+func (c *BucketsGetIamPolicyCall) OptionsRequestedPolicyVersion(optionsRequestedPolicyVersion int64) *BucketsGetIamPolicyCall {
+	c.urlParams_.Set("optionsRequestedPolicyVersion", fmt.Sprint(optionsRequestedPolicyVersion))
 	return c
 }
 
@@ -3727,6 +3873,7 @@ func (c *BucketsGetIamPolicyCall) Header() http.Header {
 
 func (c *BucketsGetIamPolicyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3801,6 +3948,13 @@ func (c *BucketsGetIamPolicyCall) Do(opts ...googleapi.CallOption) (*Policy, err
 	//       "required": true,
 	//       "type": "string"
 	//     },
+	//     "optionsRequestedPolicyVersion": {
+	//       "description": "The IAM policy format version to be returned. If the optionsRequestedPolicyVersion is for an older version that doesn't support part of the requested IAM policy, the request fails.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "minimum": "1",
+	//       "type": "integer"
+	//     },
 	//     "provisionalUserProject": {
 	//       "description": "The project to be billed for this request if the target bucket is requester-pays bucket.",
 	//       "location": "query",
@@ -3835,6 +3989,8 @@ type BucketsInsertCall struct {
 }
 
 // Insert: Creates a new bucket.
+//
+// - project: A valid API project identifier.
 func (r *BucketsService) Insert(projectid string, bucket *Bucket) *BucketsInsertCall {
 	c := &BucketsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.urlParams_.Set("project", projectid)
@@ -3936,6 +4092,7 @@ func (c *BucketsInsertCall) Header() http.Header {
 
 func (c *BucketsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4100,6 +4257,8 @@ type BucketsListCall struct {
 }
 
 // List: Retrieves a list of buckets for a given project.
+//
+// - project: A valid API project identifier.
 func (r *BucketsService) List(projectid string) *BucketsListCall {
 	c := &BucketsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.urlParams_.Set("project", projectid)
@@ -4192,6 +4351,7 @@ func (c *BucketsListCall) Header() http.Header {
 
 func (c *BucketsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4352,6 +4512,10 @@ type BucketsLockRetentionPolicyCall struct {
 }
 
 // LockRetentionPolicy: Locks retention policy on a bucket.
+//
+// - bucket: Name of a bucket.
+// - ifMetagenerationMatch: Makes the operation conditional on whether
+//   bucket's current metageneration matches the given value.
 func (r *BucketsService) LockRetentionPolicy(bucket string, ifMetagenerationMatch int64) *BucketsLockRetentionPolicyCall {
 	c := &BucketsLockRetentionPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -4401,6 +4565,7 @@ func (c *BucketsLockRetentionPolicyCall) Header() http.Header {
 
 func (c *BucketsLockRetentionPolicyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4518,6 +4683,8 @@ type BucketsPatchCall struct {
 // Patch: Patches a bucket. Changes to the bucket will be readable
 // immediately after writing, but configuration changes may take time to
 // propagate.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) Patch(bucket string, bucket2 *Bucket) *BucketsPatchCall {
 	c := &BucketsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -4635,6 +4802,7 @@ func (c *BucketsPatchCall) Header() http.Header {
 
 func (c *BucketsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4814,6 +4982,8 @@ type BucketsSetIamPolicyCall struct {
 }
 
 // SetIamPolicy: Updates an IAM policy for the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) SetIamPolicy(bucket string, policy *Policy) *BucketsSetIamPolicyCall {
 	c := &BucketsSetIamPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -4863,6 +5033,7 @@ func (c *BucketsSetIamPolicyCall) Header() http.Header {
 
 func (c *BucketsSetIamPolicyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4978,6 +5149,9 @@ type BucketsTestIamPermissionsCall struct {
 
 // TestIamPermissions: Tests a set of permissions on the given bucket to
 // see which, if any, are held by the caller.
+//
+// - bucket: Name of a bucket.
+// - permissions: Permissions to test.
 func (r *BucketsService) TestIamPermissions(bucket string, permissions []string) *BucketsTestIamPermissionsCall {
 	c := &BucketsTestIamPermissionsCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5037,6 +5211,7 @@ func (c *BucketsTestIamPermissionsCall) Header() http.Header {
 
 func (c *BucketsTestIamPermissionsCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5159,6 +5334,8 @@ type BucketsUpdateCall struct {
 // Update: Updates a bucket. Changes to the bucket will be readable
 // immediately after writing, but configuration changes may take time to
 // propagate.
+//
+// - bucket: Name of a bucket.
 func (r *BucketsService) Update(bucket string, bucket2 *Bucket) *BucketsUpdateCall {
 	c := &BucketsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5276,6 +5453,7 @@ func (c *BucketsUpdateCall) Header() http.Header {
 
 func (c *BucketsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5487,6 +5665,7 @@ func (c *ChannelsStopCall) Header() http.Header {
 
 func (c *ChannelsStopCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5554,6 +5733,11 @@ type DefaultObjectAccessControlsDeleteCall struct {
 
 // Delete: Permanently deletes the default object ACL entry for the
 // specified entity on the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *DefaultObjectAccessControlsService) Delete(bucket string, entity string) *DefaultObjectAccessControlsDeleteCall {
 	c := &DefaultObjectAccessControlsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5603,6 +5787,7 @@ func (c *DefaultObjectAccessControlsDeleteCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5691,6 +5876,11 @@ type DefaultObjectAccessControlsGetCall struct {
 
 // Get: Returns the default object ACL entry for the specified entity on
 // the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *DefaultObjectAccessControlsService) Get(bucket string, entity string) *DefaultObjectAccessControlsGetCall {
 	c := &DefaultObjectAccessControlsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5750,6 +5940,7 @@ func (c *DefaultObjectAccessControlsGetCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5868,6 +6059,8 @@ type DefaultObjectAccessControlsInsertCall struct {
 
 // Insert: Creates a new default object ACL entry on the specified
 // bucket.
+//
+// - bucket: Name of a bucket.
 func (r *DefaultObjectAccessControlsService) Insert(bucket string, objectaccesscontrol *ObjectAccessControl) *DefaultObjectAccessControlsInsertCall {
 	c := &DefaultObjectAccessControlsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5917,6 +6110,7 @@ func (c *DefaultObjectAccessControlsInsertCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6031,6 +6225,8 @@ type DefaultObjectAccessControlsListCall struct {
 }
 
 // List: Retrieves default object ACL entries on the specified bucket.
+//
+// - bucket: Name of a bucket.
 func (r *DefaultObjectAccessControlsService) List(bucket string) *DefaultObjectAccessControlsListCall {
 	c := &DefaultObjectAccessControlsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6106,6 +6302,7 @@ func (c *DefaultObjectAccessControlsListCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6228,6 +6425,11 @@ type DefaultObjectAccessControlsPatchCall struct {
 }
 
 // Patch: Patches a default object ACL entry on the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *DefaultObjectAccessControlsService) Patch(bucket string, entity string, objectaccesscontrol *ObjectAccessControl) *DefaultObjectAccessControlsPatchCall {
 	c := &DefaultObjectAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6278,6 +6480,7 @@ func (c *DefaultObjectAccessControlsPatchCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6401,6 +6604,11 @@ type DefaultObjectAccessControlsUpdateCall struct {
 }
 
 // Update: Updates a default object ACL entry on the specified bucket.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
 func (r *DefaultObjectAccessControlsService) Update(bucket string, entity string, objectaccesscontrol *ObjectAccessControl) *DefaultObjectAccessControlsUpdateCall {
 	c := &DefaultObjectAccessControlsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6451,6 +6659,7 @@ func (c *DefaultObjectAccessControlsUpdateCall) Header() http.Header {
 
 func (c *DefaultObjectAccessControlsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6573,6 +6782,9 @@ type NotificationsDeleteCall struct {
 }
 
 // Delete: Permanently deletes a notification subscription.
+//
+// - bucket: The parent bucket of the notification.
+// - notification: ID of the notification to delete.
 func (r *NotificationsService) Delete(bucket string, notification string) *NotificationsDeleteCall {
 	c := &NotificationsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6622,6 +6834,7 @@ func (c *NotificationsDeleteCall) Header() http.Header {
 
 func (c *NotificationsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6710,6 +6923,9 @@ type NotificationsGetCall struct {
 }
 
 // Get: View a notification configuration.
+//
+// - bucket: The parent bucket of the notification.
+// - notification: Notification ID.
 func (r *NotificationsService) Get(bucket string, notification string) *NotificationsGetCall {
 	c := &NotificationsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6769,6 +6985,7 @@ func (c *NotificationsGetCall) Header() http.Header {
 
 func (c *NotificationsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6889,6 +7106,8 @@ type NotificationsInsertCall struct {
 }
 
 // Insert: Creates a notification subscription for a given bucket.
+//
+// - bucket: The parent bucket of the notification.
 func (r *NotificationsService) Insert(bucket string, notification *Notification) *NotificationsInsertCall {
 	c := &NotificationsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -6938,6 +7157,7 @@ func (c *NotificationsInsertCall) Header() http.Header {
 
 func (c *NotificationsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7054,6 +7274,8 @@ type NotificationsListCall struct {
 
 // List: Retrieves a list of notification subscriptions for a given
 // bucket.
+//
+// - bucket: Name of a Google Cloud Storage bucket.
 func (r *NotificationsService) List(bucket string) *NotificationsListCall {
 	c := &NotificationsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7112,6 +7334,7 @@ func (c *NotificationsListCall) Header() http.Header {
 
 func (c *NotificationsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7226,6 +7449,13 @@ type ObjectAccessControlsDeleteCall struct {
 
 // Delete: Permanently deletes the ACL entry for the specified entity on
 // the specified object.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) Delete(bucket string, object string, entity string) *ObjectAccessControlsDeleteCall {
 	c := &ObjectAccessControlsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7284,6 +7514,7 @@ func (c *ObjectAccessControlsDeleteCall) Header() http.Header {
 
 func (c *ObjectAccessControlsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7387,6 +7618,13 @@ type ObjectAccessControlsGetCall struct {
 
 // Get: Returns the ACL entry for the specified entity on the specified
 // object.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) Get(bucket string, object string, entity string) *ObjectAccessControlsGetCall {
 	c := &ObjectAccessControlsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7455,6 +7693,7 @@ func (c *ObjectAccessControlsGetCall) Header() http.Header {
 
 func (c *ObjectAccessControlsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7587,6 +7826,10 @@ type ObjectAccessControlsInsertCall struct {
 }
 
 // Insert: Creates a new ACL entry on the specified object.
+//
+// - bucket: Name of a bucket.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) Insert(bucket string, object string, objectaccesscontrol *ObjectAccessControl) *ObjectAccessControlsInsertCall {
 	c := &ObjectAccessControlsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7645,6 +7888,7 @@ func (c *ObjectAccessControlsInsertCall) Header() http.Header {
 
 func (c *ObjectAccessControlsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7774,6 +8018,10 @@ type ObjectAccessControlsListCall struct {
 }
 
 // List: Retrieves ACL entries on the specified object.
+//
+// - bucket: Name of a bucket.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) List(bucket string, object string) *ObjectAccessControlsListCall {
 	c := &ObjectAccessControlsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7841,6 +8089,7 @@ func (c *ObjectAccessControlsListCall) Header() http.Header {
 
 func (c *ObjectAccessControlsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7966,6 +8215,13 @@ type ObjectAccessControlsPatchCall struct {
 }
 
 // Patch: Patches an ACL entry on the specified object.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) Patch(bucket string, object string, entity string, objectaccesscontrol *ObjectAccessControl) *ObjectAccessControlsPatchCall {
 	c := &ObjectAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -8025,6 +8281,7 @@ func (c *ObjectAccessControlsPatchCall) Header() http.Header {
 
 func (c *ObjectAccessControlsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8163,6 +8420,13 @@ type ObjectAccessControlsUpdateCall struct {
 }
 
 // Update: Updates an ACL entry on the specified object.
+//
+// - bucket: Name of a bucket.
+// - entity: The entity holding the permission. Can be user-userId,
+//   user-emailAddress, group-groupId, group-emailAddress, allUsers, or
+//   allAuthenticatedUsers.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectAccessControlsService) Update(bucket string, object string, entity string, objectaccesscontrol *ObjectAccessControl) *ObjectAccessControlsUpdateCall {
 	c := &ObjectAccessControlsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -8222,6 +8486,7 @@ func (c *ObjectAccessControlsUpdateCall) Header() http.Header {
 
 func (c *ObjectAccessControlsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8360,6 +8625,12 @@ type ObjectsComposeCall struct {
 
 // Compose: Concatenates a list of existing objects into a new object in
 // the same bucket.
+//
+// - destinationBucket: Name of the bucket containing the source
+//   objects. The destination object is stored in this bucket.
+// - destinationObject: Name of the new object. For information about
+//   how to URL encode object names to be path safe, see Encoding URI
+//   Path Parts.
 func (r *ObjectsService) Compose(destinationBucket string, destinationObject string, composerequest *ComposeRequest) *ObjectsComposeCall {
 	c := &ObjectsComposeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.destinationBucket = destinationBucket
@@ -8458,6 +8729,7 @@ func (c *ObjectsComposeCall) Header() http.Header {
 
 func (c *ObjectsComposeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8623,6 +8895,19 @@ type ObjectsCopyCall struct {
 
 // Copy: Copies a source object to a destination object. Optionally
 // overrides metadata.
+//
+// - destinationBucket: Name of the bucket in which to store the new
+//   object. Overrides the provided object metadata's bucket value, if
+//   any.For information about how to URL encode object names to be path
+//   safe, see Encoding URI Path Parts.
+// - destinationObject: Name of the new object. Required when the object
+//   metadata is not otherwise provided. Overrides the object metadata's
+//   name value, if any.
+// - sourceBucket: Name of the bucket in which to find the source
+//   object.
+// - sourceObject: Name of the source object. For information about how
+//   to URL encode object names to be path safe, see Encoding URI Path
+//   Parts.
 func (r *ObjectsService) Copy(sourceBucket string, sourceObject string, destinationBucket string, destinationObject string, object *Object) *ObjectsCopyCall {
 	c := &ObjectsCopyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sourceBucket = sourceBucket
@@ -8630,6 +8915,17 @@ func (r *ObjectsService) Copy(sourceBucket string, sourceObject string, destinat
 	c.destinationBucket = destinationBucket
 	c.destinationObject = destinationObject
 	c.object = object
+	return c
+}
+
+// DestinationKmsKeyName sets the optional parameter
+// "destinationKmsKeyName": Resource name of the Cloud KMS key, of the
+// form
+// projects/my-project/locations/global/keyRings/my-kr/cryptoKeys/my-key,
+//  that will be used to encrypt the object. Overrides the object
+// metadata's kms_key_name value, if any.
+func (c *ObjectsCopyCall) DestinationKmsKeyName(destinationKmsKeyName string) *ObjectsCopyCall {
+	c.urlParams_.Set("destinationKmsKeyName", destinationKmsKeyName)
 	return c
 }
 
@@ -8789,6 +9085,7 @@ func (c *ObjectsCopyCall) Header() http.Header {
 
 func (c *ObjectsCopyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8869,6 +9166,11 @@ func (c *ObjectsCopyCall) Do(opts ...googleapi.CallOption) (*Object, error) {
 	//       "description": "Name of the bucket in which to store the new object. Overrides the provided object metadata's bucket value, if any.For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
 	//       "location": "path",
 	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "destinationKmsKeyName": {
+	//       "description": "Resource name of the Cloud KMS key, of the form projects/my-project/locations/global/keyRings/my-kr/cryptoKeys/my-key, that will be used to encrypt the object. Overrides the object metadata's kms_key_name value, if any.",
+	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "destinationObject": {
@@ -9018,6 +9320,10 @@ type ObjectsDeleteCall struct {
 // Delete: Deletes an object and its metadata. Deletions are permanent
 // if versioning is not enabled for the bucket, or if the generation
 // parameter is used.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) Delete(bucket string, object string) *ObjectsDeleteCall {
 	c := &ObjectsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -9111,6 +9417,7 @@ func (c *ObjectsDeleteCall) Header() http.Header {
 
 func (c *ObjectsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9229,6 +9536,10 @@ type ObjectsGetCall struct {
 }
 
 // Get: Retrieves an object or its metadata.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) Get(bucket string, object string) *ObjectsGetCall {
 	c := &ObjectsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -9343,6 +9654,7 @@ func (c *ObjectsGetCall) Header() http.Header {
 
 func (c *ObjectsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9525,6 +9837,10 @@ type ObjectsGetIamPolicyCall struct {
 }
 
 // GetIamPolicy: Returns an IAM policy for the specified object.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) GetIamPolicy(bucket string, object string) *ObjectsGetIamPolicyCall {
 	c := &ObjectsGetIamPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -9592,6 +9908,7 @@ func (c *ObjectsGetIamPolicyCall) Header() http.Header {
 
 func (c *ObjectsGetIamPolicyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9719,6 +10036,9 @@ type ObjectsInsertCall struct {
 }
 
 // Insert: Stores a new object and metadata.
+//
+// - bucket: Name of the bucket in which to store the new object.
+//   Overrides the provided object metadata's bucket value, if any.
 func (r *ObjectsService) Insert(bucket string, object *Object) *ObjectsInsertCall {
 	c := &ObjectsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -9908,6 +10228,7 @@ func (c *ObjectsInsertCall) Header() http.Header {
 
 func (c *ObjectsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9922,7 +10243,7 @@ func (c *ObjectsInsertCall) doRequest(alt string) (*http.Response, error) {
 	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "b/{bucket}/o")
 	if c.mediaInfo_ != nil {
-		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
+		urls = googleapi.ResolveRelative(c.s.BasePath, "/upload/storage/v1/b/{bucket}/o")
 		c.urlParams_.Set("uploadType", c.mediaInfo_.UploadType())
 	}
 	if body == nil {
@@ -9941,7 +10262,7 @@ func (c *ObjectsInsertCall) doRequest(alt string) (*http.Response, error) {
 	googleapi.Expand(req.URL, map[string]string{
 		"bucket": c.bucket,
 	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+	return gensupport.SendRequestWithRetry(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "storage.objects.insert" call.
@@ -10140,6 +10461,8 @@ type ObjectsListCall struct {
 }
 
 // List: Retrieves a list of objects matching the criteria.
+//
+// - bucket: Name of the bucket in which to look for objects.
 func (r *ObjectsService) List(bucket string) *ObjectsListCall {
 	c := &ObjectsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -10154,6 +10477,15 @@ func (r *ObjectsService) List(bucket string) *ObjectsListCall {
 // prefixes are omitted.
 func (c *ObjectsListCall) Delimiter(delimiter string) *ObjectsListCall {
 	c.urlParams_.Set("delimiter", delimiter)
+	return c
+}
+
+// EndOffset sets the optional parameter "endOffset": Filter results to
+// objects whose names are lexicographically before endOffset. If
+// startOffset is also set, the objects listed will have names between
+// startOffset (inclusive) and endOffset (exclusive).
+func (c *ObjectsListCall) EndOffset(endOffset string) *ObjectsListCall {
+	c.urlParams_.Set("endOffset", endOffset)
 	return c
 }
 
@@ -10210,6 +10542,15 @@ func (c *ObjectsListCall) ProvisionalUserProject(provisionalUserProject string) 
 	return c
 }
 
+// StartOffset sets the optional parameter "startOffset": Filter results
+// to objects whose names are lexicographically equal to or after
+// startOffset. If endOffset is also set, the objects listed will have
+// names between startOffset (inclusive) and endOffset (exclusive).
+func (c *ObjectsListCall) StartOffset(startOffset string) *ObjectsListCall {
+	c.urlParams_.Set("startOffset", startOffset)
+	return c
+}
+
 // UserProject sets the optional parameter "userProject": The project to
 // be billed for this request. Required for Requester Pays buckets.
 func (c *ObjectsListCall) UserProject(userProject string) *ObjectsListCall {
@@ -10262,6 +10603,7 @@ func (c *ObjectsListCall) Header() http.Header {
 
 func (c *ObjectsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10341,6 +10683,11 @@ func (c *ObjectsListCall) Do(opts ...googleapi.CallOption) (*Objects, error) {
 	//       "location": "query",
 	//       "type": "string"
 	//     },
+	//     "endOffset": {
+	//       "description": "Filter results to objects whose names are lexicographically before endOffset. If startOffset is also set, the objects listed will have names between startOffset (inclusive) and endOffset (exclusive).",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
 	//     "includeTrailingDelimiter": {
 	//       "description": "If true, objects that end in exactly one instance of delimiter will have their metadata included in items in addition to prefixes.",
 	//       "location": "query",
@@ -10379,6 +10726,11 @@ func (c *ObjectsListCall) Do(opts ...googleapi.CallOption) (*Objects, error) {
 	//     },
 	//     "provisionalUserProject": {
 	//       "description": "The project to be billed for this request if the target bucket is requester-pays bucket.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "startOffset": {
+	//       "description": "Filter results to objects whose names are lexicographically equal to or after startOffset. If endOffset is also set, the objects listed will have names between startOffset (inclusive) and endOffset (exclusive).",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -10443,6 +10795,10 @@ type ObjectsPatchCall struct {
 }
 
 // Patch: Patches an object's metadata.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) Patch(bucket string, object string, object2 *Object) *ObjectsPatchCall {
 	c := &ObjectsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -10568,6 +10924,7 @@ func (c *ObjectsPatchCall) Header() http.Header {
 
 func (c *ObjectsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10758,6 +11115,19 @@ type ObjectsRewriteCall struct {
 
 // Rewrite: Rewrites a source object to a destination object. Optionally
 // overrides metadata.
+//
+// - destinationBucket: Name of the bucket in which to store the new
+//   object. Overrides the provided object metadata's bucket value, if
+//   any.
+// - destinationObject: Name of the new object. Required when the object
+//   metadata is not otherwise provided. Overrides the object metadata's
+//   name value, if any. For information about how to URL encode object
+//   names to be path safe, see Encoding URI Path Parts.
+// - sourceBucket: Name of the bucket in which to find the source
+//   object.
+// - sourceObject: Name of the source object. For information about how
+//   to URL encode object names to be path safe, see Encoding URI Path
+//   Parts.
 func (r *ObjectsService) Rewrite(sourceBucket string, sourceObject string, destinationBucket string, destinationObject string, object *Object) *ObjectsRewriteCall {
 	c := &ObjectsRewriteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.sourceBucket = sourceBucket
@@ -10959,6 +11329,7 @@ func (c *ObjectsRewriteCall) Header() http.Header {
 
 func (c *ObjectsRewriteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11203,6 +11574,10 @@ type ObjectsSetIamPolicyCall struct {
 }
 
 // SetIamPolicy: Updates an IAM policy for the specified object.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) SetIamPolicy(bucket string, object string, policy *Policy) *ObjectsSetIamPolicyCall {
 	c := &ObjectsSetIamPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -11261,6 +11636,7 @@ func (c *ObjectsSetIamPolicyCall) Header() http.Header {
 
 func (c *ObjectsSetIamPolicyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11392,6 +11768,11 @@ type ObjectsTestIamPermissionsCall struct {
 
 // TestIamPermissions: Tests a set of permissions on the given object to
 // see which, if any, are held by the caller.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
+// - permissions: Permissions to test.
 func (r *ObjectsService) TestIamPermissions(bucket string, object string, permissions []string) *ObjectsTestIamPermissionsCall {
 	c := &ObjectsTestIamPermissionsCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -11460,6 +11841,7 @@ func (c *ObjectsTestIamPermissionsCall) Header() http.Header {
 
 func (c *ObjectsTestIamPermissionsCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11595,6 +11977,10 @@ type ObjectsUpdateCall struct {
 }
 
 // Update: Updates an object's metadata.
+//
+// - bucket: Name of the bucket in which the object resides.
+// - object: Name of the object. For information about how to URL encode
+//   object names to be path safe, see Encoding URI Path Parts.
 func (r *ObjectsService) Update(bucket string, object string, object2 *Object) *ObjectsUpdateCall {
 	c := &ObjectsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -11720,6 +12106,7 @@ func (c *ObjectsUpdateCall) Header() http.Header {
 
 func (c *ObjectsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11906,6 +12293,8 @@ type ObjectsWatchAllCall struct {
 }
 
 // WatchAll: Watch for changes on all objects in a bucket.
+//
+// - bucket: Name of the bucket in which to look for objects.
 func (r *ObjectsService) WatchAll(bucket string, channel *Channel) *ObjectsWatchAllCall {
 	c := &ObjectsWatchAllCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -11921,6 +12310,15 @@ func (r *ObjectsService) WatchAll(bucket string, channel *Channel) *ObjectsWatch
 // prefixes are omitted.
 func (c *ObjectsWatchAllCall) Delimiter(delimiter string) *ObjectsWatchAllCall {
 	c.urlParams_.Set("delimiter", delimiter)
+	return c
+}
+
+// EndOffset sets the optional parameter "endOffset": Filter results to
+// objects whose names are lexicographically before endOffset. If
+// startOffset is also set, the objects listed will have names between
+// startOffset (inclusive) and endOffset (exclusive).
+func (c *ObjectsWatchAllCall) EndOffset(endOffset string) *ObjectsWatchAllCall {
+	c.urlParams_.Set("endOffset", endOffset)
 	return c
 }
 
@@ -11977,6 +12375,15 @@ func (c *ObjectsWatchAllCall) ProvisionalUserProject(provisionalUserProject stri
 	return c
 }
 
+// StartOffset sets the optional parameter "startOffset": Filter results
+// to objects whose names are lexicographically equal to or after
+// startOffset. If endOffset is also set, the objects listed will have
+// names between startOffset (inclusive) and endOffset (exclusive).
+func (c *ObjectsWatchAllCall) StartOffset(startOffset string) *ObjectsWatchAllCall {
+	c.urlParams_.Set("startOffset", startOffset)
+	return c
+}
+
 // UserProject sets the optional parameter "userProject": The project to
 // be billed for this request. Required for Requester Pays buckets.
 func (c *ObjectsWatchAllCall) UserProject(userProject string) *ObjectsWatchAllCall {
@@ -12019,6 +12426,7 @@ func (c *ObjectsWatchAllCall) Header() http.Header {
 
 func (c *ObjectsWatchAllCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12100,6 +12508,11 @@ func (c *ObjectsWatchAllCall) Do(opts ...googleapi.CallOption) (*Channel, error)
 	//       "location": "query",
 	//       "type": "string"
 	//     },
+	//     "endOffset": {
+	//       "description": "Filter results to objects whose names are lexicographically before endOffset. If startOffset is also set, the objects listed will have names between startOffset (inclusive) and endOffset (exclusive).",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
 	//     "includeTrailingDelimiter": {
 	//       "description": "If true, objects that end in exactly one instance of delimiter will have their metadata included in items in addition to prefixes.",
 	//       "location": "query",
@@ -12138,6 +12551,11 @@ func (c *ObjectsWatchAllCall) Do(opts ...googleapi.CallOption) (*Channel, error)
 	//     },
 	//     "provisionalUserProject": {
 	//       "description": "The project to be billed for this request if the target bucket is requester-pays bucket.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "startOffset": {
+	//       "description": "Filter results to objects whose names are lexicographically equal to or after startOffset. If endOffset is also set, the objects listed will have names between startOffset (inclusive) and endOffset (exclusive).",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -12183,6 +12601,9 @@ type ProjectsHmacKeysCreateCall struct {
 }
 
 // Create: Creates a new HMAC key for the specified service account.
+//
+// - projectId: Project ID owning the service account.
+// - serviceAccountEmail: Email address of the service account.
 func (r *ProjectsHmacKeysService) Create(projectId string, serviceAccountEmail string) *ProjectsHmacKeysCreateCall {
 	c := &ProjectsHmacKeysCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -12224,6 +12645,7 @@ func (c *ProjectsHmacKeysCreateCall) Header() http.Header {
 
 func (c *ProjectsHmacKeysCreateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12332,6 +12754,9 @@ type ProjectsHmacKeysDeleteCall struct {
 }
 
 // Delete: Deletes an HMAC key.
+//
+// - accessId: Name of the HMAC key to be deleted.
+// - projectId: Project ID owning the requested key.
 func (r *ProjectsHmacKeysService) Delete(projectId string, accessId string) *ProjectsHmacKeysDeleteCall {
 	c := &ProjectsHmacKeysDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -12373,6 +12798,7 @@ func (c *ProjectsHmacKeysDeleteCall) Header() http.Header {
 
 func (c *ProjectsHmacKeysDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12456,6 +12882,10 @@ type ProjectsHmacKeysGetCall struct {
 }
 
 // Get: Retrieves an HMAC key's metadata
+//
+// - accessId: Name of the HMAC key.
+// - projectId: Project ID owning the service account of the requested
+//   key.
 func (r *ProjectsHmacKeysService) Get(projectId string, accessId string) *ProjectsHmacKeysGetCall {
 	c := &ProjectsHmacKeysGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -12507,6 +12937,7 @@ func (c *ProjectsHmacKeysGetCall) Header() http.Header {
 
 func (c *ProjectsHmacKeysGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12602,6 +13033,7 @@ func (c *ProjectsHmacKeysGetCall) Do(opts ...googleapi.CallOption) (*HmacKeyMeta
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/cloud-platform",
 	//     "https://www.googleapis.com/auth/cloud-platform.read-only",
+	//     "https://www.googleapis.com/auth/devstorage.full_control",
 	//     "https://www.googleapis.com/auth/devstorage.read_only"
 	//   ]
 	// }
@@ -12620,6 +13052,8 @@ type ProjectsHmacKeysListCall struct {
 }
 
 // List: Retrieves a list of HMAC keys matching the criteria.
+//
+// - projectId: Name of the project in which to look for HMAC keys.
 func (r *ProjectsHmacKeysService) List(projectId string) *ProjectsHmacKeysListCall {
 	c := &ProjectsHmacKeysListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -12705,6 +13139,7 @@ func (c *ProjectsHmacKeysListCall) Header() http.Header {
 
 func (c *ProjectsHmacKeysListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12857,6 +13292,10 @@ type ProjectsHmacKeysUpdateCall struct {
 
 // Update: Updates the state of an HMAC key. See the HMAC Key resource
 // descriptor for valid states.
+//
+// - accessId: Name of the HMAC key being updated.
+// - projectId: Project ID owning the service account of the updated
+//   key.
 func (r *ProjectsHmacKeysService) Update(projectId string, accessId string, hmackeymetadata *HmacKeyMetadata) *ProjectsHmacKeysUpdateCall {
 	c := &ProjectsHmacKeysUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -12899,6 +13338,7 @@ func (c *ProjectsHmacKeysUpdateCall) Header() http.Header {
 
 func (c *ProjectsHmacKeysUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -13017,6 +13457,8 @@ type ProjectsServiceAccountGetCall struct {
 
 // Get: Get the email address of this project's Google Cloud Storage
 // service account.
+//
+// - projectId: Project ID.
 func (r *ProjectsServiceAccountService) Get(projectId string) *ProjectsServiceAccountGetCall {
 	c := &ProjectsServiceAccountGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectId = projectId
@@ -13075,6 +13517,7 @@ func (c *ProjectsServiceAccountGetCall) Header() http.Header {
 
 func (c *ProjectsServiceAccountGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210406")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}

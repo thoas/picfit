@@ -33,8 +33,8 @@ import (
 // built-ins from that package.
 func Glob(fs Fs, pattern string) (matches []string, err error) {
 	if !hasMeta(pattern) {
-		// afero does not support Lstat directly.
-		if _, err = lstatIfOs(fs, pattern); err != nil {
+		// Lstat not supported by a ll filesystems.
+		if _, err = lstatIfPossible(fs, pattern); err != nil {
 			return nil, nil
 		}
 		return []string{pattern}, nil
@@ -106,5 +106,5 @@ func glob(fs Fs, dir, pattern string, matches []string) (m []string, e error) {
 // recognized by Match.
 func hasMeta(path string) bool {
 	// TODO(niemeyer): Should other magic characters be added here?
-	return strings.IndexAny(path, "*?[") >= 0
+	return strings.ContainsAny(path, "*?[")
 }
