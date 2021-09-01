@@ -33,7 +33,7 @@ type MimetypeDetectorFunc func(*url.URL) (string, error)
 
 // Detect mimetype by looking at the URL extension
 func MimetypeDetectorExtension(uri *url.URL) (string, error) {
-	return mime.TypeByExtension(filepath.Ext(uri.String())), nil
+	return mime.TypeByExtension(filepath.Ext(uri.Path)), nil
 }
 
 // Detect mimetype with third-party fastimage library.
