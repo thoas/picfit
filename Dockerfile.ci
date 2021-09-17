@@ -1,7 +1,0 @@
-FROM golang:1.17
-
-ADD . /go/src/github.com/thoas/picfit
-
-WORKDIR /go/src/github.com/thoas/picfit
-
-CMD make test
