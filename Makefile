@@ -17,10 +17,6 @@ export GO111MODULE=on
 
 test: unit
 
-ci:
-	@(docker build -t picfit-ci -f Dockerfile.ci .)
-	@(docker run --net=host --rm picfit-ci)
-
 vendorize:
 	find vendor/ -type f -not -path "*/.git*" -exec git add {} \;
 

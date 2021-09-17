@@ -1,10 +1,6 @@
 picfit
 ======
 
-.. image:: https://secure.travis-ci.org/thoas/picfit.svg?branch=master
-    :alt: Build Status
-    :target: http://travis-ci.org/thoas/picfit
-
 .. image:: https://d262ilb51hltx0.cloudfront.net/max/800/1*oR04S6Ie7s1JctwjsDsN0w.png
 
 picfit is a reusable Go server to manipulate images (resize, thumbnail, etc.).

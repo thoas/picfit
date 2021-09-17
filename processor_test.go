@@ -364,6 +364,10 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	// with the SourceStorage
 	ioutil.WriteFile(path.Join(tmp, "avatar.png"), body, 0755)
 
+	var (
+		redisHost = os.Getenv("REDIS_HOST")
+	)
+
 	content := `{
 	  "debug": true,
 	  "port": 3001,
@@ -371,7 +375,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 		"prefix": "picfit:",
 		"type": "redis",
 		"redis": {
-			"host": "127.0.0.1",
+			"host": "%s",
 			"db": 0,
 			"password": "",
 			"port": 6379
@@ -390,7 +394,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	  }
 	}`
 
-	content = fmt.Sprintf(content, tmp)
+	content = fmt.Sprintf(content, redisHost, tmp)
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
 		server, err := server.New(suite.Config)
@@ -471,6 +475,10 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 	tmp := os.TempDir()
 
+	var (
+		redisHost = os.Getenv("REDIS_HOST")
+	)
+
 	content := `{
 	  "debug": true,
 	  "port": 3001,
@@ -478,7 +486,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 		"prefix": "picfit:",
 		"type": "redis",
 		"redis": {
-			"host": "127.0.0.1",
+			"host": "%s",
 			"db": 0,
 			"password": "",
 			"port": 6379
@@ -492,7 +500,8 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	  }
 	}`
 
-	content = fmt.Sprintf(content, tmp)
+	content = fmt.Sprintf(content, redisHost, tmp)
+	fmt.Println(content)
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
 		server, err := server.New(suite.Config)

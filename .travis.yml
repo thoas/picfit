@@ -1,5 +1,0 @@
-services:
-  - docker
-  - redis-server
-
-script: make ci
