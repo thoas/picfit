@@ -12,6 +12,7 @@ import (
 
 const (
 	DOs3StorageType     = "dos3"
+	minioStorageType    = "minio"
 	fsStorageType       = "fs"
 	gcsStorageType      = "gcs"
 	httpDOs3StorageType = "http+dos3"
@@ -118,6 +119,26 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 		}
 
 		region, ok := GetDOs3Region(cfg.Region)
+		if !ok {
+			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+		}
+
+		return gostorages.NewS3Storage(
+			cfg.AccessKeyID,
+			cfg.SecretAccessKey,
+			cfg.BucketName,
+			cfg.Location,
+			region,
+			acl,
+			cfg.BaseURL,
+		), nil
+	case minioStorageType:
+		acl, ok := gostorages.ACLs[cfg.ACL]
+		if !ok {
+			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
+		}
+
+		region, ok := GetMINIOs3Region(cfg.Region, cfg.BaseURL)
 		if !ok {
 			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
 		}
