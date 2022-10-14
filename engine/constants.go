@@ -9,6 +9,7 @@ var (
 		"png":  "image/png",
 		"webp": "image/webp",
 		"svg":  "image/svg+xml",
+		"pdf":  "application/pdf",
 	}
 
 	MimeTypes = []string{
