@@ -2,6 +2,7 @@ package picfit_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -49,7 +50,7 @@ func TestSignatureApplicationNotAuthorized(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", location, nil)
 
-		server, err := server.New(suite.Config)
+		server, err := server.New(context.Background(), suite.Config)
 		assert.Nil(t, err)
 
 		res := httptest.NewRecorder()
@@ -85,7 +86,7 @@ func TestSignatureApplicationAuthorized(t *testing.T) {
 
 		request, _ := http.NewRequest("GET", location, nil)
 
-		server, err := server.New(suite.Config)
+		server, err := server.New(context.Background(), suite.Config)
 		assert.Nil(t, err)
 
 		res := httptest.NewRecorder()
@@ -113,7 +114,7 @@ func TestSizeRestrictedApplicationNotAuthorized(t *testing.T) {
 	}`
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
-		server, err := server.New(suite.Config)
+		server, err := server.New(context.Background(), suite.Config)
 		assert.Nil(t, err)
 
 		u, _ := url.Parse(ts.URL + "/avatar.png")
@@ -167,7 +168,7 @@ func TestUploadHandler(t *testing.T) {
 	content = fmt.Sprintf(content, tmp)
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
-		server, err := server.New(suite.Config)
+		server, err := server.New(context.Background(), suite.Config)
 		assert.Nil(t, err)
 
 		f, err := os.Open("tests/fixtures/avatar.png")
@@ -272,7 +273,7 @@ func TestDeleteHandler(t *testing.T) {
 
 	cfg = fmt.Sprintf(cfg, tmpSrcStorage, tmpDstStorage)
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
-		server, err := server.New(suite.Config)
+		server, err := server.New(context.Background(), suite.Config)
 		assert.Nil(t, err)
 
 		// generate 5 resized image1.jpg
@@ -397,7 +398,8 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	content = fmt.Sprintf(content, redisHost, tmp)
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
-		server, err := server.New(suite.Config)
+		ctx := context.Background()
+		server, err := server.New(ctx, suite.Config)
 		assert.Nil(t, err)
 
 		location := "http://example.com/display/resize/100x100/avatar.png"
@@ -416,11 +418,11 @@ func TestStorageApplicationWithPath(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		exists, err := suite.Processor.KeyExists(etag)
+		exists, err := suite.Processor.KeyExists(ctx, etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := suite.Processor.GetKey(etag)
+		raw, err := suite.Processor.GetKey(ctx, etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
@@ -504,7 +506,8 @@ func TestStorageApplicationWithURL(t *testing.T) {
 	fmt.Println(content)
 
 	tests.Run(t, func(t *testing.T, suite *tests.Suite) {
-		server, err := server.New(suite.Config)
+		ctx := context.Background()
+		server, err := server.New(ctx, suite.Config)
 		assert.Nil(t, err)
 
 		filename := "avatar.png"
@@ -527,11 +530,11 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 		etag := res.Header().Get("ETag")
 
-		exists, err := suite.Processor.KeyExists(etag)
+		exists, err := suite.Processor.KeyExists(ctx, etag)
 		assert.Nil(t, err)
 		assert.True(t, exists)
 
-		raw, err := suite.Processor.GetKey(etag)
+		raw, err := suite.Processor.GetKey(ctx, etag)
 		assert.Nil(t, err)
 
 		filepath, err := conv.String(raw)
@@ -551,8 +554,9 @@ func TestDummyApplicationErrors(t *testing.T) {
 	request, _ := http.NewRequest("GET", location, nil)
 
 	res := httptest.NewRecorder()
+	ctx := context.Background()
 
-	server, err := server.New(config.DefaultConfig())
+	server, err := server.New(ctx, config.DefaultConfig())
 	assert.Nil(t, err)
 
 	server.ServeHTTP(res, request)
@@ -564,7 +568,8 @@ func TestDummyApplication(t *testing.T) {
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
-	server, err := server.New(config.DefaultConfig())
+	ctx := context.Background()
+	server, err := server.New(ctx, config.DefaultConfig())
 	assert.Nil(t, err)
 
 	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {

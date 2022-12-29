@@ -1,6 +1,8 @@
 package picfit
 
 import (
+	"context"
+
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/logger"
@@ -9,7 +11,7 @@ import (
 )
 
 // NewProcessor returns a Processor instance from a config.Config instance
-func NewProcessor(cfg *config.Config) (*Processor, error) {
+func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	log := logger.New(cfg.Logger)
 
 	sourceStorage, destinationStorage, err := storage.New(
@@ -19,6 +21,7 @@ func NewProcessor(cfg *config.Config) (*Processor, error) {
 	}
 
 	s, err := store.New(
+		ctx,
 		log.With(logger.String("logger", "store")),
 		cfg.KVStore)
 	if err != nil {

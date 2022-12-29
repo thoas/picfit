@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/thoas/picfit"
@@ -11,8 +12,8 @@ type Server struct {
 	http *HTTPServer
 }
 
-func New(cfg *config.Config) (*Server, error) {
-	processor, err := picfit.NewProcessor(cfg)
+func New(ctx context.Context, cfg *config.Config) (*Server, error) {
+	processor, err := picfit.NewProcessor(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -35,13 +36,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Run runs the application and launch servers
-func Run(path string) error {
+func Run(ctx context.Context, path string) error {
 	cfg, err := config.Load(path)
 	if err != nil {
 		return err
 	}
 
-	server, err := New(cfg)
+	server, err := New(ctx, cfg)
 	if err != nil {
 		return err
 	}

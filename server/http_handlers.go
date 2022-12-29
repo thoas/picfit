@@ -100,6 +100,7 @@ func (h handlers) delete(c *gin.Context) error {
 		err         error
 		path        = c.Param("parameters")
 		key, exists = c.Get("key")
+		ctx         = c.Request.Context()
 	)
 
 	if path == "" && !exists {
@@ -107,9 +108,9 @@ func (h handlers) delete(c *gin.Context) error {
 	}
 
 	if !exists {
-		err = h.processor.Delete(path[1:])
+		err = h.processor.Delete(ctx, path[1:])
 	} else {
-		err = h.processor.DeleteChild(key.(string))
+		err = h.processor.DeleteChild(ctx, key.(string))
 	}
 
 	if err != nil {

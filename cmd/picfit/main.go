@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -87,7 +88,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		err := server.Run(config)
+		err := server.Run(context.Background(), config)
 
 		if err != nil {
 			fmt.Fprint(os.Stderr, err)

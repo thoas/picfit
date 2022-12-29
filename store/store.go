@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -19,7 +20,7 @@ const (
 )
 
 // New returns a KVStore from config
-func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
+func New(ctx context.Context, log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	if cfg == nil {
 		return gokvstores.DummyStore{}, nil
 	}
@@ -33,7 +34,7 @@ func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	case redisClusterKVStoreType:
 		redis := cfg.RedisCluster
 
-		s, err := gokvstores.NewRedisClusterStore(&gokvstores.RedisClusterOptions{
+		s, err := gokvstores.NewRedisClusterStore(ctx, &gokvstores.RedisClusterOptions{
 			Addrs:    redis.Addrs,
 			Password: redis.Password,
 		}, time.Duration(redis.Expiration)*time.Second)
@@ -45,7 +46,7 @@ func New(log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	case redisKVStoreType:
 		redis := cfg.Redis
 
-		s, err := gokvstores.NewRedisClientStore(&gokvstores.RedisClientOptions{
+		s, err := gokvstores.NewRedisClientStore(ctx, &gokvstores.RedisClientOptions{
 			Addr:     redis.Addr(),
 			DB:       redis.DB,
 			Password: redis.Password,

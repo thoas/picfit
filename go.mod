@@ -29,7 +29,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.4.0
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
-	github.com/ulule/gokvstores v0.0.0-20190522151009-afe9350f1dcd
+	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
 	github.com/ulule/gostorages v0.0.0-20190508132116-7b1387fcb001
 	github.com/urfave/cli v1.22.5
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
@@ -40,16 +40,18 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
-	gopkg.in/redis.v5 v5.2.9 // indirect
 )
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
@@ -74,9 +76,9 @@ require (
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/tools v0.1.2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

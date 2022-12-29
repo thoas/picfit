@@ -2,6 +2,7 @@ package picfit
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -61,7 +62,7 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 }
 
 // Store stores an image file with the defined filepath
-func (p *Processor) Store(filepath string, i *image.ImageFile) error {
+func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFile) error {
 	err := i.Save()
 	if err != nil {
 		return err
@@ -70,7 +71,7 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 	p.logger.Info("Save file to storage",
 		logger.String("file", i.Filepath))
 
-	err = p.store.Set(i.Key, i.Filepath)
+	err = p.store.Set(ctx, i.Key, i.Filepath)
 	if err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = p.store.AppendSlice(parentKey, i.Key)
+		err = p.store.AppendSlice(ctx, parentKey, i.Key)
 		if err != nil {
 			return err
 		}
@@ -100,10 +101,10 @@ func (p *Processor) Store(filepath string, i *image.ImageFile) error {
 }
 
 // DeleteChild remove a child from store and storage
-func (p *Processor) DeleteChild(key string) error {
+func (p *Processor) DeleteChild(ctx context.Context, key string) error {
 	// Now, every child is a hash which points to a key/value pair in
 	// Store which in turn points to a file in dst storage.
-	dstfileRaw, err := p.store.Get(key)
+	dstfileRaw, err := p.store.Get(ctx, key)
 	if err != nil {
 		return errors.Wrapf(err, "unable to retrieve key %s", key)
 	}
@@ -121,7 +122,7 @@ func (p *Processor) DeleteChild(key string) error {
 		}
 	}
 
-	err = p.store.Delete(key)
+	err = p.store.Delete(ctx, key)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", key)
 	}
@@ -133,7 +134,7 @@ func (p *Processor) DeleteChild(key string) error {
 }
 
 // Delete removes a file from store and storage
-func (p *Processor) Delete(filepath string) error {
+func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	p.logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
 
@@ -153,7 +154,7 @@ func (p *Processor) Delete(filepath string) error {
 
 	childrenKey := fmt.Sprintf("%s:children", parentKey)
 
-	exists, err := p.store.Exists(childrenKey)
+	exists, err := p.store.Exists(ctx, childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to verify if %s exists", childrenKey)
 	}
@@ -167,7 +168,7 @@ func (p *Processor) Delete(filepath string) error {
 	}
 
 	// Get the list of items to cleanup.
-	children, err := p.store.GetSlice(childrenKey)
+	children, err := p.store.GetSlice(ctx, childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to retrieve children set %s", childrenKey)
 	}
@@ -185,7 +186,7 @@ func (p *Processor) Delete(filepath string) error {
 			return err
 		}
 
-		err = p.DeleteChild(key)
+		err = p.DeleteChild(ctx, key)
 		if err != nil {
 			return errors.Wrapf(err, "unable to delete child %s", key)
 		}
@@ -195,7 +196,7 @@ func (p *Processor) Delete(filepath string) error {
 	p.logger.Info("Delete set %s",
 		logger.String("set", childrenKey))
 
-	err = p.store.Delete(childrenKey)
+	err = p.store.Delete(ctx, childrenKey)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", childrenKey)
 	}
@@ -209,11 +210,12 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		storeKey = c.MustGet("key").(string)
 		force    = c.Query("force")
 		options  = newOptions(opts...)
+		ctx      = c.Request.Context()
 	)
 
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
 	if modifiedSince != "" && force == "" {
-		exists, err := p.store.Exists(storeKey)
+		exists, err := p.store.Exists(ctx, storeKey)
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +231,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 
 	if force == "" {
 		// try to retrieve image from the k/v rtore
-		filepathRaw, err := p.store.Get(storeKey)
+		filepathRaw, err := p.store.Get(ctx, storeKey)
 		if err != nil {
 			return nil, err
 		}
@@ -290,6 +292,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	var (
 		filepath string
 		err      error
+		ctx      = c.Request.Context()
 	)
 
 	file := &image.ImageFile{
@@ -333,9 +336,9 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Headers["ETag"] = storeKey
 
 	if async == true {
-		go p.Store(filepath, file)
+		go p.Store(ctx, filepath, file)
 	} else {
-		err = p.Store(filepath, file)
+		err = p.Store(ctx, filepath, file)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
@@ -353,12 +356,12 @@ func (p Processor) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (p Processor) GetKey(key string) (interface{}, error) {
-	return p.store.Get(key)
+func (p Processor) GetKey(ctx context.Context, key string) (interface{}, error) {
+	return p.store.Get(ctx, key)
 }
 
-func (p Processor) KeyExists(key string) (bool, error) {
-	return p.store.Exists(key)
+func (p Processor) KeyExists(ctx context.Context, key string) (bool, error) {
+	return p.store.Exists(ctx, key)
 }
 
 func (p Processor) FileExists(name string) bool {

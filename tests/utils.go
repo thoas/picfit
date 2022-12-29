@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -37,8 +38,8 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func NewDummyProcessor() *picfit.Processor {
-	processor, _ := picfit.NewProcessor(config.DefaultConfig())
+func NewDummyProcessor(ctx context.Context) *picfit.Processor {
+	processor, _ := picfit.NewProcessor(ctx, config.DefaultConfig())
 
 	return processor
 }
@@ -77,13 +78,14 @@ func Run(t *testing.T, f FuncTest, opt ...Option) {
 	var (
 		opts  = newOptions(opt...)
 		suite *Suite
+		ctx   = context.Background()
 	)
 
 	if opts.Config != "" {
 		cfg, err := config.LoadFromContent(opts.Config)
 		assert.Nil(t, err)
 
-		processor, err := picfit.NewProcessor(cfg)
+		processor, err := picfit.NewProcessor(ctx, cfg)
 		assert.Nil(t, err)
 
 		suite = &Suite{
@@ -93,7 +95,7 @@ func Run(t *testing.T, f FuncTest, opt ...Option) {
 	} else {
 		cfg := config.DefaultConfig()
 
-		processor, _ := picfit.NewProcessor(cfg)
+		processor, _ := picfit.NewProcessor(ctx, cfg)
 
 		suite = &Suite{
 			Config:    cfg,

@@ -1,6 +1,7 @@
 package picfit_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func TestEngineOperationFromQuery(t *testing.T) {
 	op := "op:resize w:123 h:321 upscale:true pos:top q:99"
-	processor := tests.NewDummyProcessor()
+	processor := tests.NewDummyProcessor(context.Background())
 	operation, err := processor.NewEngineOperationFromQuery(op)
 	assert.Nil(t, err)
 
