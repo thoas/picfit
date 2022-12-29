@@ -17,9 +17,6 @@ export GO111MODULE=on
 
 test: unit
 
-vendorize:
-	find vendor/ -type f -not -path "*/.git*" -exec git add {} \;
-
 run-server:
 	@PICFIT_CONFIG_PATH=$(PICFIT_CONFIG_PATH) $(BIN)
 
@@ -27,7 +24,7 @@ serve:
 	@modd
 
 unit:
-	go test -mod=vendor -v -cover ./...
+	go test -v -cover ./...
 
 all: picfit
 	@(mkdir -p $(BIN_DIR))
@@ -35,7 +32,7 @@ all: picfit
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))
-	go build -mod=vendor -ldflags "\
+	go build -ldflags "\
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
@@ -50,7 +47,7 @@ format:
 build-static:
 	@(echo "-> Creating statically linked binary...")
 	mkdir -p $(BIN_DIR)
-	go build -mod=vendor -ldflags "\
+	go build -ldflags "\
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
