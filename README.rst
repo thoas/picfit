@@ -69,6 +69,7 @@ The location of the configuration is specified by --config or the PICFIT_CONFIG_
 - **redis** - generated keys stored in Redis_, see `below <#store-images-on-amazon-s3-keys-in-redis-and-shard-filename>`_ how you can customize connection parameters
 - **cache** - generated keys stored in an in-memory cache
 - **redis-cluster** - generated keys stored in `Redis cluster <https://redis.io/topics/cluster-tutorial>`_
+- **redis-roundrobin** - generated keys stored in Redis_, using multiple replicas to read keys, picfit will automatically detects a write error and round robin to the primary
 
 ``[STORAGE]`` can be:
 
@@ -270,6 +271,28 @@ You will be able to load and store your images from different storages backend.
 
 In this example, images will be loaded from the file system storage
 and generated to the Amazon S3 storage.
+
+Keys stored in Redis with multiple replicas
+-------------------------------------------
+
+* key/value store provided by Redis with replicas
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "kvstore": {
+        "type": "redis-roundrobin",
+        "redis-roundrobin": {
+          "addrs": [
+            "redis://127.0.0.1:6379?db=0",
+            "redis://127.0.0.1:6380?db=0"
+          ]
+        }
+      },
+      "port": 3001
+    }
 
 Load images from storage backend base url, store them in Amazon S3, keys prefixed on Redis
 ------------------------------------------------------------------------------------------
