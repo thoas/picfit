@@ -1,7 +1,8 @@
 package image
 
 import (
-	"io/ioutil"
+	"bytes"
+	"io"
 	"net/url"
 
 	"github.com/ulule/gostorages"
@@ -59,12 +60,13 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 		"Content-Type":  contentType,
 	}
 
-	buf, err := ioutil.ReadAll(f)
+	var buffer bytes.Buffer
+	_, err = io.Copy(&buffer, f)
 	if err != nil {
 		return nil, err
 	}
 
-	file.Source = buf
+	file.Source = buffer.Bytes()
 	file.Headers = headers
 
 	return file, err
