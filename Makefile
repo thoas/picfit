@@ -29,6 +29,9 @@ unit:
 all: picfit
 	@(mkdir -p $(BIN_DIR))
 
+memory-analysis:
+	go  build -gcflags="-m -m" .
+
 build:
 	@(echo "-> Compiling picfit binary")
 	@(mkdir -p $(BIN_DIR))

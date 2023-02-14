@@ -348,7 +348,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 }
 
 // ShardFilename shards a filename based on config
-func (p Processor) ShardFilename(filename string) string {
+func (p *Processor) ShardFilename(filename string) string {
 	cfg := p.config
 
 	results := hash.Shard(filename, cfg.Shard.Width, cfg.Shard.Depth, cfg.Shard.RestOnly)
@@ -356,18 +356,18 @@ func (p Processor) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (p Processor) GetKey(ctx context.Context, key string) (interface{}, error) {
+func (p *Processor) GetKey(ctx context.Context, key string) (interface{}, error) {
 	return p.store.Get(ctx, key)
 }
 
-func (p Processor) KeyExists(ctx context.Context, key string) (bool, error) {
+func (p *Processor) KeyExists(ctx context.Context, key string) (bool, error) {
 	return p.store.Exists(ctx, key)
 }
 
-func (p Processor) FileExists(name string) bool {
+func (p *Processor) FileExists(name string) bool {
 	return p.sourceStorage.Exists(name)
 }
 
-func (p Processor) OpenFile(name string) (gostorages.File, error) {
+func (p *Processor) OpenFile(name string) (gostorages.File, error) {
 	return p.sourceStorage.Open(name)
 }
