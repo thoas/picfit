@@ -65,16 +65,14 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFile) error {
-	err := i.Save()
-	if err != nil {
+	if err := i.Save(); err != nil {
 		return err
 	}
 
 	p.logger.Info("Save file to storage",
 		logger.String("file", i.Filepath))
 
-	err = p.store.Set(ctx, i.Key, i.Filepath)
-	if err != nil {
+	if err := p.store.Set(ctx, i.Key, i.Filepath); err != nil {
 		return err
 	}
 
@@ -88,8 +86,7 @@ func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFi
 
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
-		err = p.store.AppendSlice(ctx, parentKey, i.Key)
-		if err != nil {
+		if err := p.store.AppendSlice(ctx, parentKey, i.Key); err != nil {
 			return err
 		}
 
@@ -339,13 +336,12 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 	if async == true {
 		go func() {
-			if err := p.Store(ctx, filepath, file); err != nil {
+			if err := p.Store(context.Background(), filepath, file); err != nil {
 				p.logger.Error("async store", logger.Error(err))
 			}
 		}()
 	} else {
-		err = p.Store(ctx, filepath, file)
-		if err != nil {
+		if err := p.Store(ctx, filepath, file); err != nil {
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
 	}
