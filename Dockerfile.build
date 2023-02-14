@@ -1,4 +1,4 @@
-FROM golang:1.19-buster
+FROM golang:1.20-buster
 
 ADD . /go/src/github.com/thoas/picfit
 
