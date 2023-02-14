@@ -37,6 +37,7 @@ type Options struct {
 	EnablePprof         bool          `mapstructure:"enable_pprof"`
 	EnableStats         bool          `mapstructure:"enable_stats"`
 	EnableUpload        bool          `mapstructure:"enable_upload"`
+	EnablePrometheus    bool          `mapstructure:"enable_prometheus"`
 	MimetypeDetector    string        `mapstructure:"mimetype_detector"`
 }
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -168,6 +169,10 @@ func (s *HTTPServer) Init() error {
 
 	router.GET("/error", handlers.internalError)
 
+	if s.config.Options.EnablePrometheus {
+		router.GET("/metrics", prometheusHandler())
+	}
+
 	if s.config.Options.EnablePprof {
 		prefixRouter := router.Group("/debug/pprof")
 		{
@@ -210,6 +215,13 @@ func (s *HTTPServer) Init() error {
 	s.engine = router
 
 	return nil
+}
+
+func prometheusHandler() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
 }
 
 // Run loads a new http server
