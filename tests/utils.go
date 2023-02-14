@@ -110,7 +110,6 @@ func NewImageServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			f, err := os.Open(path.Join("tests", "fixtures", r.URL.Path))
-			defer f.Close()
 
 			if err != nil {
 				w.WriteHeader(500)
@@ -123,6 +122,9 @@ func NewImageServer() *httptest.Server {
 
 				w.Header().Set("Content-Type", contentType)
 				w.Write(bytes)
+				if err := f.Close(); err != nil {
+					w.WriteHeader(500)
+				}
 			}
 		}
 	}))

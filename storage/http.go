@@ -1,8 +1,9 @@
 package storage
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -54,8 +55,6 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 		return nil, err
 	}
 
-	defer content.Body.Close()
-
 	if content.StatusCode == http.StatusNotFound {
 		return nil, failure.ErrFileNotExists
 	}
@@ -63,8 +62,15 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 	if content.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s [status: %d]", u.String(), content.StatusCode)
 	}
-
-	return ioutil.ReadAll(content.Body)
+	var buffer bytes.Buffer
+	_, err = io.Copy(&buffer, content.Body)
+	if err != nil {
+		return nil, err
+	}
+	if err := content.Body.Close(); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }
 
 // HeadersFromURL retrieves the headers from an url
@@ -80,14 +86,14 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 		return nil, err
 	}
 
-	defer content.Body.Close()
-
 	for _, key := range HeaderKeys {
 		if value, ok := content.Header[key]; ok && len(value) > 0 {
 			headers[key] = value[0]
 		}
 	}
-
+	if err := content.Body.Close(); err != nil {
+		return nil, err
+	}
 	return headers, nil
 }
 
