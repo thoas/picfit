@@ -9,14 +9,17 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
-//Decode is image.Decode handling orientation in EXIF tags if exists.
-//Requires io.ReadSeeker instead of io.Reader.
+// Decode is image.Decode handling orientation in EXIF tags if exists.
+// Requires io.ReadSeeker instead of io.Reader.
 func decode(reader io.ReadSeeker) (image.Image, error) {
 	img, err := imaging.Decode(reader)
 	if err != nil {
 		return nil, err
 	}
-	reader.Seek(0, io.SeekStart)
+	_, err = reader.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
 	orientation := getOrientation(reader)
 	switch orientation {
 	case "1":
@@ -47,7 +50,10 @@ func sameInputAndOutputHeader(reader io.ReadSeeker) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	reader.Seek(0, io.SeekStart)
+	_, err = reader.Seek(0, io.SeekStart)
+	if err != nil {
+		return false, err
+	}
 	orientation := getOrientation(reader)
 	switch orientation {
 	case "1":

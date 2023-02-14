@@ -60,8 +60,6 @@ func MimetypeDetectorSniff(uri *url.URL) (string, error) {
 		return "", err
 	}
 
-	defer resp.Body.Close()
-
 	buffer := make([]byte, 512)
 
 	n, err := resp.Body.Read(buffer)
@@ -71,6 +69,9 @@ func MimetypeDetectorSniff(uri *url.URL) (string, error) {
 		return "", err
 	}
 
+	if err := resp.Body.Close(); err != nil {
+		return "", err
+	}
 	contentType := http.DetectContentType(buffer[:n])
 
 	return contentType, nil

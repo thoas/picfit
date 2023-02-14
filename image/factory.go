@@ -41,8 +41,6 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 		return nil, err
 	}
 
-	defer f.Close()
-
 	modifiedTime, err := storage.ModifiedTime(filepath)
 	if err != nil {
 		return nil, err
@@ -68,6 +66,8 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 
 	file.Source = buffer.Bytes()
 	file.Headers = headers
-
+	if err := f.Close(); err != nil {
+		return nil, err
+	}
 	return file, err
 }

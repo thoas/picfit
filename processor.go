@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	conv "github.com/cstockton/go-conv"
+	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/ulule/gostorages"
@@ -41,13 +41,15 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
 
 	dataBytes := bytes.Buffer{}
 
 	_, err = dataBytes.ReadFrom(fh)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read data from uploaded file")
+	}
+	if err := fh.Close(); err != nil {
+		return nil, err
 	}
 
 	err = p.sourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
@@ -247,7 +249,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				logger.String("filepath", filepath))
 
 			img, err := p.fileFromStorage(storeKey, filepath, options.Load)
-			//no such file, just reprocess (maybe file cache was purged)
+			// no such file, just reprocess (maybe file cache was purged)
 			if err != nil && os.IsNotExist(err) {
 				return p.processImage(c, storeKey, options.Async)
 			}
@@ -336,7 +338,11 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Headers["ETag"] = storeKey
 
 	if async == true {
-		go p.Store(ctx, filepath, file)
+		go func() {
+			if err := p.Store(ctx, filepath, file); err != nil {
+				p.logger.Error("async store", logger.Error(err))
+			}
+		}()
 	} else {
 		err = p.Store(ctx, filepath, file)
 		if err != nil {
