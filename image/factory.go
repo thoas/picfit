@@ -2,12 +2,12 @@ package image
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/url"
+	"time"
 
 	"github.com/thoas/picfit/http"
-	"github.com/ulule/gostorages"
-
 	storagepkg "github.com/thoas/picfit/storage"
 )
 
@@ -25,24 +25,32 @@ func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
 		return nil, err
 	}
 
+	var buffer bytes.Buffer
+	_, err = io.Copy(&buffer, content)
+	if err != nil {
+		return nil, err
+	}
+	if err := content.Close(); err != nil {
+		return nil, err
+	}
 	return &ImageFile{
-		Source:   content,
+		Source:   buffer.Bytes(),
 		Headers:  headers,
 		Filepath: u.Path[1:],
 	}, nil
 }
 
 // FromStorage retrieves an ImageFile from storage
-func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error) {
+func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath string) (*ImageFile, error) {
 	var file *ImageFile
 	var err error
 
-	f, err := storage.Open(filepath)
+	f, err := storage.Open(ctx, filepath)
 	if err != nil {
 		return nil, err
 	}
 
-	modifiedTime, err := storage.ModifiedTime(filepath)
+	stat, err := storage.Stat(ctx, filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +63,7 @@ func FromStorage(storage gostorages.Storage, filepath string) (*ImageFile, error
 	contentType := file.ContentType()
 
 	headers := map[string]string{
-		"Last-Modified": modifiedTime.Format(gostorages.LastModifiedFormat),
+		"Last-Modified": stat.ModifiedTime.Format(time.RFC1123),
 		"Content-Type":  contentType,
 	}
 

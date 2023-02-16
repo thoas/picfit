@@ -11,7 +11,7 @@ import (
 func TestEngineOperationFromQuery(t *testing.T) {
 	op := "op:resize w:123 h:321 upscale:true pos:top q:99"
 	processor := tests.NewDummyProcessor(context.Background())
-	operation, err := processor.NewEngineOperationFromQuery(op)
+	operation, err := processor.NewEngineOperationFromQuery(context.Background(), op)
 	assert.Nil(t, err)
 
 	assert.Equal(t, operation.Operation.String(), "resize")

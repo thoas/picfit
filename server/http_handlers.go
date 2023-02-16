@@ -1,12 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/thoas/picfit/config"
 
 	"github.com/mholt/binding"
 
@@ -20,6 +22,7 @@ import (
 
 type handlers struct {
 	processor *picfit.Processor
+	config    *config.Config
 }
 
 func (h handlers) stats(c *gin.Context) {
@@ -78,7 +81,7 @@ func (h handlers) upload(c *gin.Context) error {
 		return err
 	}
 
-	file, err := h.processor.Upload(multipartPayload)
+	file, err := h.processor.Upload(context.Background(), multipartPayload)
 
 	if err != nil {
 		return err

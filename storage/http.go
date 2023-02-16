@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -38,22 +37,17 @@ func NewHTTPStorage(storage gostorages.Storage, httpclient *httppkg.Client) *HTT
 }
 
 // Open retrieves a gostorages File from a filepath
-func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
-	u, err := url.Parse(s.URL(filepath))
+func (s *HTTPStorage) Open(ctx context.Context, filepath string) (io.ReadCloser, error) {
+	u, err := url.Parse(filepath)
 	if err != nil {
 		return nil, err
 	}
 
-	content, err := s.OpenFromURL(u)
-	if err != nil {
-		return nil, err
-	}
-
-	return gostorages.NewContentFile(content), nil
+	return s.OpenFromURL(u)
 }
 
 // OpenFromURL retrieves bytes from an url
-func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
+func (s *HTTPStorage) OpenFromURL(u *url.URL) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(context.Background(), "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -71,16 +65,7 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%s [status: %d]", u.String(), resp.StatusCode)
 	}
-
-	var buffer bytes.Buffer
-	_, err = io.Copy(&buffer, resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if err := resp.Body.Close(); err != nil {
-		return nil, err
-	}
-	return buffer.Bytes(), nil
+	return resp.Body, nil
 }
 
 // HeadersFromURL retrieves the headers from an url
@@ -107,7 +92,7 @@ func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 
 // Headers returns headers from a filepath
 func (s *HTTPStorage) Headers(filepath string) (map[string]string, error) {
-	u, err := url.Parse(s.URL(filepath))
+	u, err := url.Parse(filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +112,7 @@ func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("Last-Modified header not found")
 	}
 
-	return time.Parse(gostorages.LastModifiedFormat, lastModified)
+	return time.Parse(time.RFC1123, lastModified)
 }
 
 func (s *HTTPStorage) IsNotExist(err error) bool {

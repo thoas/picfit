@@ -37,9 +37,9 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 		Logger: log,
 
 		config:             cfg,
-		destinationStorage: destinationStorage,
+		destinationStorage: *destinationStorage,
 		engine:             e,
-		sourceStorage:      sourceStorage,
+		sourceStorage:      *sourceStorage,
 		store:              s,
 	}, nil
 }

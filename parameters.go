@@ -1,12 +1,14 @@
 package picfit
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
+	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/engine"
@@ -36,7 +38,7 @@ type Parameters struct {
 }
 
 // newParameters returns Parameters for engine.
-func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
+func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -106,7 +108,7 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 					return nil, err
 				}
 			} else {
-				engineOperation, err = p.NewEngineOperationFromQuery(ops[i])
+				engineOperation, err = p.NewEngineOperationFromQuery(ctx, ops[i])
 				if err != nil {
 					return nil, err
 				}
@@ -125,7 +127,7 @@ func (p *Processor) NewParameters(input *image.ImageFile, qs map[string]interfac
 	}, nil
 }
 
-func (p Processor) NewEngineOperationFromQuery(op string) (*engine.EngineOperation, error) {
+func (p Processor) NewEngineOperationFromQuery(ctx context.Context, op string) (*engine.EngineOperation, error) {
 	params := make(map[string]interface{})
 	var imagePaths []string
 	for _, p := range strings.Split(op, " ") {
@@ -151,11 +153,11 @@ func (p Processor) NewEngineOperationFromQuery(op string) (*engine.EngineOperati
 	}
 
 	for i := range imagePaths {
-		if !p.sourceStorage.Exists(imagePaths[i]) {
+		if _, err := p.sourceStorage.Stat(ctx, imagePaths[i]); errors.Is(err, gostorages.ErrNotExist) {
 			return nil, errors.Wrapf(failure.ErrFileNotExists, "file does not exist: %s", imagePaths[i])
 		}
 
-		file, err := image.FromStorage(p.sourceStorage, imagePaths[i])
+		file, err := image.FromStorage(ctx, p.sourceStorage, imagePaths[i])
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to load file from storage: %s", imagePaths[i])
 		}

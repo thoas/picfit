@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime"
 	"mime/multipart"
@@ -18,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	conv "github.com/cstockton/go-conv"
+	"github.com/cstockton/go-conv"
 
 	"github.com/disintegration/imaging"
 
@@ -210,12 +211,13 @@ func TestUploadHandler(t *testing.T) {
 
 		assert.Equal(t, 200, res.Code)
 
-		assert.True(t, suite.Processor.FileExists("avatar.png"))
+		assert.True(t, suite.Processor.FileExists(context.Background(), "avatar.png"))
 
-		file, err := suite.Processor.OpenFile("avatar.png")
-
-		assert.Nil(t, err)
-		assert.Equal(t, file.Size(), stats.Size())
+		file, err := suite.Processor.OpenFile(context.Background(), "avatar.png")
+		assert.NoError(t, err)
+		filebyte, err := io.ReadAll(file)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(len(filebyte)), stats.Size())
 		assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
 	}, tests.WithConfig(content))
 }
@@ -304,7 +306,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 5, "after resize requests")
 		checkDirCount(tmpDstStorage, 7, "after resize requests")
-		assert.True(t, suite.Processor.FileExists("image1.jpg"))
+		assert.True(t, suite.Processor.FileExists(context.Background(), "image1.jpg"))
 
 		// Delete image1.jpg and all of the derived images
 		req, err := http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
@@ -316,7 +318,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
 		checkDirCount(tmpDstStorage, 2, "after 1st delete request")
-		assert.False(t, suite.Processor.FileExists("image1.jpg"))
+		assert.False(t, suite.Processor.FileExists(context.Background(), "image1.jpg"))
 
 		// Try to delete image1.jpg again
 		req, err = http.NewRequest("DELETE", "http://www.example.com/image1.jpg", nil)
@@ -329,9 +331,9 @@ func TestDeleteHandler(t *testing.T) {
 		checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
 		checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
 
-		assert.False(t, suite.Processor.FileExists("image1.jpg"))
+		assert.False(t, suite.Processor.FileExists(context.Background(), "image1.jpg"))
 
-		assert.True(t, suite.Processor.FileExists("image2.jpg"))
+		assert.True(t, suite.Processor.FileExists(context.Background(), "image2.jpg"))
 
 		// Delete image2.jpg and all of the derived images
 		req, err = http.NewRequest("DELETE", "http://www.example.com/image2.jpg", nil)
@@ -343,7 +345,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
 		checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
-		assert.False(t, suite.Processor.FileExists("image2.jpg"))
+		assert.False(t, suite.Processor.FileExists(context.Background(), "image2.jpg"))
 	}, tests.WithConfig(cfg))
 }
 
@@ -434,7 +436,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 		assert.Equal(t, len(parts[0]), 1)
 		assert.Equal(t, len(parts[1]), 1)
 
-		assert.True(t, suite.Processor.FileExists(filepath))
+		assert.True(t, suite.Processor.FileExists(context.Background(), filepath))
 
 		location = "http://example.com/get/resize/100x100/avatar.png"
 
@@ -544,7 +546,7 @@ func TestStorageApplicationWithURL(t *testing.T) {
 
 		assert.Equal(t, len(parts), 1)
 
-		assert.True(t, suite.Processor.FileExists(filepath))
+		assert.True(t, suite.Processor.FileExists(context.Background(), filepath))
 	}, tests.WithConfig(content))
 }
 

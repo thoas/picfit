@@ -1,12 +1,16 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
 	"github.com/thoas/picfit/http"
 	"github.com/ulule/gostorages"
+	fsstorage "github.com/ulule/gostorages/fs"
+	gcstorage "github.com/ulule/gostorages/gcs"
+	s3storage "github.com/ulule/gostorages/s3"
 	"go.uber.org/zap"
 
 	"github.com/thoas/picfit/logger"
@@ -23,10 +27,15 @@ const (
 	s3StorageType       = "s3"
 )
 
+type Storage struct {
+	gostorages.Storage
+	StorageConfig
+}
+
 // New return destination and source storages from config
-func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
+func New(log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 	if cfg == nil {
-		storage := &DummyStorage{}
+		storage := &Storage{Storage: &DummyStorage{}}
 
 		return storage, storage, nil
 	}
@@ -51,7 +60,13 @@ func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, 
 		log.Debug("Destination storage not set, source storage will be used",
 			logger.String("type", cfg.Source.Type))
 
-		return sourceStorage, sourceStorage, nil
+		return &Storage{
+				Storage:       sourceStorage,
+				StorageConfig: *cfg.Source,
+			}, &Storage{
+				Storage:       sourceStorage,
+				StorageConfig: *cfg.Source,
+			}, nil
 	}
 
 	destinationStorage, err = newStorage(cfg.Destination)
@@ -62,7 +77,13 @@ func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, 
 	log.Debug("Destination storage configured",
 		logger.String("type", cfg.Destination.Type))
 
-	return sourceStorage, destinationStorage, nil
+	return &Storage{
+			Storage:       sourceStorage,
+			StorageConfig: *cfg.Source,
+		}, &Storage{
+			Storage:       destinationStorage,
+			StorageConfig: *cfg.Destination,
+		}, nil
 }
 
 func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
@@ -85,25 +106,17 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case s3StorageType:
-		acl, ok := gostorages.ACLs[cfg.ACL]
-		if !ok {
-			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
-		}
-
 		region, ok := aws.Regions[cfg.Region]
 		if !ok {
-			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
 		}
 
-		return gostorages.NewS3Storage(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			region,
-			acl,
-			cfg.BaseURL,
-		), nil
+		return s3storage.NewStorage(s3storage.Config{
+			AccessKeyID:     cfg.AccessKeyID,
+			SecretAccessKey: cfg.SecretAccessKey,
+			Region:          region.Name,
+			Bucket:          cfg.BucketName,
+		})
 	case httpDOs3StorageType:
 		cfg.Type = DOs3StorageType
 
@@ -114,34 +127,20 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case DOs3StorageType:
-		acl, ok := gostorages.ACLs[cfg.ACL]
-		if !ok {
-			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
-		}
-
 		region, ok := GetDOs3Region(cfg.Region)
 		if !ok {
-			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
 		}
-
-		return gostorages.NewS3Storage(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			region,
-			acl,
-			cfg.BaseURL,
-		), nil
+		return s3storage.NewStorage(s3storage.Config{
+			AccessKeyID:     cfg.AccessKeyID,
+			SecretAccessKey: cfg.SecretAccessKey,
+			Region:          region.Name,
+			Bucket:          cfg.BucketName,
+		})
 	case gcsStorageType:
-		return gostorages.NewGCSStorage(
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			cfg.BaseURL,
-			cfg.CacheControl)
+		return gcstorage.NewStorage(context.Background(), cfg.SecretAccessKey, cfg.BucketName)
 	case fsStorageType:
-		return gostorages.NewFileSystemStorage(cfg.Location, cfg.BaseURL), nil
+		return fsstorage.NewStorage(fsstorage.Config{Root: cfg.Location}), nil
 	case httpFSStorageType:
 		cfg.Type = fsStorageType
 

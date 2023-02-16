@@ -1,7 +1,6 @@
 package picfit
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/thoas/picfit/storage"
 	"github.com/thoas/picfit/util"
 	"github.com/ulule/gostorages"
 	"go.uber.org/zap"
@@ -32,14 +32,14 @@ type Processor struct {
 	Logger *zap.Logger
 
 	config             *config.Config
-	destinationStorage gostorages.Storage
+	destinationStorage storage.Storage
 	engine             *engine.Engine
-	sourceStorage      gostorages.Storage
+	sourceStorage      storage.Storage
 	store              store.Store
 }
 
 // Upload uploads a file to its storage
-func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error) {
+func (p *Processor) Upload(ctx context.Context, payload *payload.Multipart) (*image.ImageFile, error) {
 	var fh io.ReadCloser
 
 	fh, err := payload.Data.Open()
@@ -47,21 +47,13 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 		return nil, err
 	}
 
-	dataBytes := bytes.Buffer{}
-
-	_, err = dataBytes.ReadFrom(fh)
+	err = p.sourceStorage.Save(ctx, fh, payload.Data.Filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read data from uploaded file")
+		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
 	}
 	if err := fh.Close(); err != nil {
 		return nil, err
 	}
-
-	err = p.sourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
-	}
-
 	return &image.ImageFile{
 		Filepath: payload.Data.Filename,
 		Storage:  p.sourceStorage,
@@ -71,7 +63,7 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, log *zap.Logger, filepath string, i *image.ImageFile) error {
 	starttime := time.Now()
-	if err := i.Save(); err != nil {
+	if err := i.Save(ctx); err != nil {
 		return err
 	}
 
@@ -129,7 +121,7 @@ func (p *Processor) DeleteChild(ctx context.Context, key string) error {
 		}
 
 		// And try to delete it all.
-		err = p.destinationStorage.Delete(dstfile)
+		err = p.destinationStorage.Delete(ctx, dstfile)
 		if err != nil {
 			return errors.Wrapf(err, "unable to delete %s on storage", dstfile)
 		}
@@ -151,14 +143,14 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	p.Logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
 
-	if !p.sourceStorage.Exists(filepath) {
+	if !p.FileExists(ctx, filepath) {
 		p.Logger.Info("File does not exist anymore on source storage",
 			logger.String("file", filepath))
 
 		return errors.Wrapf(failure.ErrFileNotExists, "unable to delete, file does not exist: %s", filepath)
 	}
 
-	err := p.sourceStorage.Delete(filepath)
+	err := p.sourceStorage.Delete(ctx, filepath)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete %s on source storage", filepath)
 	}
@@ -259,7 +251,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				logger.String("filepath", filepath))
 
 			starttime := time.Now()
-			img, err := p.fileFromStorage(storeKey, filepath, options.Load)
+			img, err := p.fileFromStorage(ctx, storeKey, filepath, options.Load)
 			// no such file, just reprocess (maybe file cache was purged)
 			if err != nil {
 				if os.IsNotExist(err) {
@@ -294,7 +286,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 	return p.processImage(c, storeKey)
 }
 
-func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*image.ImageFile, error) {
+func (p *Processor) fileFromStorage(ctx context.Context, key string, filepath string, load bool) (*image.ImageFile, error) {
 	var (
 		file = &image.ImageFile{
 			Key:      key,
@@ -306,7 +298,7 @@ func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*im
 	)
 
 	if load {
-		file, err = image.FromStorage(p.destinationStorage, filepath)
+		file, err = image.FromStorage(ctx, p.destinationStorage, filepath)
 		if err != nil {
 			return nil, err
 		}
@@ -338,11 +330,11 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	} else {
 		// URL provided we use http protocol to retrieve it
 		filepath = qs["path"].(string)
-		if !p.sourceStorage.Exists(filepath) {
+		if !p.FileExists(ctx, filepath) {
 			return nil, errors.Wrapf(failure.ErrFileNotExists, "unable to process image, file does exist: %s", filepath)
 		}
 
-		file, err = image.FromStorage(p.sourceStorage, filepath)
+		file, err = image.FromStorage(ctx, p.sourceStorage, filepath)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
@@ -364,7 +356,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	log.Info("Retrieved image to process from storage",
 		logger.Duration("duration", endtime.Sub(starttime)))
 
-	parameters, err := p.NewParameters(file, qs)
+	parameters, err := p.NewParameters(ctx, file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
@@ -419,10 +411,14 @@ func (p *Processor) KeyExists(ctx context.Context, key string) (bool, error) {
 	return p.store.Exists(ctx, key)
 }
 
-func (p *Processor) FileExists(name string) bool {
-	return p.sourceStorage.Exists(name)
+func (p *Processor) FileExists(ctx context.Context, name string) bool {
+	_, err := p.sourceStorage.Stat(ctx, name)
+	if errors.Is(err, gostorages.ErrNotExist) {
+		return false
+	}
+	return true
 }
 
-func (p *Processor) OpenFile(name string) (gostorages.File, error) {
-	return p.sourceStorage.Open(name)
+func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, error) {
+	return p.sourceStorage.Open(ctx, name)
 }

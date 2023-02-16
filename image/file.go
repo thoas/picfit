@@ -1,11 +1,13 @@
 package image
 
 import (
+	"bytes"
+	"context"
 	"mime"
 	"path"
 	"strings"
 
-	"github.com/ulule/gostorages"
+	"github.com/thoas/picfit/storage"
 )
 
 type ImageFile struct {
@@ -14,7 +16,20 @@ type ImageFile struct {
 	Key       string
 	Processed []byte
 	Source    []byte
-	Storage   gostorages.Storage
+	Storage   storage.Storage
+}
+
+func (i *ImageFile) URL() string {
+	if i.Storage.BaseURL != "" {
+		return strings.Join([]string{i.Storage.BaseURL, i.Filepath}, "/")
+	}
+
+	return ""
+}
+
+// Path joins the given file to the storage path
+func (i *ImageFile) Path() string {
+	return path.Join(i.Storage.Location, i.Filepath)
 }
 
 func (i *ImageFile) Content() []byte {
@@ -25,16 +40,9 @@ func (i *ImageFile) Content() []byte {
 	return i.Source
 }
 
-func (i *ImageFile) URL() string {
-	return i.Storage.URL(i.Filepath)
-}
-
-func (i *ImageFile) Path() string {
-	return i.Storage.Path(i.Filepath)
-}
-
-func (i *ImageFile) Save() error {
-	return i.Storage.Save(i.Filepath, gostorages.NewContentFile(i.Content()))
+func (i *ImageFile) Save(ctx context.Context) error {
+	content := bytes.NewReader(i.Content())
+	return i.Storage.Save(ctx, content, i.Filepath)
 }
 
 func (i *ImageFile) Format() string {
