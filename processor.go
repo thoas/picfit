@@ -8,10 +8,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/thoas/picfit/util"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/config"
@@ -317,6 +319,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
+	filesize := util.ByteCountDecimal(int64(len(file.Content())))
+	starttime := time.Now()
 
 	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
@@ -345,7 +349,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
 	}
-
+	endtime := time.Now()
+	p.logger.Info("processImage", logger.String("image", file.Path()), logger.Duration("duration", endtime.Sub(starttime)), logger.String("size", filesize))
 	return file, nil
 }
 
