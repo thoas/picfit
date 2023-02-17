@@ -34,10 +34,11 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 		logger.String("engine", e.String()))
 
 	return &Processor{
+		Logger: log,
+
 		config:             cfg,
 		destinationStorage: destinationStorage,
 		engine:             e,
-		logger:             log,
 		sourceStorage:      sourceStorage,
 		store:              s,
 	}, nil

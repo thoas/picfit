@@ -41,7 +41,10 @@ require (
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
 )
 
-require github.com/prometheus/client_golang v1.14.0
+require (
+	github.com/gin-contrib/zap v0.1.0
+	github.com/prometheus/client_golang v1.14.0
+)
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
@@ -82,6 +85,8 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	go.opencensus.io v0.23.0 // indirect
+	go.opentelemetry.io/otel v1.10.0 // indirect
+	go.opentelemetry.io/otel/trace v1.10.0 // indirect
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect

@@ -10,17 +10,8 @@ import (
 type Field = zapcore.Field
 type ObjectEncoder = zapcore.ObjectEncoder
 
-type Logger interface {
-	Debug(string, ...Field)
-	Error(string, ...Field)
-	Info(string, ...Field)
-	Panic(string, ...Field)
-	Sync() error
-	With(fields ...Field) *zap.Logger
-}
-
-func New(cfg Config) Logger {
-	var logger Logger
+func New(cfg Config) *zap.Logger {
+	var logger *zap.Logger
 	if cfg.GetLevel() == DevelopmentLevel {
 		logger, _ = NewDevelopmentLogger()
 	} else {
@@ -66,14 +57,14 @@ func Object(key string, val zapcore.ObjectMarshaler) Field {
 	return zap.Object(key, val)
 }
 
-func NewProductionLogger() (Logger, error) {
+func NewProductionLogger() (*zap.Logger, error) {
 	return zap.NewProduction()
 }
 
-func NewDevelopmentLogger() (Logger, error) {
+func NewDevelopmentLogger() (*zap.Logger, error) {
 	return zap.NewDevelopment()
 }
 
-func NewNopLogger() (Logger, error) {
+func NewNopLogger() (*zap.Logger, error) {
 	return zap.NewNop(), nil
 }

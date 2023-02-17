@@ -29,10 +29,11 @@ import (
 )
 
 type Processor struct {
+	Logger *zap.Logger
+
 	config             *config.Config
 	destinationStorage gostorages.Storage
 	engine             *engine.Engine
-	logger             logger.Logger
 	sourceStorage      gostorages.Storage
 	store              store.Store
 }
@@ -139,7 +140,7 @@ func (p *Processor) DeleteChild(ctx context.Context, key string) error {
 		return errors.Wrapf(err, "unable to delete key %s", key)
 	}
 
-	p.logger.Info("Deleting child",
+	p.Logger.Info("Deleting child",
 		logger.String("key", key))
 
 	return nil
@@ -147,11 +148,11 @@ func (p *Processor) DeleteChild(ctx context.Context, key string) error {
 
 // Delete removes a file from store and storage
 func (p *Processor) Delete(ctx context.Context, filepath string) error {
-	p.logger.Info("Deleting file on source storage",
+	p.Logger.Info("Deleting file on source storage",
 		logger.String("file", filepath))
 
 	if !p.sourceStorage.Exists(filepath) {
-		p.logger.Info("File does not exist anymore on source storage",
+		p.Logger.Info("File does not exist anymore on source storage",
 			logger.String("file", filepath))
 
 		return errors.Wrapf(failure.ErrFileNotExists, "unable to delete, file does not exist: %s", filepath)
@@ -172,7 +173,7 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	}
 
 	if !exists {
-		p.logger.Info("Children key does not exist in set",
+		p.Logger.Info("Children key does not exist in set",
 			logger.String("key", childrenKey),
 			logger.String("set", parentKey))
 
@@ -186,7 +187,7 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	}
 
 	if children == nil {
-		p.logger.Info("No children to delete in set",
+		p.Logger.Info("No children to delete in set",
 			logger.String("set", parentKey))
 
 		return nil
@@ -205,7 +206,7 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	}
 
 	// Delete them right away, we don't care about them anymore.
-	p.logger.Info("Delete set %s",
+	p.Logger.Info("Delete set %s",
 		logger.String("set", childrenKey))
 
 	err = p.store.Delete(ctx, childrenKey)
@@ -223,7 +224,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		force    = c.Query("force")
 		options  = newOptions(opts...)
 		ctx      = c.Request.Context()
-		log      = p.logger.With(logger.String("key", storeKey))
+		log      = p.Logger.With(logger.String("key", storeKey))
 	)
 
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
@@ -320,7 +321,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		filepath string
 		err      error
 		ctx      = c.Request.Context()
-		log      = p.logger.With(logger.String("key", storeKey))
+		log      = p.Logger.With(logger.String("key", storeKey))
 	)
 
 	file := &image.ImageFile{
@@ -397,7 +398,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	if async == true {
 		go func() {
 			if err := p.Store(context.Background(), log, filepath, file); err != nil {
-				p.logger.Error("async store", logger.Error(err))
+				p.Logger.Error("async store", logger.Error(err))
 			}
 		}()
 	} else {

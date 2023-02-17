@@ -10,6 +10,7 @@ import (
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/logger"
+	"go.uber.org/zap"
 )
 
 type Engine struct {
@@ -17,7 +18,7 @@ type Engine struct {
 	DefaultQuality int
 	Format         string
 	backends       []*backendWrapper
-	logger         logger.Logger
+	logger         *zap.Logger
 }
 
 type backendWrapper struct {
@@ -27,7 +28,7 @@ type backendWrapper struct {
 }
 
 // New initializes an Engine
-func New(cfg config.Config, logger logger.Logger) *Engine {
+func New(cfg config.Config, logger *zap.Logger) *Engine {
 	var b []*backendWrapper
 
 	if cfg.Backends == nil {

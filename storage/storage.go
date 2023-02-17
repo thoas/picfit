@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/goamz/aws"
 	"github.com/ulule/gostorages"
+	"go.uber.org/zap"
 
 	"github.com/thoas/picfit/logger"
 )
@@ -22,7 +23,7 @@ const (
 )
 
 // New return destination and source storages from config
-func New(log logger.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
+func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
 	if cfg == nil {
 		storage := &DummyStorage{}
 

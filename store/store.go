@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ulule/gokvstores"
+	"go.uber.org/zap"
 
 	"github.com/thoas/picfit/logger"
 )
@@ -61,7 +62,7 @@ func getHostPortWithDefaults(u *url.URL) (string, string) {
 }
 
 // New returns a KVStore from config
-func New(ctx context.Context, log logger.Logger, cfg *Config) (gokvstores.KVStore, error) {
+func New(ctx context.Context, log *zap.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	if cfg == nil {
 		return gokvstores.DummyStore{}, nil
 	}

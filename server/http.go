@@ -11,6 +11,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gin-gonic/contrib/cors"
@@ -70,7 +71,7 @@ func (s *HTTPServer) Init() error {
 	}
 
 	if s.config.Logger.GetLevel() == logger.DevelopmentLevel {
-		router.Use(gin.Logger())
+		router.Use(ginzap.Ginzap(s.processor.Logger, time.RFC3339, true))
 	}
 
 	if s.config.Sentry != nil {
