@@ -253,12 +253,26 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				logger.String("key", storeKey),
 				logger.String("filepath", filepath))
 
+			starttime := time.Now()
 			img, err := p.fileFromStorage(storeKey, filepath, options.Load)
 			// no such file, just reprocess (maybe file cache was purged)
-			if err != nil && os.IsNotExist(err) {
-				return p.processImage(c, storeKey, options.Async)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return p.processImage(c, storeKey, options.Async)
+				}
+
+				return nil, err
 			}
-			return img, err
+
+			filesize := util.ByteCountDecimal(int64(len(img.Content())))
+			endtime := time.Now()
+			p.logger.Info("Image retrieved from storage",
+				logger.String("key", storeKey),
+				logger.Duration("duration", endtime.Sub(starttime)),
+				logger.String("size", filesize),
+				logger.String("image", img.Filepath))
+
+			return img, nil
 		}
 
 		// Image not found from the Store, we need to process it
