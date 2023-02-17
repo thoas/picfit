@@ -19,7 +19,6 @@ import (
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/failure"
-	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/middleware"
 	"github.com/thoas/stats"
 )
@@ -70,9 +69,7 @@ func (s *HTTPServer) Init() error {
 		router.Use(gin.Recovery())
 	}
 
-	if s.config.Logger.GetLevel() == logger.DevelopmentLevel {
-		router.Use(ginzap.Ginzap(s.processor.Logger, time.RFC3339, true))
-	}
+	router.Use(ginzap.Ginzap(s.processor.Logger, time.RFC3339, true))
 
 	if s.config.Sentry != nil {
 		if err := sentry.Init(sentry.ClientOptions{
