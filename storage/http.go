@@ -2,23 +2,23 @@ package storage
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/franela/goreq"
-
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/failure"
+	httppkg "github.com/thoas/picfit/http"
 )
 
 // HTTPStorage wraps a storage
 type HTTPStorage struct {
 	gostorages.Storage
-	UserAgent string
+	httpclient *httppkg.Client
 }
 
 // HeaderKeys represents the list of headers
@@ -28,6 +28,13 @@ var HeaderKeys = []string{
 	"Last-Modified",
 	"Date",
 	"Etag",
+}
+
+func NewHTTPStorage(storage gostorages.Storage, httpclient *httppkg.Client) *HTTPStorage {
+	return &HTTPStorage{
+		Storage:    storage,
+		httpclient: httpclient,
+	}
 }
 
 // Open retrieves a gostorages File from a filepath
@@ -47,27 +54,30 @@ func (s *HTTPStorage) Open(filepath string) (gostorages.File, error) {
 
 // OpenFromURL retrieves bytes from an url
 func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
-	content, err := goreq.Request{
-		Uri:       u.String(),
-		UserAgent: s.UserAgent,
-	}.Do()
+	req, err := http.NewRequestWithContext(context.Background(), "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	if content.StatusCode == http.StatusNotFound {
+	resp, err := s.httpclient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
 		return nil, failure.ErrFileNotExists
 	}
 
-	if content.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s [status: %d]", u.String(), content.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s [status: %d]", u.String(), resp.StatusCode)
 	}
+
 	var buffer bytes.Buffer
-	_, err = io.Copy(&buffer, content.Body)
+	_, err = io.Copy(&buffer, resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	if err := content.Body.Close(); err != nil {
+	if err := resp.Body.Close(); err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
@@ -77,22 +87,20 @@ func (s *HTTPStorage) OpenFromURL(u *url.URL) ([]byte, error) {
 func (s *HTTPStorage) HeadersFromURL(u *url.URL) (map[string]string, error) {
 	var headers = make(map[string]string)
 
-	content, err := goreq.Request{
-		Uri:       u.String(),
-		Method:    "GET",
-		UserAgent: s.UserAgent,
-	}.Do()
+	req, err := http.NewRequestWithContext(context.Background(), "HEAD", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.httpclient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, key := range HeaderKeys {
-		if value, ok := content.Header[key]; ok && len(value) > 0 {
+		if value, ok := resp.Header[key]; ok && len(value) > 0 {
 			headers[key] = value[0]
 		}
-	}
-	if err := content.Body.Close(); err != nil {
-		return nil, err
 	}
 	return headers, nil
 }

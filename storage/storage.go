@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
+	"github.com/thoas/picfit/http"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/logger"
@@ -81,7 +82,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 			return nil, err
 		}
 
-		return &HTTPStorage{storage, ""}, nil
+		return NewHTTPStorage(storage, http.NewClient()), nil
 	case s3StorageType:
 		acl, ok := gostorages.ACLs[cfg.ACL]
 		if !ok {
@@ -110,7 +111,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 			return nil, err
 		}
 
-		return &HTTPStorage{storage, ""}, nil
+		return NewHTTPStorage(storage, http.NewClient()), nil
 	case DOs3StorageType:
 		acl, ok := gostorages.ACLs[cfg.ACL]
 		if !ok {
@@ -148,7 +149,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 			return nil, err
 		}
 
-		return &HTTPStorage{storage, ""}, nil
+		return NewHTTPStorage(storage, http.NewClient()), nil
 	}
 
 	return nil, fmt.Errorf("storage %s does not exist", cfg.Type)
