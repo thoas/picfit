@@ -8,10 +8,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/thoas/picfit/util"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/config"
@@ -65,19 +67,25 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFile) error {
+	starttime := time.Now()
 	if err := i.Save(); err != nil {
 		return err
 	}
 
+	endtime := time.Now()
 	p.logger.Info("Save file to storage",
+		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("file", i.Filepath))
 
+	starttime = time.Now()
 	if err := p.store.Set(ctx, i.Key, i.Filepath); err != nil {
 		return err
 	}
+	endtime = time.Now()
 
 	p.logger.Info("Save key to store",
 		logger.String("key", i.Key),
+		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("filepath", i.Filepath))
 
 	// Write children info only when we actually want to be able to delete things.
@@ -301,6 +309,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	}
 
 	qs := c.MustGet("parameters").(map[string]interface{})
+	starttime := time.Now()
 
 	u, exists := c.Get("url")
 	if exists {
@@ -318,21 +327,36 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
+	filesize := util.ByteCountDecimal(int64(len(file.Content())))
+	endtime := time.Now()
+	p.logger.Info("Retrieved image to process from storage",
+		logger.Duration("duration", endtime.Sub(starttime)),
+		logger.String("image", file.Filepath),
+		logger.String("size", filesize))
+
 	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
+	starttime = time.Now()
 	file, err = p.engine.Transform(parameters.output, parameters.operations)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
+	endtime = time.Now()
 
+	filesize = util.ByteCountDecimal(int64(len(file.Content())))
 	filename := p.ShardFilename(storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
 	file.Storage = p.destinationStorage
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
+
+	p.logger.Info("Image processed",
+		logger.String("image", file.Filepath),
+		logger.Duration("duration", endtime.Sub(starttime)),
+		logger.String("size", filesize))
 
 	if async == true {
 		go func() {
@@ -345,7 +369,6 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
 	}
-
 	return file, nil
 }
 
