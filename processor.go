@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	filepathpkg "path/filepath"
 	"strings"
 	"time"
 
@@ -82,6 +83,10 @@ func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFi
 		return err
 	}
 	endtime = time.Now()
+	defaultMetrics.histogram.WithLabelValues(
+		"store",
+		strings.ToLower(filepathpkg.Ext(filepath)),
+	).Observe(endtime.Sub(starttime).Seconds())
 
 	p.logger.Info("Save key to store",
 		logger.String("key", i.Key),
@@ -218,6 +223,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		force    = c.Query("force")
 		options  = newOptions(opts...)
 		ctx      = c.Request.Context()
+		log      = p.logger.With(logger.String("key", storeKey))
 	)
 
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
@@ -228,8 +234,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		}
 
 		if exists {
-			p.logger.Info("Key already exists on store, file not modified",
-				logger.String("key", storeKey),
+			log.Info("Key already exists on store, file not modified",
 				logger.String("modified-since", modifiedSince))
 
 			return nil, failure.ErrFileNotModified
@@ -249,8 +254,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				return nil, err
 			}
 
-			p.logger.Info("Key found in store",
-				logger.String("key", storeKey),
+			log.Info("Key found in store",
 				logger.String("filepath", filepath))
 
 			starttime := time.Now()
@@ -266,22 +270,24 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 
 			filesize := util.ByteCountDecimal(int64(len(img.Content())))
 			endtime := time.Now()
-			p.logger.Info("Image retrieved from storage",
-				logger.String("key", storeKey),
+			log.Info("Image retrieved from storage",
 				logger.Duration("duration", endtime.Sub(starttime)),
 				logger.String("size", filesize),
 				logger.String("image", img.Filepath))
+
+			defaultMetrics.histogram.WithLabelValues(
+				"load",
+				strings.ToLower(filepathpkg.Ext(filepath)),
+			).Observe(endtime.Sub(starttime).Seconds())
 
 			return img, nil
 		}
 
 		// Image not found from the Store, we need to process it
 		// URL available in Query String
-		p.logger.Info("Key not found in store",
-			logger.String("key", storeKey))
+		log.Info("Key not found in store")
 	} else {
-		p.logger.Info("Force activated, key will be re-processed",
-			logger.String("key", storeKey))
+		log.Info("Force activated, key will be re-processed")
 	}
 
 	return p.processImage(c, storeKey, options.Async)
@@ -314,6 +320,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		filepath string
 		err      error
 		ctx      = c.Request.Context()
+		log      = p.logger.With(logger.String("key", storeKey))
 	)
 
 	file := &image.ImageFile{
@@ -324,7 +331,6 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 	qs := c.MustGet("parameters").(map[string]interface{})
 	starttime := time.Now()
-
 	u, exists := c.Get("url")
 	if exists {
 		file, err = image.FromURL(u.(*url.URL), p.config.Options.DefaultUserAgent)
@@ -340,10 +346,15 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
+	endtime := time.Now()
+
+	defaultMetrics.histogram.WithLabelValues(
+		"load",
+		strings.ToLower(filepathpkg.Ext(filepath)),
+	).Observe(endtime.Sub(starttime).Seconds())
 
 	filesize := util.ByteCountDecimal(int64(len(file.Content())))
-	endtime := time.Now()
-	p.logger.Info("Retrieved image to process from storage",
+	log.Info("Retrieved image to process from storage",
 		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("image", file.Filepath),
 		logger.String("size", filesize))
@@ -359,6 +370,10 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 	endtime = time.Now()
+	defaultMetrics.histogram.WithLabelValues(
+		"transform",
+		strings.ToLower(filepathpkg.Ext(filepath)),
+	).Observe(endtime.Sub(starttime).Seconds())
 
 	filesize = util.ByteCountDecimal(int64(len(file.Content())))
 	filename := p.ShardFilename(storeKey)
@@ -367,7 +382,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
-	p.logger.Info("Image processed",
+	log.Info("Image processed",
 		logger.String("image", file.Filepath),
 		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("size", filesize))
