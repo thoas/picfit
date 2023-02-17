@@ -67,19 +67,25 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFile) error {
+	starttime := time.Now()
 	if err := i.Save(); err != nil {
 		return err
 	}
 
+	endtime := time.Now()
 	p.logger.Info("Save file to storage",
+		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("file", i.Filepath))
 
+	starttime = time.Now()
 	if err := p.store.Set(ctx, i.Key, i.Filepath); err != nil {
 		return err
 	}
+	endtime = time.Now()
 
 	p.logger.Info("Save key to store",
 		logger.String("key", i.Key),
+		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("filepath", i.Filepath))
 
 	// Write children info only when we actually want to be able to delete things.
@@ -303,6 +309,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	}
 
 	qs := c.MustGet("parameters").(map[string]interface{})
+	starttime := time.Now()
 
 	u, exists := c.Get("url")
 	if exists {
@@ -316,27 +323,39 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 		file, err = image.FromStorage(p.sourceStorage, filepath)
 	}
+
+	filesize := util.ByteCountDecimal(int64(len(file.Content())))
+	endtime := time.Now()
+	p.logger.Info("Retrieved image to process from storage",
+		logger.Duration("duration", endtime.Sub(starttime)),
+		logger.String("image", file.Path()),
+		logger.String("size", filesize))
+
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
-	filesize := util.ByteCountDecimal(int64(len(file.Content())))
-	starttime := time.Now()
-
 	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
+	starttime = time.Now()
 	file, err = p.engine.Transform(parameters.output, parameters.operations)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
-
+	filesize = util.ByteCountDecimal(int64(len(file.Content())))
 	filename := p.ShardFilename(storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
 	file.Storage = p.destinationStorage
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
+
+	endtime = time.Now()
+	p.logger.Info("Image processed",
+		logger.String("image", file.Path()),
+		logger.Duration("duration", endtime.Sub(starttime)),
+		logger.String("size", filesize))
 
 	if async == true {
 		go func() {
@@ -349,8 +368,6 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
 	}
-	endtime := time.Now()
-	p.logger.Info("processImage", logger.String("image", file.Path()), logger.Duration("duration", endtime.Sub(starttime)), logger.String("size", filesize))
 	return file, nil
 }
 
