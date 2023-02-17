@@ -323,17 +323,17 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 		file, err = image.FromStorage(p.sourceStorage, filepath)
 	}
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to process image")
+	}
 
 	filesize := util.ByteCountDecimal(int64(len(file.Content())))
 	endtime := time.Now()
 	p.logger.Info("Retrieved image to process from storage",
 		logger.Duration("duration", endtime.Sub(starttime)),
-		logger.String("image", file.Path()),
+		logger.String("image", file.Filepath),
 		logger.String("size", filesize))
 
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to process image")
-	}
 	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
@@ -354,7 +354,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Headers["ETag"] = storeKey
 
 	p.logger.Info("Image processed",
-		logger.String("image", file.Path()),
+		logger.String("image", file.Filepath),
 		logger.Duration("duration", endtime.Sub(starttime)),
 		logger.String("size", filesize))
 
