@@ -344,6 +344,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
+	endtime = time.Now()
+
 	filesize = util.ByteCountDecimal(int64(len(file.Content())))
 	filename := p.ShardFilename(storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
@@ -351,7 +353,6 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
-	endtime = time.Now()
 	p.logger.Info("Image processed",
 		logger.String("image", file.Path()),
 		logger.Duration("duration", endtime.Sub(starttime)),
