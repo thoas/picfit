@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/util"
 	"github.com/ulule/gostorages"
+	"go.uber.org/zap"
 
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
@@ -67,16 +68,16 @@ func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error)
 }
 
 // Store stores an image file with the defined filepath
-func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFile) error {
+func (p *Processor) Store(ctx context.Context, log *zap.Logger, filepath string, i *image.ImageFile) error {
 	starttime := time.Now()
 	if err := i.Save(); err != nil {
 		return err
 	}
 
 	endtime := time.Now()
-	p.logger.Info("Save file to storage",
+	log.Info("Save file to storage",
 		logger.Duration("duration", endtime.Sub(starttime)),
-		logger.String("file", i.Filepath))
+	)
 
 	starttime = time.Now()
 	if err := p.store.Set(ctx, i.Key, i.Filepath); err != nil {
@@ -88,10 +89,9 @@ func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFi
 		strings.ToLower(filepathpkg.Ext(filepath)),
 	).Observe(endtime.Sub(starttime).Seconds())
 
-	p.logger.Info("Save key to store",
-		logger.String("key", i.Key),
+	log.Info("Save key to store",
 		logger.Duration("duration", endtime.Sub(starttime)),
-		logger.String("filepath", i.Filepath))
+	)
 
 	// Write children info only when we actually want to be able to delete things.
 	if p.config.Options.EnableCascadeDelete {
@@ -103,10 +103,10 @@ func (p *Processor) Store(ctx context.Context, filepath string, i *image.ImageFi
 			return err
 		}
 
-		p.logger.Info("Put key into set in store",
+		log.Info("Put key into set in store",
 			logger.String("set", parentKey),
 			logger.String("value", filepath),
-			logger.String("key", i.Key))
+		)
 	}
 
 	return nil
@@ -354,10 +354,14 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	).Observe(endtime.Sub(starttime).Seconds())
 
 	filesize := util.ByteCountDecimal(int64(len(file.Content())))
-	log.Info("Retrieved image to process from storage",
-		logger.Duration("duration", endtime.Sub(starttime)),
+
+	log = log.With(
 		logger.String("image", file.Filepath),
-		logger.String("size", filesize))
+		logger.String("size", filesize),
+	)
+
+	log.Info("Retrieved image to process from storage",
+		logger.Duration("duration", endtime.Sub(starttime)))
 
 	parameters, err := p.NewParameters(file, qs)
 	if err != nil {
@@ -382,19 +386,22 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
-	log.Info("Image processed",
+	log = log.With(
 		logger.String("image", file.Filepath),
-		logger.Duration("duration", endtime.Sub(starttime)),
-		logger.String("size", filesize))
+		logger.String("size", filesize),
+	)
+
+	log.Info("Image processed",
+		logger.Duration("duration", endtime.Sub(starttime)))
 
 	if async == true {
 		go func() {
-			if err := p.Store(context.Background(), filepath, file); err != nil {
+			if err := p.Store(context.Background(), log, filepath, file); err != nil {
 				p.logger.Error("async store", logger.Error(err))
 			}
 		}()
 	} else {
-		if err := p.Store(ctx, filepath, file); err != nil {
+		if err := p.Store(ctx, log, filepath, file); err != nil {
 			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 		}
 	}
