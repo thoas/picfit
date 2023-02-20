@@ -5,8 +5,8 @@ import (
 	"context"
 	"io"
 	"net/url"
-	"time"
 
+	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/http"
 	storagepkg "github.com/thoas/picfit/storage"
 )
@@ -63,7 +63,7 @@ func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath strin
 	contentType := file.ContentType()
 
 	headers := map[string]string{
-		"Last-Modified": stat.ModifiedTime.Format(time.RFC1123),
+		"Last-Modified": stat.ModifiedTime.Format(constants.ModifiedTimeFormat),
 		"Content-Type":  contentType,
 	}
 

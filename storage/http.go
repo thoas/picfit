@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/thoas/picfit/constants"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/failure"
@@ -112,7 +113,7 @@ func (s *HTTPStorage) ModifiedTime(filepath string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("Last-Modified header not found")
 	}
 
-	return time.Parse(time.RFC1123, lastModified)
+	return time.Parse(constants.ModifiedTimeFormat, lastModified)
 }
 
 func (s *HTTPStorage) IsNotExist(err error) bool {

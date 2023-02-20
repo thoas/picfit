@@ -1,5 +1,9 @@
 package constants
 
+import (
+	"time"
+)
+
 const (
 	// Version is the current version of picfit
 	Version = "0.9.0"
@@ -35,3 +39,5 @@ var StickPositions = []string{
 	TopLeft,
 	TopRight,
 }
+
+const ModifiedTimeFormat = time.RFC1123
