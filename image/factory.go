@@ -5,14 +5,15 @@ import (
 	"io"
 	"net/url"
 
+	"github.com/thoas/picfit/http"
 	"github.com/ulule/gostorages"
 
-	"github.com/thoas/picfit/storage"
+	storagepkg "github.com/thoas/picfit/storage"
 )
 
 // FromURL retrieves an ImageFile from an url
 func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
-	storage := &storage.HTTPStorage{UserAgent: userAgent}
+	storage := storagepkg.NewHTTPStorage(nil, http.NewClient(http.WithUserAgent(userAgent)))
 
 	content, err := storage.OpenFromURL(u)
 	if err != nil {

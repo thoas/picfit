@@ -6,8 +6,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.0.1 // indirect
-	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727 // indirect
-	github.com/franela/goreq v0.0.0-20141202194629-6d074b8384a4
 	github.com/getsentry/sentry-go v0.16.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.8.2
