@@ -263,7 +263,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			// no such file, just reprocess (maybe file cache was purged)
 			if err != nil {
 				if os.IsNotExist(err) {
-					return p.processImage(c, storeKey, options.Async)
+					return p.processImage(c, storeKey)
 				}
 
 				return nil, err
@@ -291,7 +291,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		log.Info("Force activated, key will be re-processed")
 	}
 
-	return p.processImage(c, storeKey, options.Async)
+	return p.processImage(c, storeKey)
 }
 
 func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*image.ImageFile, error) {
@@ -316,7 +316,7 @@ func (p *Processor) fileFromStorage(key string, filepath string, load bool) (*im
 	return file, nil
 }
 
-func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*image.ImageFile, error) {
+func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageFile, error) {
 	var (
 		filepath string
 		err      error
@@ -395,17 +395,10 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	log.Info("Image processed",
 		logger.Duration("duration", endtime.Sub(starttime)))
 
-	if async == true {
-		go func() {
-			if err := p.Store(context.Background(), log, filepath, file); err != nil {
-				p.Logger.Error("async store", logger.Error(err))
-			}
-		}()
-	} else {
-		if err := p.Store(ctx, log, filepath, file); err != nil {
-			return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
-		}
+	if err := p.Store(ctx, log, filepath, file); err != nil {
+		return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
 	}
+
 	return file, nil
 }
 
