@@ -14,14 +14,13 @@ import (
 func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	log := logger.New(cfg.Logger)
 
-	sourceStorage, destinationStorage, err := storage.New(
+	sourceStorage, destinationStorage, err := storage.New(ctx,
 		log.With(logger.String("logger", "storage")), cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := store.New(
-		ctx,
+	s, err := store.New(ctx,
 		log.With(logger.String("logger", "store")),
 		cfg.KVStore)
 	if err != nil {
@@ -30,7 +29,7 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 
 	e := engine.New(*cfg.Engine, log.With(logger.String("logger", "engine")))
 
-	log.Debug("Image engine configured",
+	log.Info("Image engine configured",
 		logger.String("engine", e.String()))
 
 	return &Processor{

@@ -33,9 +33,12 @@ type Storage struct {
 }
 
 // New return destination and source storages from config
-func New(log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
+func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 	if cfg == nil {
 		storage := &Storage{Storage: &DummyStorage{}}
+
+		log.Info("Source storage configured",
+			logger.String("type", "dummy"))
 
 		return storage, storage, nil
 	}
@@ -47,17 +50,17 @@ func New(log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 	)
 
 	if cfg.Source != nil {
-		sourceStorage, err = newStorage(cfg.Source)
+		sourceStorage, err = newStorage(ctx, cfg.Source)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		log.Debug("Source storage configured",
+		log.Info("Source storage configured",
 			logger.String("type", cfg.Source.Type))
 	}
 
 	if cfg.Destination == nil {
-		log.Debug("Destination storage not set, source storage will be used",
+		log.Info("Destination storage not set, source storage will be used",
 			logger.String("type", cfg.Source.Type))
 
 		return &Storage{
@@ -69,12 +72,12 @@ func New(log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 			}, nil
 	}
 
-	destinationStorage, err = newStorage(cfg.Destination)
+	destinationStorage, err = newStorage(ctx, cfg.Destination)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	log.Debug("Destination storage configured",
+	log.Info("Destination storage configured",
 		logger.String("type", cfg.Destination.Type))
 
 	return &Storage{
@@ -86,7 +89,7 @@ func New(log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 		}, nil
 }
 
-func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
+func newStorage(ctx context.Context, cfg *StorageConfig) (gostorages.Storage, error) {
 	if cfg == nil {
 		return &DummyStorage{}, nil
 	}
@@ -99,7 +102,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 	case httpS3StorageType:
 		cfg.Type = s3StorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +123,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 	case httpDOs3StorageType:
 		cfg.Type = DOs3StorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -138,13 +141,13 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 			Bucket:          cfg.BucketName,
 		})
 	case gcsStorageType:
-		return gcstorage.NewStorage(context.Background(), cfg.SecretAccessKey, cfg.BucketName)
+		return gcstorage.NewStorage(ctx, cfg.SecretAccessKey, cfg.BucketName)
 	case fsStorageType:
 		return fsstorage.NewStorage(fsstorage.Config{Root: cfg.Location}), nil
 	case httpFSStorageType:
 		cfg.Type = fsStorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
