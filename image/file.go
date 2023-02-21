@@ -20,16 +20,12 @@ type ImageFile struct {
 }
 
 func (i *ImageFile) URL() string {
-	if i.Storage.BaseURL != "" {
-		return strings.Join([]string{i.Storage.BaseURL, i.Filepath}, "/")
-	}
-
-	return ""
+	return i.Storage.URL(i.Filepath)
 }
 
 // Path joins the given file to the storage path
 func (i *ImageFile) Path() string {
-	return path.Join(i.Storage.Location, i.Filepath)
+	return i.Storage.Path(i.Filepath)
 }
 
 func (i *ImageFile) Content() []byte {

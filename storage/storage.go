@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
@@ -27,9 +28,25 @@ const (
 	s3StorageType       = "s3"
 )
 
+// Storage wraps gostorages.Storage.
 type Storage struct {
 	gostorages.Storage
-	StorageConfig
+	cfg StorageConfig
+}
+
+// URL returns the filepath prefixed with BaseURL from storage.
+func (s *Storage) URL(filepath string) string {
+	if s.cfg.BaseURL != "" {
+		return strings.Join([]string{s.cfg.BaseURL, filepath}, "/")
+
+	}
+
+	return ""
+}
+
+// Path returns the filepath prefixed with Location from storage.
+func (s *Storage) Path(filepath string) string {
+	return path.Join(s.cfg.Location, filepath)
 }
 
 // New return destination and source storages from config
@@ -64,11 +81,11 @@ func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage,
 			logger.String("type", cfg.Source.Type))
 
 		return &Storage{
-				Storage:       sourceStorage,
-				StorageConfig: *cfg.Source,
+				Storage: sourceStorage,
+				cfg:     *cfg.Source,
 			}, &Storage{
-				Storage:       sourceStorage,
-				StorageConfig: *cfg.Source,
+				Storage: sourceStorage,
+				cfg:     *cfg.Source,
 			}, nil
 	}
 
@@ -81,11 +98,11 @@ func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage,
 		logger.String("type", cfg.Destination.Type))
 
 	return &Storage{
-			Storage:       sourceStorage,
-			StorageConfig: *cfg.Source,
+			Storage: sourceStorage,
+			cfg:     *cfg.Source,
 		}, &Storage{
-			Storage:       destinationStorage,
-			StorageConfig: *cfg.Destination,
+			Storage: destinationStorage,
+			cfg:     *cfg.Destination,
 		}, nil
 }
 
