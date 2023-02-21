@@ -7,10 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	"github.com/thoas/picfit/config"
-
 	"github.com/mholt/binding"
+	"github.com/pkg/errors"
 
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
@@ -22,7 +20,6 @@ import (
 
 type handlers struct {
 	processor *picfit.Processor
-	config    *config.Config
 }
 
 func (h handlers) stats(c *gin.Context) {

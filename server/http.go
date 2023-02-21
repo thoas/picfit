@@ -45,7 +45,7 @@ func NewHTTPServer(cfg *config.Config, processor *picfit.Processor) (*HTTPServer
 func (s *HTTPServer) Init() error {
 	var (
 		router    = gin.New()
-		handlers  = &handlers{s.processor, s.config}
+		handlers  = &handlers{s.processor}
 		endpoints = []endpoint{
 			{
 				pattern: "redirect",
