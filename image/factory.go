@@ -26,8 +26,7 @@ func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
 	}
 
 	var buffer bytes.Buffer
-	_, err = io.Copy(&buffer, content)
-	if err != nil {
+	if _, err = io.Copy(&buffer, content); err != nil {
 		return nil, err
 	}
 	if err := content.Close(); err != nil {
@@ -68,8 +67,7 @@ func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath strin
 	}
 
 	var buffer bytes.Buffer
-	_, err = io.Copy(&buffer, f)
-	if err != nil {
+	if _, err = io.Copy(&buffer, f); err != nil {
 		return nil, err
 	}
 

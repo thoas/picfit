@@ -41,8 +41,7 @@ func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([
 		}
 		buf := bytes.Buffer{}
 
-		err = gif.EncodeAll(&buf, g)
-		if err != nil {
+		if err := gif.EncodeAll(&buf, g); err != nil {
 			return nil, err
 		}
 
@@ -172,9 +171,9 @@ func drawForeground(fg draw.Image, images []image.Image, options *Options) draw.
 
 	if b.Dx() > b.Dy() {
 		return foregroundHorizontal(fg, images, options)
-	} else {
-		return foregroundVertical(fg, images, options)
 	}
+
+	return foregroundVertical(fg, images, options)
 }
 
 // foregroundHorizontal splits the fg according to the number of images  in

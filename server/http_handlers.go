@@ -73,13 +73,11 @@ func (h handlers) display(c *gin.Context) error {
 // upload uploads an image to the destination storage
 func (h handlers) upload(c *gin.Context) error {
 	multipartPayload := new(payload.Multipart)
-	err := binding.Bind(c.Request, multipartPayload)
-	if err != nil {
+	if err := binding.Bind(c.Request, multipartPayload); err != nil {
 		return err
 	}
 
 	file, err := h.processor.Upload(context.Background(), multipartPayload)
-
 	if err != nil {
 		return err
 	}
