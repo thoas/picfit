@@ -6,7 +6,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/mitchellh/goamz/aws"
 	"github.com/thoas/picfit/http"
 	"github.com/ulule/gostorages"
 	fsstorage "github.com/ulule/gostorages/fs"
@@ -126,15 +125,10 @@ func newStorage(ctx context.Context, cfg *StorageConfig) (gostorages.Storage, er
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case s3StorageType:
-		region, ok := aws.Regions[cfg.Region]
-		if !ok {
-			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
-		}
-
 		return s3storage.NewStorage(s3storage.Config{
 			AccessKeyID:     cfg.AccessKeyID,
 			SecretAccessKey: cfg.SecretAccessKey,
-			Region:          region.Name,
+			Region:          cfg.Region,
 			Bucket:          cfg.BucketName,
 		})
 	case httpDOs3StorageType:
@@ -147,15 +141,13 @@ func newStorage(ctx context.Context, cfg *StorageConfig) (gostorages.Storage, er
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case DOs3StorageType:
-		region, ok := GetDOs3Region(cfg.Region)
-		if !ok {
-			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
-		}
+		region := cfg.Region
 		return s3storage.NewStorage(s3storage.Config{
 			AccessKeyID:     cfg.AccessKeyID,
 			SecretAccessKey: cfg.SecretAccessKey,
-			Region:          region.Name,
+			Region:          region,
 			Bucket:          cfg.BucketName,
+			Endpoint:        fmt.Sprintf("https://%s.digitaloceanspaces.com", region),
 		})
 	case gcsStorageType:
 		return gcstorage.NewStorage(ctx, cfg.SecretAccessKey, cfg.BucketName)
