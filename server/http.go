@@ -34,8 +34,7 @@ func NewHTTPServer(cfg *config.Config, processor *picfit.Processor) (*HTTPServer
 		config:    cfg,
 		processor: processor,
 	}
-	err := server.Init()
-	if err != nil {
+	if err := server.Init(); err != nil {
 		return nil, err
 	}
 

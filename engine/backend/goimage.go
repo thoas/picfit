@@ -102,12 +102,9 @@ func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error
 }
 
 func (e *GoImage) toBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
-	buf := &bytes.Buffer{}
+	var buf bytes.Buffer
 
-	var err error
-
-	err = encode(buf, img, format, quality)
-	if err != nil {
+	if err := encode(&buf, img, format, quality); err != nil {
 		return nil, err
 	}
 
@@ -156,8 +153,7 @@ func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans
 
 	buf := bytes.Buffer{}
 
-	err = gif.EncodeAll(&buf, g)
-	if err != nil {
+	if err := gif.EncodeAll(&buf, g); err != nil {
 		return nil, err
 	}
 

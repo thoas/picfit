@@ -1,12 +1,17 @@
 package storage
 
 import (
+	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/mitchellh/goamz/aws"
 	"github.com/thoas/picfit/http"
 	"github.com/ulule/gostorages"
+	fsstorage "github.com/ulule/gostorages/fs"
+	gcstorage "github.com/ulule/gostorages/gcs"
+	s3storage "github.com/ulule/gostorages/s3"
 	"go.uber.org/zap"
 
 	"github.com/thoas/picfit/logger"
@@ -23,10 +28,34 @@ const (
 	s3StorageType       = "s3"
 )
 
+// Storage wraps gostorages.Storage.
+type Storage struct {
+	gostorages.Storage
+	cfg StorageConfig
+}
+
+// URL returns the filepath prefixed with BaseURL from storage.
+func (s *Storage) URL(filepath string) string {
+	if s.cfg.BaseURL != "" {
+		return strings.Join([]string{s.cfg.BaseURL, filepath}, "/")
+
+	}
+
+	return ""
+}
+
+// Path returns the filepath prefixed with Location from storage.
+func (s *Storage) Path(filepath string) string {
+	return path.Join(s.cfg.Location, filepath)
+}
+
 // New return destination and source storages from config
-func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, error) {
+func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
 	if cfg == nil {
-		storage := &DummyStorage{}
+		storage := &Storage{Storage: &DummyStorage{}}
+
+		log.Info("Source storage configured",
+			logger.String("type", "dummy"))
 
 		return storage, storage, nil
 	}
@@ -38,34 +67,46 @@ func New(log *zap.Logger, cfg *Config) (gostorages.Storage, gostorages.Storage, 
 	)
 
 	if cfg.Source != nil {
-		sourceStorage, err = newStorage(cfg.Source)
+		sourceStorage, err = newStorage(ctx, cfg.Source)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		log.Debug("Source storage configured",
+		log.Info("Source storage configured",
 			logger.String("type", cfg.Source.Type))
 	}
 
 	if cfg.Destination == nil {
-		log.Debug("Destination storage not set, source storage will be used",
+		log.Info("Destination storage not set, source storage will be used",
 			logger.String("type", cfg.Source.Type))
 
-		return sourceStorage, sourceStorage, nil
+		return &Storage{
+				Storage: sourceStorage,
+				cfg:     *cfg.Source,
+			}, &Storage{
+				Storage: sourceStorage,
+				cfg:     *cfg.Source,
+			}, nil
 	}
 
-	destinationStorage, err = newStorage(cfg.Destination)
+	destinationStorage, err = newStorage(ctx, cfg.Destination)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	log.Debug("Destination storage configured",
+	log.Info("Destination storage configured",
 		logger.String("type", cfg.Destination.Type))
 
-	return sourceStorage, destinationStorage, nil
+	return &Storage{
+			Storage: sourceStorage,
+			cfg:     *cfg.Source,
+		}, &Storage{
+			Storage: destinationStorage,
+			cfg:     *cfg.Destination,
+		}, nil
 }
 
-func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
+func newStorage(ctx context.Context, cfg *StorageConfig) (gostorages.Storage, error) {
 	if cfg == nil {
 		return &DummyStorage{}, nil
 	}
@@ -78,74 +119,52 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 	case httpS3StorageType:
 		cfg.Type = s3StorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case s3StorageType:
-		acl, ok := gostorages.ACLs[cfg.ACL]
-		if !ok {
-			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
-		}
-
 		region, ok := aws.Regions[cfg.Region]
 		if !ok {
-			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
 		}
 
-		return gostorages.NewS3Storage(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			region,
-			acl,
-			cfg.BaseURL,
-		), nil
+		return s3storage.NewStorage(s3storage.Config{
+			AccessKeyID:     cfg.AccessKeyID,
+			SecretAccessKey: cfg.SecretAccessKey,
+			Region:          region.Name,
+			Bucket:          cfg.BucketName,
+		})
 	case httpDOs3StorageType:
 		cfg.Type = DOs3StorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
 
 		return NewHTTPStorage(storage, http.NewClient()), nil
 	case DOs3StorageType:
-		acl, ok := gostorages.ACLs[cfg.ACL]
-		if !ok {
-			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
-		}
-
 		region, ok := GetDOs3Region(cfg.Region)
 		if !ok {
-			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
+			return nil, fmt.Errorf("the region %s does not exist", cfg.Region)
 		}
-
-		return gostorages.NewS3Storage(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			region,
-			acl,
-			cfg.BaseURL,
-		), nil
+		return s3storage.NewStorage(s3storage.Config{
+			AccessKeyID:     cfg.AccessKeyID,
+			SecretAccessKey: cfg.SecretAccessKey,
+			Region:          region.Name,
+			Bucket:          cfg.BucketName,
+		})
 	case gcsStorageType:
-		return gostorages.NewGCSStorage(
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			cfg.BaseURL,
-			cfg.CacheControl)
+		return gcstorage.NewStorage(ctx, cfg.SecretAccessKey, cfg.BucketName)
 	case fsStorageType:
-		return gostorages.NewFileSystemStorage(cfg.Location, cfg.BaseURL), nil
+		return fsstorage.NewStorage(fsstorage.Config{Root: cfg.Location}), nil
 	case httpFSStorageType:
 		cfg.Type = fsStorageType
 
-		storage, err := newStorage(cfg)
+		storage, err := newStorage(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}

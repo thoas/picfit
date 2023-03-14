@@ -12,8 +12,7 @@ type Handler func(*gin.Context) error
 
 func Handle(h Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := h(c)
-		if err != nil {
+		if err := h(c); err != nil {
 			cerr := errors.Cause(err)
 
 			if cerr == ErrFileNotExists || cerr == ErrKeyNotExists {

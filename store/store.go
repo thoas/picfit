@@ -67,7 +67,7 @@ func New(ctx context.Context, log *zap.Logger, cfg *Config) (gokvstores.KVStore,
 		return gokvstores.DummyStore{}, nil
 	}
 
-	log.Debug("KVStore configured",
+	log.Info("KVStore configured",
 		logger.String("type", cfg.Type))
 
 	switch cfg.Type {

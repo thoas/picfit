@@ -16,8 +16,7 @@ func decode(reader io.ReadSeeker) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = reader.Seek(0, io.SeekStart)
-	if err != nil {
+	if _, err = reader.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}
 	orientation := getOrientation(reader)

@@ -5,7 +5,6 @@ require (
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/disintegration/imaging v1.6.2
-	github.com/djherbis/times v1.0.1 // indirect
 	github.com/getsentry/sentry-go v0.16.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.8.2
@@ -27,7 +26,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
-	github.com/ulule/gostorages v0.0.0-20190508132116-7b1387fcb001
+	github.com/ulule/gostorages v0.2.4
 	github.com/urfave/cli v1.22.10
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
 	go.uber.org/atomic v1.10.0 // indirect
@@ -47,6 +46,7 @@ require (
 require (
 	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
+	github.com/aws/aws-sdk-go v1.25.36 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -60,6 +60,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
