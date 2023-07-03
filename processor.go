@@ -413,10 +413,7 @@ func (p *Processor) KeyExists(ctx context.Context, key string) (bool, error) {
 
 func (p *Processor) FileExists(ctx context.Context, name string) bool {
 	_, err := p.sourceStorage.Stat(ctx, name)
-	if errors.Is(err, gostorages.ErrNotExist) {
-		return false
-	}
-	return true
+	return !errors.Is(err, gostorages.ErrNotExist)
 }
 
 func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, error) {

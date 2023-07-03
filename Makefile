@@ -67,3 +67,6 @@ docker-build:
 	@(docker build -t picfit-builder -f Dockerfile.build .)
 	@(mkdir -p $(BIN_DIR))
 	@(docker run --rm -v $(BIN_DIR):$(APP_DIR)/bin picfit-builder)
+
+lint:
+	golangci-lint run .

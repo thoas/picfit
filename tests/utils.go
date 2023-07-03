@@ -2,7 +2,7 @@ package tests
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -114,7 +114,7 @@ func NewImageServer() *httptest.Server {
 			if err != nil {
 				w.WriteHeader(500)
 			} else {
-				bytes, _ := ioutil.ReadAll(f)
+				bytes, _ := io.ReadAll(f)
 
 				contentType, _ := image.MimetypeDetectorExtension(r.URL)
 

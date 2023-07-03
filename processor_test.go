@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -185,7 +184,7 @@ func TestUploadHandler(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		fileContent, err := ioutil.ReadAll(f)
+		fileContent, err := io.ReadAll(f)
 
 		assert.Nil(t, err)
 
@@ -193,7 +192,8 @@ func TestUploadHandler(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		writer.Write(fileContent)
+		_, err = writer.Write(fileContent)
+		assert.NoError(t, err)
 
 		if err := w.Close(); err != nil {
 			t.Fatal(err)
@@ -223,28 +223,26 @@ func TestUploadHandler(t *testing.T) {
 }
 
 func TestDeleteHandler(t *testing.T) {
-	tmp, err := ioutil.TempDir("", tests.RandString(10))
-
-	assert.Nil(t, err)
+	tmp := os.TempDir()
 
 	tmpSrcStorage := filepath.Join(tmp, "src")
 	tmpDstStorage := filepath.Join(tmp, "dst")
 
-	os.MkdirAll(tmpSrcStorage, 0755)
-	os.MkdirAll(tmpDstStorage, 0755)
+	assert.NoError(t, os.MkdirAll(tmpSrcStorage, 0755))
+	assert.NoError(t, os.MkdirAll(tmpDstStorage, 0755))
 
-	img, err := ioutil.ReadFile("tests/fixtures/schwarzy.jpg")
+	img, err := os.ReadFile("tests/fixtures/schwarzy.jpg")
 	assert.Nil(t, err)
 
 	// copy 5 images to src storage
 	for i := 0; i < 5; i++ {
 		fn := fmt.Sprintf("image%d.jpg", i+1)
-		err = ioutil.WriteFile(filepath.Join(tmpSrcStorage, fn), img, 0644)
+		err = os.WriteFile(filepath.Join(tmpSrcStorage, fn), img, 0644)
 		assert.Nil(t, err)
 	}
 
 	checkDirCount := func(dir string, count int, context string) {
-		dircontents, err := ioutil.ReadDir(dir)
+		dircontents, err := os.ReadDir(dir)
 		assert.Nil(t, err)
 		assert.Equal(t, count, len(dircontents), "%s (%s)", context, dir)
 	}
@@ -360,12 +358,12 @@ func TestStorageApplicationWithPath(t *testing.T) {
 	assert.Nil(t, err)
 	defer f.Close()
 
-	body, err := ioutil.ReadAll(f)
+	body, err := io.ReadAll(f)
 	assert.Nil(t, err)
 
 	// We store the image at the tmp location to access it
 	// with the SourceStorage
-	ioutil.WriteFile(path.Join(tmp, "avatar.png"), body, 0755)
+	assert.NoError(t, os.WriteFile(path.Join(tmp, "avatar.png"), body, 0755))
 
 	var (
 		redisHost = os.Getenv("REDIS_HOST")
