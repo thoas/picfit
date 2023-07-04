@@ -176,7 +176,8 @@ Store images on Amazon S3, keys in Redis and shard filename
           "bucket_name": "[BUCKET_NAME]",
           "acl": "[ACL]",
           "region": "[REGION_NAME]",
-          "location": "path/to/directory"
+          "location": "path/to/directory",
+          "endpoint": "[protocol://service-code.region-code.amazonaws.com]"
         }
       },
       "shard": {
@@ -262,7 +263,8 @@ Load images from file system and store them in Amazon S3, keys on Redis cluster
           "bucket_name": "[BUCKET_NAME]",
           "acl": "[ACL]",
           "region": "[REGION_NAME]",
-          "location": "path/to/directory"
+          "location": "path/to/directory",
+          "endpoint": "[protocol://service-code.region-code.amazonaws.com]"
         }
       }
     }

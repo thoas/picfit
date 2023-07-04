@@ -11,6 +11,7 @@ type StorageConfig struct {
 	Region          string
 	SecretAccessKey string `mapstructure:"secret_access_key"`
 	Type            string
+	Endpoint        string `mapstructure:"endpoint"`
 }
 
 // Config is a struct to represent a section of storage (src, fst)

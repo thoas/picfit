@@ -130,6 +130,7 @@ func newStorage(ctx context.Context, cfg *StorageConfig) (gostorages.Storage, er
 			SecretAccessKey: cfg.SecretAccessKey,
 			Region:          cfg.Region,
 			Bucket:          cfg.BucketName,
+			Endpoint:        cfg.Endpoint,
 		})
 	case httpDOs3StorageType:
 		cfg.Type = DOs3StorageType
