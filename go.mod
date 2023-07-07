@@ -23,7 +23,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
-	github.com/ulule/gostorages v0.2.5-0.20230314124119-11134a4bce61
+	github.com/ulule/gostorages v0.2.5-0.20230707072626-d429b21ca9b4
 	github.com/urfave/cli v1.22.10
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

@@ -3,12 +3,11 @@ package image
 import (
 	"bytes"
 	"context"
-	"io"
-	"net/url"
-
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/http"
 	storagepkg "github.com/thoas/picfit/storage"
+	"io"
+	"net/url"
 )
 
 // FromURL retrieves an ImageFile from an url
@@ -44,12 +43,7 @@ func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath strin
 	var file *ImageFile
 	var err error
 
-	f, err := storage.Open(ctx, filepath)
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := storage.Stat(ctx, filepath)
+	f, stat, err := storage.OpenWithStat(ctx, filepath)
 	if err != nil {
 		return nil, err
 	}

@@ -25,3 +25,7 @@ func (s *DummyStorage) Open(ctx context.Context, filepath string) (io.ReadCloser
 func (s DummyStorage) Stat(ctx context.Context, path string) (*gostorages.Stat, error) {
 	return &gostorages.Stat{}, nil
 }
+
+func (s DummyStorage) OpenWithStat(ctx context.Context, path string) (io.ReadCloser, *gostorages.Stat, error) {
+	return nil, &gostorages.Stat{}, nil
+}
