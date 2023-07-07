@@ -211,6 +211,7 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 
 // ProcessContext processes a gin.Context generates and retrieves an ImageFile
 func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.ImageFile, error) {
+
 	var (
 		storeKey = c.MustGet("key").(string)
 		force    = c.Query("force")
@@ -387,9 +388,13 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	log.Info("Image processed",
 		logger.Duration("duration", endtime.Sub(starttime)))
 
-	if err := p.Store(ctx, log, filepath, file); err != nil {
-		return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
-	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		if err := p.Store(ctx, log, filepath, file); err != nil {
+			fmt.Println(errors.Wrapf(err, "unable to store processed image: %s", filepath))
+		}
+		cancel()
+	}()
 
 	return file, nil
 }

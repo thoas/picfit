@@ -36,6 +36,7 @@ require (
 )
 
 require (
+	github.com/davidbyttow/govips/v2 v2.13.0
 	github.com/gin-contrib/zap v0.1.0
 	github.com/prometheus/client_golang v1.14.0
 )

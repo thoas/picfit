@@ -58,6 +58,13 @@ func New(cfg config.Config, logger *zap.Logger) *Engine {
 				weight:    cfg.Backends.GoImage.Weight,
 			})
 		}
+		if cfg.Backends.GoVips != nil {
+			b = append(b, &backendWrapper{
+				backend:   &backend.Govips{},
+				mimetypes: cfg.Backends.GoVips.Mimetypes,
+				weight:    cfg.Backends.GoVips.Weight,
+			})
+		}
 	}
 
 	sort.Slice(b, func(i, j int) bool {

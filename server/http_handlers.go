@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +55,9 @@ func (h handlers) healthcheck(startedAt time.Time) func(c *gin.Context) {
 
 // display displays and image using resizing parameters
 func (h handlers) display(c *gin.Context) error {
+	f, _ := os.Create("cpu.pprof")
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 	file, err := h.processor.ProcessContext(c,
 		picfit.WithLoad(true))
 	if err != nil {
