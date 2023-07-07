@@ -218,7 +218,6 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		ctx      = c.Request.Context()
 		log      = p.Logger.With(logger.String("key", storeKey))
 	)
-
 	modifiedSince := c.Request.Header.Get("If-Modified-Since")
 	if modifiedSince != "" && force == "" {
 		exists, err := p.store.Exists(ctx, storeKey)

@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/thoas/picfit"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/engine"
@@ -102,12 +102,22 @@ func setParamsFromURLValues(params map[string]interface{}, values url.Values) ma
 }
 
 // URLParser extracts the url query string and add a url.URL to the context
-func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
+func URLParser(mimetypeDetectorType string, processor *picfit.Processor) gin.HandlerFunc {
 	mimetypeDetector := image.GetMimetypeDetector(mimetypeDetectorType)
 
 	return func(c *gin.Context) {
 		value := c.Query("url")
-
+		storeKey := c.MustGet("key").(string)
+		if storeKey != "" {
+			exist, err := processor.KeyExists(c.Request.Context(), storeKey)
+			if err != nil {
+				c.Abort()
+			}
+			if exist {
+				c.Next()
+				return
+			}
+		}
 		if value != "" {
 			url, err := url.Parse(value)
 
@@ -130,7 +140,6 @@ func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
 			c.Set("url", url)
 			c.Set("mimetype", mimetype)
 		}
-
 		c.Next()
 	}
 }
