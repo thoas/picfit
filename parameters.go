@@ -68,20 +68,23 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 		format = p.engine.DefaultFormat
 	}
 
-	log.Info("Content-type:")
-	log.Info(engine.ContentTypes[format])
-	log.Info("Format")
-	log.Info(format)
-
 	if format != input.Format() {
 		index := len(filepath) - len(input.Format())
 
 		filepath = filepath[:index] + format
 
 		if contentType, ok := engine.ContentTypes[format]; ok {
+			log.Info("Content-type:")
+			log.Info(contentType)
+			log.Info("Format")
+			log.Info(format)
+
 			input.Headers["Content-Type"] = contentType
 		}
 	}
+
+	log.Info("Header exists")
+	log.Info(input.Headers["Content-Type"])
 
 	output := &image.ImageFile{
 		Source:   input.Source,
