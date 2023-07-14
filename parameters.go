@@ -43,9 +43,6 @@ type Parameters struct {
 
 // newParameters returns Parameters for engine.
 func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
-	var (
-		log = p.Logger
-	)
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -74,17 +71,9 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 		filepath = filepath[:index] + format
 
 		if contentType, ok := engine.ContentTypes[format]; ok {
-			log.Info("Content-type:")
-			log.Info(contentType)
-			log.Info("Format")
-			log.Info(format)
-
 			input.Headers["Content-Type"] = contentType
 		}
 	}
-
-	log.Info("Header exists")
-	log.Info(input.Headers["Content-Type"])
 
 	output := &image.ImageFile{
 		Source:   input.Source,
