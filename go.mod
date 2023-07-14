@@ -35,6 +35,7 @@ require (
 )
 
 require (
+	github.com/chai2010/webp v1.1.1
 	github.com/gin-contrib/zap v0.1.0
 	github.com/prometheus/client_golang v1.14.0
 )
