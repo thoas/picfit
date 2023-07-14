@@ -3,7 +3,6 @@ package picfit
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"strconv"
 	"strings"
 
@@ -35,8 +34,6 @@ var formats = map[string]image.Format{
 }
 
 type Parameters struct {
-	Logger *zap.Logger
-
 	output     *image.ImageFile
 	operations []engine.EngineOperation
 }
