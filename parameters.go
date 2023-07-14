@@ -3,6 +3,7 @@ package picfit
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"strconv"
 	"strings"
 
@@ -34,12 +35,17 @@ var formats = map[string]image.Format{
 }
 
 type Parameters struct {
+	Logger *zap.Logger
+
 	output     *image.ImageFile
 	operations []engine.EngineOperation
 }
 
 // newParameters returns Parameters for engine.
 func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
+	var (
+		log = p.Logger
+	)
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -61,6 +67,11 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 	if format == "" {
 		format = p.engine.DefaultFormat
 	}
+
+	log.Info("Content-type:")
+	log.Info(engine.ContentTypes[format])
+	log.Info("Format")
+	log.Info(format)
 
 	if format != input.Format() {
 		index := len(filepath) - len(input.Format())
