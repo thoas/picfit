@@ -180,6 +180,10 @@ func (e *GoImage) resize(img *imagefile.ImageFile, options *Options, trans trans
 }
 
 func (e *GoImage) transform(img image.Image, options *Options, trans transformation) ([]byte, error) {
+	if options.Height == 0 || options.Width == 0 {
+		return e.toBytes(img, options.Format, options.Quality)
+	}
+
 	return e.toBytes(scale(img, options, trans), options.Format, options.Quality)
 }
 
