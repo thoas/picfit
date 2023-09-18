@@ -2,14 +2,17 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/constants"
 	"log/slog"
+	"runtime"
 	"time"
 )
 
-func NewLogger(logger *slog.Logger) gin.HandlerFunc {
+func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -40,5 +43,25 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 		} else {
 			logger.LogAttrs(c.Request.Context(), slog.LevelInfo, path, attributes...)
 		}
+		if cfg.Debug {
+			logMemStats(c.Request.Context(), logger)
+
+		}
 	}
+}
+
+func logMemStats(ctx context.Context, logger *slog.Logger) {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	attributes := []slog.Attr{
+		slog.String("Alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
+		slog.String("TotalAlloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
+		slog.String("Sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
+		slog.String("NumGC", fmt.Sprintf("%v", m.NumGC)),
+	}
+	logger.LogAttrs(ctx, slog.LevelInfo, "mem stats", attributes...)
+}
+
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
 }

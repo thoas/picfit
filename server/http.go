@@ -66,7 +66,7 @@ func (s *HTTPServer) Init() error {
 		router.Use(gin.Recovery())
 	}
 
-	router.Use(middleware.NewLogger(s.processor.Logger))
+	router.Use(middleware.NewLogger(s.config, s.processor.Logger))
 
 	if s.config.Sentry != nil {
 		if err := sentry.Init(sentry.ClientOptions{
