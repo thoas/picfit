@@ -28,7 +28,7 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 			slog.String("method", c.Request.Method),
 			slog.String("path", path),
 			slog.String("ip", c.ClientIP()),
-			slog.Duration("latency", latency),
+			slog.String("latency", latency.String()),
 			slog.String("user-agent", c.Request.UserAgent()),
 			slog.Time("time", end.UTC()),
 		}

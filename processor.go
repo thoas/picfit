@@ -68,7 +68,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 
 	endtime := time.Now()
 	log.InfoContext(ctx, "Save file to storage",
-		slog.Duration("duration", endtime.Sub(starttime)),
+		slog.String("duration", endtime.Sub(starttime).String()),
 	)
 
 	starttime = time.Now()
@@ -82,7 +82,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 	).Observe(endtime.Sub(starttime).Seconds())
 
 	log.InfoContext(ctx, "Save key to store",
-		slog.Duration("duration", endtime.Sub(starttime)),
+		slog.String("duration", endtime.Sub(starttime).String()),
 	)
 
 	// Write children info only when we actually want to be able to delete things.
@@ -263,7 +263,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			filesize := util.ByteCountDecimal(int64(len(img.Content())))
 			endtime := time.Now()
 			log.InfoContext(ctx, "Image retrieved from storage",
-				slog.Duration("duration", endtime.Sub(starttime)),
+				slog.String("duration", endtime.Sub(starttime).String()),
 				slog.String("size", filesize),
 				slog.String("image", img.Filepath))
 
@@ -325,7 +325,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	starttime := time.Now()
 	u, exists := c.Get("url")
 	if exists {
-		file, err = image.FromURL(u.(*url.URL), p.config.Options.DefaultUserAgent)
+		file, err = image.FromURL(ctx, u.(*url.URL), p.config.Options.DefaultUserAgent)
 	} else {
 		// URL provided we use http protocol to retrieve it
 		filepath = qs["path"].(string)
@@ -353,7 +353,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	)
 
 	log.InfoContext(ctx, "Retrieved image to process from storage",
-		slog.Duration("duration", endtime.Sub(starttime)))
+		slog.String("duration", endtime.Sub(starttime).String()))
 
 	parameters, err := p.NewParameters(ctx, file, qs)
 	if err != nil {
@@ -384,7 +384,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	)
 
 	log.InfoContext(ctx, "Image processed",
-		slog.Duration("duration", endtime.Sub(starttime)))
+		slog.String("duration", endtime.Sub(starttime).String()))
 
 	if err := p.Store(ctx, log, filepath, file); err != nil {
 		return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
