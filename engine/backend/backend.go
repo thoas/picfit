@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/disintegration/imaging"
@@ -32,11 +33,11 @@ func (o Options) String() string {
 
 // Engine is an interface to define an image engine
 type Backend interface {
-	Fit(img *image.ImageFile, options *Options) ([]byte, error)
-	Flat(background *image.ImageFile, options *Options) ([]byte, error)
-	Flip(img *image.ImageFile, options *Options) ([]byte, error)
-	Resize(img *image.ImageFile, options *Options) ([]byte, error)
-	Rotate(img *image.ImageFile, options *Options) ([]byte, error)
+	Fit(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
+	Flat(ctx context.Context, background *image.ImageFile, options *Options) ([]byte, error)
+	Flip(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
+	Resize(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
+	Rotate(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
 	String() string
-	Thumbnail(img *image.ImageFile, options *Options) ([]byte, error)
+	Thumbnail(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
 }

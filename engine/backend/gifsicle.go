@@ -2,6 +2,7 @@ package backend
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"image/gif"
@@ -20,7 +21,7 @@ func (b *Gifsicle) String() string {
 }
 
 // Resize implements Backend.
-func (b *Gifsicle) Resize(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
+func (b *Gifsicle) Resize(ctx context.Context, imgfile *image.ImageFile, opts *Options) ([]byte, error) {
 	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
 	if err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func (b *Gifsicle) Resize(imgfile *image.ImageFile, opts *Options) ([]byte, erro
 }
 
 // Thumbnail implements Backend.
-func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, error) {
+func (b *Gifsicle) Thumbnail(ctx context.Context, imgfile *image.ImageFile, opts *Options) ([]byte, error) {
 	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
 	if err != nil {
 		return nil, err
@@ -62,7 +63,7 @@ func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, e
 	bounds := img.Bounds()
 	left, top, cropw, croph := computecrop(bounds.Dx(), bounds.Dy(), opts.Width, opts.Height)
 
-	cmd := exec.Command(b.Path,
+	cmd := exec.CommandContext(ctx, b.Path,
 		"--crop", fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph),
 		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
 	)
@@ -82,22 +83,22 @@ func (b *Gifsicle) Thumbnail(imgfile *image.ImageFile, opts *Options) ([]byte, e
 }
 
 // Rotate implements Backend.
-func (b *Gifsicle) Rotate(*image.ImageFile, *Options) ([]byte, error) {
+func (b *Gifsicle) Rotate(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
 // Fit implements Backend.
-func (b *Gifsicle) Fit(*image.ImageFile, *Options) ([]byte, error) {
+func (b *Gifsicle) Fit(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
 // Flat implements Backend.
-func (b *Gifsicle) Flat(*image.ImageFile, *Options) ([]byte, error) {
+func (b *Gifsicle) Flat(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 
 // Flip implements Backend.
-func (b *Gifsicle) Flip(*image.ImageFile, *Options) ([]byte, error) {
+func (b *Gifsicle) Flip(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
 }
 

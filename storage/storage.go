@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path"
 	"strings"
 
@@ -11,9 +12,6 @@ import (
 	fsstorage "github.com/ulule/gostorages/fs"
 	gcstorage "github.com/ulule/gostorages/gcs"
 	s3storage "github.com/ulule/gostorages/s3"
-	"go.uber.org/zap"
-
-	"github.com/thoas/picfit/logger"
 )
 
 const (
@@ -49,12 +47,12 @@ func (s *Storage) Path(filepath string) string {
 }
 
 // New return destination and source storages from config
-func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage, error) {
+func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage, error) {
 	if cfg == nil {
 		storage := &Storage{Storage: &DummyStorage{}}
 
-		log.Info("Source storage configured",
-			logger.String("type", "dummy"))
+		log.InfoContext(ctx, "Source storage configured",
+			slog.String("type", "dummy"))
 
 		return storage, storage, nil
 	}
@@ -71,13 +69,13 @@ func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage,
 			return nil, nil, err
 		}
 
-		log.Info("Source storage configured",
-			logger.String("type", cfg.Source.Type))
+		log.InfoContext(ctx, "Source storage configured",
+			slog.String("type", cfg.Source.Type))
 	}
 
 	if cfg.Destination == nil {
-		log.Info("Destination storage not set, source storage will be used",
-			logger.String("type", cfg.Source.Type))
+		log.InfoContext(ctx, "Destination storage not set, source storage will be used",
+			slog.String("type", cfg.Source.Type))
 
 		return &Storage{
 				Storage: sourceStorage,
@@ -93,8 +91,8 @@ func New(ctx context.Context, log *zap.Logger, cfg *Config) (*Storage, *Storage,
 		return nil, nil, err
 	}
 
-	log.Info("Destination storage configured",
-		logger.String("type", cfg.Destination.Type))
+	log.InfoContext(ctx, "Destination storage configured",
+		slog.String("type", cfg.Destination.Type))
 
 	return &Storage{
 			Storage: sourceStorage,

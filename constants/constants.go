@@ -41,3 +41,5 @@ var StickPositions = []string{
 }
 
 const ModifiedTimeFormat = time.RFC1123
+
+const RequestIDCtx = "request-id"
