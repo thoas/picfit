@@ -31,7 +31,7 @@ func (b *Gifsicle) Resize(ctx context.Context, imgfile *image.ImageFile, opts *O
 		return imgfile.Source, nil
 	}
 
-	cmd := exec.Command(b.Path,
+	cmd := exec.CommandContext(ctx, b.Path,
 		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
 	)
 	cmd.Stdin = bytes.NewReader(imgfile.Source)
