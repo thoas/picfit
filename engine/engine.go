@@ -3,14 +3,14 @@ package engine
 import (
 	"context"
 	"fmt"
+	"github.com/thoas/picfit/engine/backend"
+	"github.com/thoas/picfit/engine/config"
+	"github.com/thoas/picfit/image"
 	"log/slog"
 	"os/exec"
 	"sort"
 	"strings"
-
-	"github.com/thoas/picfit/engine/backend"
-	"github.com/thoas/picfit/engine/config"
-	"github.com/thoas/picfit/image"
+	"time"
 )
 
 type Engine struct {
@@ -92,6 +92,7 @@ func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operatio
 		err       error
 		processed []byte
 		source    = output.Source
+		start     = time.Now()
 	)
 
 	ct := output.ContentType()
@@ -109,11 +110,14 @@ func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operatio
 				continue
 			}
 
-			e.logger.DebugContext(ctx, "Processing image...",
-				slog.String("backend", e.backends[j].backend.String()),
-				slog.String("operation", operations[i].Operation.String()),
-				slog.String("options", operations[i].Options.String()),
-			)
+			defer func() {
+				e.logger.InfoContext(ctx, "Processing image",
+					slog.String("backend", e.backends[j].backend.String()),
+					slog.String("operation", operations[i].Operation.String()),
+					slog.String("options", operations[i].Options.String()),
+					slog.String("duration", time.Now().Sub(start).String()),
+				)
+			}()
 
 			processed, err = operate(ctx, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {

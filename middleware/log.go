@@ -29,6 +29,7 @@ func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 		attributes := []slog.Attr{
 			slog.Int("status", c.Writer.Status()),
 			slog.String("method", c.Request.Method),
+			slog.Any("params", c.Request.URL.Query()),
 			slog.String("path", path),
 			slog.String("ip", c.ClientIP()),
 			slog.String("latency", latency.String()),
@@ -53,11 +54,14 @@ func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 func logMemStats(ctx context.Context, logger *slog.Logger) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
+
 	attributes := []slog.Attr{
 		slog.String("alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
-		slog.String("totalAlloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
+		slog.String("heapalloc", fmt.Sprintf("%v MiB", bToMb(m.HeapAlloc))),
+		slog.String("totalalloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
 		slog.String("sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
-		slog.String("numGC", fmt.Sprintf("%v", m.NumGC)),
+		slog.String("numgc", fmt.Sprintf("%v", m.NumGC)),
+		slog.Int("totalgoroutine", runtime.NumGoroutine()),
 	}
 	logger.LogAttrs(ctx, slog.LevelInfo, "memory stats", attributes...)
 }
