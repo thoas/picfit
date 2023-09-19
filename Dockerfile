@@ -1,4 +1,4 @@
-FROM golang:1.20-buster as builder
+FROM golang:1.21-bookworm as builder
 LABEL stage=builder
 
 ENV REPO=thoas/picfit
