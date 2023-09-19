@@ -2,6 +2,7 @@ package backend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/draw"
@@ -16,7 +17,7 @@ import (
 	imagefile "github.com/thoas/picfit/image"
 )
 
-func (e *GoImage) Flat(backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flat(ctx context.Context, backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
 	var err error
 	images := make([]image.Image, len(options.Images))
 	for i := range options.Images {

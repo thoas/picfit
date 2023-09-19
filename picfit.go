@@ -2,6 +2,8 @@ package picfit
 
 import (
 	"context"
+	"github.com/thoas/picfit/constants"
+	"log/slog"
 
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
@@ -12,25 +14,26 @@ import (
 
 // NewProcessor returns a Processor instance from a config.Config instance
 func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
+	cfg.Logger.ContextKeys = []string{constants.RequestIDCtx}
 	log := logger.New(cfg.Logger)
 
 	sourceStorage, destinationStorage, err := storage.New(ctx,
-		log.With(logger.String("logger", "storage")), cfg.Storage)
+		log.With(slog.String("logger", "storage")), cfg.Storage)
 	if err != nil {
 		return nil, err
 	}
 
 	s, err := store.New(ctx,
-		log.With(logger.String("logger", "store")),
+		log.With(slog.String("logger", "store")),
 		cfg.KVStore)
 	if err != nil {
 		return nil, err
 	}
 
-	e := engine.New(*cfg.Engine, log.With(logger.String("logger", "engine")))
+	e := engine.New(*cfg.Engine, log.With(slog.String("logger", "engine")))
 
-	log.Info("Image engine configured",
-		logger.String("engine", e.String()))
+	log.InfoContext(ctx, "Image engine configured",
+		slog.String("engine", e.String()))
 
 	return &Processor{
 		Logger: log,

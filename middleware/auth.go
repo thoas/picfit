@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/thoas/picfit/signature"
 	"net/http"
 	"strconv"
 
@@ -8,7 +9,6 @@ import (
 
 	"github.com/thoas/go-funk"
 	"github.com/thoas/picfit/config"
-	"github.com/thoas/picfit/signature"
 )
 
 // Security wraps the request and confront sent parameters with secret key

@@ -11,11 +11,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
-	ginzap "github.com/gin-contrib/zap"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/failure"
@@ -68,7 +66,8 @@ func (s *HTTPServer) Init() error {
 		router.Use(gin.Recovery())
 	}
 
-	router.Use(ginzap.Ginzap(s.processor.Logger, time.RFC3339, true))
+	router.Use(middleware.NewLogger(s.config, s.processor.Logger))
+	router.Use(middleware.MetricsMiddlewares)
 
 	if s.config.Sentry != nil {
 		if err := sentry.Init(sentry.ClientOptions{

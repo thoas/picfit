@@ -44,12 +44,12 @@ func (s *HTTPStorage) Open(ctx context.Context, filepath string) (io.ReadCloser,
 		return nil, err
 	}
 
-	return s.OpenFromURL(u)
+	return s.OpenFromURL(ctx, u)
 }
 
 // OpenFromURL retrieves bytes from an url
-func (s *HTTPStorage) OpenFromURL(u *url.URL) (io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(context.Background(), "GET", u.String(), nil)
+func (s *HTTPStorage) OpenFromURL(ctx context.Context, u *url.URL) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}

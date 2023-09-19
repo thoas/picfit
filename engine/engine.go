@@ -1,16 +1,16 @@
 package engine
 
 import (
+	"context"
 	"fmt"
-	"os/exec"
-	"sort"
-	"strings"
-
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
-	"github.com/thoas/picfit/logger"
-	"go.uber.org/zap"
+	"log/slog"
+	"os/exec"
+	"sort"
+	"strings"
+	"time"
 )
 
 type Engine struct {
@@ -18,7 +18,7 @@ type Engine struct {
 	DefaultQuality int
 	Format         string
 	backends       []*backendWrapper
-	logger         *zap.Logger
+	logger         *slog.Logger
 }
 
 type backendWrapper struct {
@@ -28,7 +28,7 @@ type backendWrapper struct {
 }
 
 // New initializes an Engine
-func New(cfg config.Config, logger *zap.Logger) *Engine {
+func New(cfg config.Config, logger *slog.Logger) *Engine {
 	var b []*backendWrapper
 
 	if cfg.Backends == nil {
@@ -87,11 +87,12 @@ func (e Engine) String() string {
 	return strings.Join(backendNames, " ")
 }
 
-func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation) (*image.ImageFile, error) {
+func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operations []EngineOperation) (*image.ImageFile, error) {
 	var (
 		err       error
 		processed []byte
 		source    = output.Source
+		start     = time.Now()
 	)
 
 	ct := output.ContentType()
@@ -109,13 +110,16 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 				continue
 			}
 
-			e.logger.Debug("Processing image...",
-				logger.String("backend", e.backends[j].backend.String()),
-				logger.String("operation", operations[i].Operation.String()),
-				logger.String("options", operations[i].Options.String()),
-			)
+			defer func() {
+				e.logger.InfoContext(ctx, "Processing image",
+					slog.String("backend", e.backends[j].backend.String()),
+					slog.String("operation", operations[i].Operation.String()),
+					slog.String("options", operations[i].Options.String()),
+					slog.String("duration", time.Now().Sub(start).String()),
+				)
+			}()
 
-			processed, err = operate(e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
+			processed, err = operate(ctx, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {
 				output.Source = processed
 				break
@@ -132,22 +136,22 @@ func (e Engine) Transform(output *image.ImageFile, operations []EngineOperation)
 	return output, err
 }
 
-func operate(b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
+func operate(ctx context.Context, b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
 	switch operation {
 	case Noop:
 		return img.Source, nil
 	case Flip:
-		return b.Flip(img, options)
+		return b.Flip(ctx, img, options)
 	case Rotate:
-		return b.Rotate(img, options)
+		return b.Rotate(ctx, img, options)
 	case Resize:
-		return b.Resize(img, options)
+		return b.Resize(ctx, img, options)
 	case Thumbnail:
-		return b.Thumbnail(img, options)
+		return b.Thumbnail(ctx, img, options)
 	case Fit:
-		return b.Fit(img, options)
+		return b.Fit(ctx, img, options)
 	case Flat:
-		return b.Flat(img, options)
+		return b.Flat(ctx, img, options)
 	default:
 		return nil, fmt.Errorf("Operation not found for %s", operation)
 	}

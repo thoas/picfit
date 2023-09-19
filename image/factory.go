@@ -12,10 +12,10 @@ import (
 )
 
 // FromURL retrieves an ImageFile from an url
-func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
+func FromURL(ctx context.Context, u *url.URL, userAgent string) (*ImageFile, error) {
 	storage := storagepkg.NewHTTPStorage(nil, http.NewClient(http.WithUserAgent(userAgent)))
 
-	content, err := storage.OpenFromURL(u)
+	content, err := storage.OpenFromURL(ctx, u)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package backend
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/color/palette"
@@ -43,15 +44,15 @@ type GoImage struct{}
 func (e *GoImage) String() string {
 	return "goimage"
 }
-func (e *GoImage) Resize(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Resize(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return e.resize(img, options, imaging.Resize)
 }
 
-func (e *GoImage) Thumbnail(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Thumbnail(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	return e.resize(img, options, imaging.Thumbnail)
 }
 
-func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Rotate(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.source(img)
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func (e *GoImage) Rotate(img *imagefile.ImageFile, options *Options) ([]byte, er
 	return e.toBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flip(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.source(img)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (e *GoImage) Flip(img *imagefile.ImageFile, options *Options) ([]byte, erro
 	return e.toBytes(transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImage) Fit(img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	if options.Format == imaging.GIF {
 		content, err := e.transformGIF(img, options, imaging.Thumbnail)
 		if err != nil {

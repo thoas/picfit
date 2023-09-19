@@ -920,7 +920,6 @@ Levels available are:
 * info
 * error
 * warning
-* fatal
 
 Allowed sizes
 -------------
