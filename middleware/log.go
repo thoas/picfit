@@ -54,12 +54,12 @@ func logMemStats(ctx context.Context, logger *slog.Logger) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	attributes := []slog.Attr{
-		slog.String("Alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
-		slog.String("TotalAlloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
-		slog.String("Sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
-		slog.String("NumGC", fmt.Sprintf("%v", m.NumGC)),
+		slog.String("alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
+		slog.String("totalAlloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
+		slog.String("sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
+		slog.String("numGC", fmt.Sprintf("%v", m.NumGC)),
 	}
-	logger.LogAttrs(ctx, slog.LevelInfo, "mem stats", attributes...)
+	logger.LogAttrs(ctx, slog.LevelInfo, "memory stats", attributes...)
 }
 
 func bToMb(b uint64) uint64 {
