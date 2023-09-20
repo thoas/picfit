@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/thoas/picfit/storage"
 )
 
@@ -38,7 +39,11 @@ func (i *ImageFile) Content() []byte {
 
 func (i *ImageFile) Save(ctx context.Context) error {
 	content := bytes.NewReader(i.Content())
-	return i.Storage.Save(ctx, content, i.Filepath)
+	if err := i.Storage.Save(ctx, content, i.Filepath); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
 func (i *ImageFile) Format() string {

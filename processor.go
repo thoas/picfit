@@ -46,12 +46,11 @@ func (p *Processor) Upload(ctx context.Context, payload *payload.Multipart) (*im
 		return nil, err
 	}
 
-	err = p.sourceStorage.Save(ctx, fh, payload.Data.Filename)
-	if err != nil {
+	if err := p.sourceStorage.Save(ctx, fh, payload.Data.Filename); err != nil {
 		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
 	}
 	if err := fh.Close(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	return &image.ImageFile{
 		Filepath: payload.Data.Filename,
@@ -73,7 +72,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 
 	starttime = time.Now()
 	if err := p.store.Set(ctx, i.Key, i.Filepath); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	endtime = time.Now()
 	defaultMetrics.histogram.WithLabelValues(
@@ -92,7 +91,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 		parentKey = fmt.Sprintf("%s:children", parentKey)
 
 		if err := p.store.AppendSlice(ctx, parentKey, i.Key); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		log.InfoContext(ctx, "Put key into set in store",
@@ -126,8 +125,7 @@ func (p *Processor) DeleteChild(ctx context.Context, key string) error {
 		}
 	}
 
-	err = p.store.Delete(ctx, key)
-	if err != nil {
+	if err := p.store.Delete(ctx, key); err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", key)
 	}
 
@@ -200,8 +198,7 @@ func (p *Processor) Delete(ctx context.Context, filepath string) error {
 	p.Logger.InfoContext(ctx, "Delete set %s",
 		slog.String("set", childrenKey))
 
-	err = p.store.Delete(ctx, childrenKey)
-	if err != nil {
+	if err := p.store.Delete(ctx, childrenKey); err != nil {
 		return errors.Wrapf(err, "unable to delete key %s", childrenKey)
 	}
 
@@ -222,7 +219,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 	if modifiedSince != "" && force == "" {
 		exists, err := p.store.Exists(ctx, storeKey)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		if exists {
@@ -237,13 +234,13 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		// try to retrieve image from the k/v rtore
 		filepathRaw, err := p.store.Get(ctx, storeKey)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		if filepathRaw != nil {
 			filepath, err := conv.String(filepathRaw)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			log.InfoContext(ctx, "Key found in store",
@@ -257,7 +254,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 					return p.processImage(c, storeKey)
 				}
 
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			filesize := util.ByteCountDecimal(int64(len(img.Content())))
