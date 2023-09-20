@@ -17,7 +17,7 @@ type ImageFile struct {
 	Key       string
 	Processed []byte
 	Source    []byte
-	Storage   storage.Storage
+	Storage   *storage.Storage
 }
 
 func (i *ImageFile) URL() string {

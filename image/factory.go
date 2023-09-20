@@ -41,7 +41,7 @@ func FromURL(ctx context.Context, u *url.URL, userAgent string) (*ImageFile, err
 }
 
 // FromStorage retrieves an ImageFile from storage
-func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath string) (*ImageFile, error) {
+func FromStorage(ctx context.Context, storage *storagepkg.Storage, filepath string) (*ImageFile, error) {
 	var file *ImageFile
 	var err error
 
