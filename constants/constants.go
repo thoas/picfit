@@ -6,7 +6,7 @@ import (
 
 const (
 	// Version is the current version of picfit
-	Version = "0.9.0"
+	Version = "0.12.0"
 )
 
 var (
@@ -41,3 +41,5 @@ var StickPositions = []string{
 }
 
 const ModifiedTimeFormat = time.RFC1123
+
+const RequestIDCtx = "request-id"

@@ -3,15 +3,13 @@ package store
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/ulule/gokvstores"
-	"go.uber.org/zap"
-
-	"github.com/thoas/picfit/logger"
 )
 
 type Store gokvstores.KVStore
@@ -62,13 +60,13 @@ func getHostPortWithDefaults(u *url.URL) (string, string) {
 }
 
 // New returns a KVStore from config
-func New(ctx context.Context, log *zap.Logger, cfg *Config) (gokvstores.KVStore, error) {
+func New(ctx context.Context, log *slog.Logger, cfg *Config) (gokvstores.KVStore, error) {
 	if cfg == nil {
 		return gokvstores.DummyStore{}, nil
 	}
 
-	log.Info("KVStore configured",
-		logger.String("type", cfg.Type))
+	log.InfoContext(ctx, "KVStore configured",
+		slog.String("type", cfg.Type))
 
 	switch cfg.Type {
 	case dummyKVStoreType:

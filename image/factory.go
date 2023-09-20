@@ -3,6 +3,10 @@ package image
 import (
 	"bytes"
 	"context"
+	"io"
+	"net/url"
+
+	"github.com/pkg/errors"
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/http"
 	storagepkg "github.com/thoas/picfit/storage"
@@ -11,25 +15,25 @@ import (
 )
 
 // FromURL retrieves an ImageFile from an url
-func FromURL(u *url.URL, userAgent string) (*ImageFile, error) {
+func FromURL(ctx context.Context, u *url.URL, userAgent string) (*ImageFile, error) {
 	storage := storagepkg.NewHTTPStorage(nil, http.NewClient(http.WithUserAgent(userAgent)))
 
-	content, err := storage.OpenFromURL(u)
+	content, err := storage.OpenFromURL(ctx, u)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	headers, err := storage.HeadersFromURL(u)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, content); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	if err := content.Close(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	return &ImageFile{
 		Source:   buffer.Bytes(),
@@ -45,7 +49,7 @@ func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath strin
 
 	f, stat, err := storage.OpenWithStat(ctx, filepath)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	file = &ImageFile{
@@ -62,13 +66,13 @@ func FromStorage(ctx context.Context, storage storagepkg.Storage, filepath strin
 
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, f); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	file.Source = buffer.Bytes()
 	file.Headers = headers
 	if err := f.Close(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	return file, err
 }
