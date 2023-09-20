@@ -64,6 +64,8 @@ func (s *HTTPServer) Init() error {
 
 	if s.config.Debug {
 		router.Use(gin.Recovery())
+	} else {
+		router.Use(recoverMiddleware)
 	}
 
 	router.Use(middleware.NewLogger(s.config, s.processor.Logger))
@@ -76,7 +78,7 @@ func (s *HTTPServer) Init() error {
 			return err
 		}
 
-		router.Use(sentrygin.New(sentrygin.Options{}))
+		router.Use(sentrygin.New(sentrygin.Options{Repanic: true}))
 	}
 
 	if s.config.AllowedOrigins != nil && s.config.AllowedMethods != nil {
