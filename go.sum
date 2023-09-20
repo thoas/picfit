@@ -445,6 +445,8 @@ github.com/ulule/gostorages v0.2.5-0.20230707071807-ba19d4693f53 h1:uzC+DOzybak6
 github.com/ulule/gostorages v0.2.5-0.20230707071807-ba19d4693f53/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
 github.com/ulule/gostorages v0.2.5-0.20230707072626-d429b21ca9b4 h1:PTBZrQv/VKCYBZQdbBj5ug+wvJZ+HuYLjAhzzu5PnB4=
 github.com/ulule/gostorages v0.2.5-0.20230707072626-d429b21ca9b4/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
+github.com/ulule/gostorages v0.2.5-0.20230710095702-bfbe5260f605 h1:PYD0HGywjlJ+WxFivejD2zyVRD0rRclPmCHx+HdBbXQ=
+github.com/ulule/gostorages v0.2.5-0.20230710095702-bfbe5260f605/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
 github.com/urfave/cli v1.22.10 h1:p8Fspmz3iTctJstry1PYS3HVdllxnEzTEsgIgtxTrCk=
 github.com/urfave/cli v1.22.10/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

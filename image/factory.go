@@ -10,8 +10,6 @@ import (
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/http"
 	storagepkg "github.com/thoas/picfit/storage"
-	"io"
-	"net/url"
 )
 
 // FromURL retrieves an ImageFile from an url
