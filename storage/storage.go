@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"path"
 	"strings"
@@ -27,8 +28,8 @@ const (
 
 // Storage wraps gostorages.Storage.
 type Storage struct {
-	gostorages.Storage
-	cfg StorageConfig
+	storage gostorages.Storage
+	cfg     StorageConfig
 }
 
 // URL returns the filepath prefixed with BaseURL from storage.
@@ -43,13 +44,38 @@ func (s *Storage) URL(filepath string) string {
 
 // Path returns the filepath prefixed with Location from storage.
 func (s *Storage) Path(filepath string) string {
+	if _, ok := s.storage.(*fsstorage.Storage); ok {
+		return filepath
+	}
+
 	return path.Join(s.cfg.Location, filepath)
+}
+
+func (s *Storage) Save(ctx context.Context, content io.Reader, path string) error {
+	filepath := s.Path(path)
+	return s.storage.Save(ctx, content, filepath)
+}
+
+func (s *Storage) Stat(ctx context.Context, path string) (*gostorages.Stat, error) {
+	return s.storage.Stat(ctx, s.Path(path))
+}
+
+func (s *Storage) Open(ctx context.Context, path string) (io.ReadCloser, error) {
+	return s.storage.Open(ctx, s.Path(path))
+}
+
+func (s *Storage) OpenWithStat(ctx context.Context, path string) (io.ReadCloser, *gostorages.Stat, error) {
+	return s.storage.OpenWithStat(ctx, s.Path(path))
+
+}
+func (s *Storage) Delete(ctx context.Context, path string) error {
+	return s.storage.Delete(ctx, s.Path(path))
 }
 
 // New return destination and source storages from config
 func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage, error) {
 	if cfg == nil {
-		storage := &Storage{Storage: &DummyStorage{}}
+		storage := &Storage{storage: &DummyStorage{}}
 
 		log.InfoContext(ctx, "Source storage configured",
 			slog.String("type", "dummy"))
@@ -78,10 +104,10 @@ func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage
 			slog.String("type", cfg.Source.Type))
 
 		return &Storage{
-				Storage: sourceStorage,
+				storage: sourceStorage,
 				cfg:     *cfg.Source,
 			}, &Storage{
-				Storage: sourceStorage,
+				storage: sourceStorage,
 				cfg:     *cfg.Source,
 			}, nil
 	}
@@ -95,10 +121,10 @@ func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage
 		slog.String("type", cfg.Destination.Type))
 
 	return &Storage{
-			Storage: sourceStorage,
+			storage: sourceStorage,
 			cfg:     *cfg.Source,
 		}, &Storage{
-			Storage: destinationStorage,
+			storage: destinationStorage,
 			cfg:     *cfg.Destination,
 		}, nil
 }

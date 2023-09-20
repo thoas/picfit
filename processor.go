@@ -31,9 +31,9 @@ type Processor struct {
 	Logger *slog.Logger
 
 	config             *config.Config
-	destinationStorage storage.Storage
+	destinationStorage *storage.Storage
 	engine             *engine.Engine
-	sourceStorage      storage.Storage
+	sourceStorage      *storage.Storage
 	store              store.Store
 }
 
@@ -46,8 +46,9 @@ func (p *Processor) Upload(ctx context.Context, payload *payload.Multipart) (*im
 		return nil, err
 	}
 
-	if err := p.sourceStorage.Save(ctx, fh, payload.Data.Filename); err != nil {
-		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
+	filepath := payload.Data.Filename
+	if err := p.sourceStorage.Save(ctx, fh, filepath); err != nil {
+		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", filepath)
 	}
 	if err := fh.Close(); err != nil {
 		return nil, errors.WithStack(err)

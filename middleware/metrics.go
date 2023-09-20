@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func MetricsMiddlewares(c *gin.Context) {
+func Metrics(c *gin.Context) {
 	c.Next()
 	customMetrics.histogram.WithLabelValues(
 		c.Request.Method,

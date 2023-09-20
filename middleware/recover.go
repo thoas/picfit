@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func recoverMiddleware(c *gin.Context) {
+func Recover(c *gin.Context) {
 	defer func() {
 		// We must abort if there has been a recover, otherwise the
 		// remaining handlers would be called. If everything went fine,

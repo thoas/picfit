@@ -211,7 +211,8 @@ func TestUploadHandler(t *testing.T) {
 
 		assert.Equal(t, 200, res.Code)
 
-		assert.True(t, suite.Processor.FileExists(context.Background(), "avatar.png"))
+		exists := suite.Processor.FileExists(context.Background(), "avatar.png")
+		assert.True(t, exists)
 
 		file, err := suite.Processor.OpenFile(context.Background(), "avatar.png")
 		assert.NoError(t, err)
@@ -237,7 +238,8 @@ func TestDeleteHandler(t *testing.T) {
 	// copy 5 images to src storage
 	for i := 0; i < 5; i++ {
 		fn := fmt.Sprintf("image%d.jpg", i+1)
-		err = os.WriteFile(filepath.Join(tmpSrcStorage, fn), img, 0644)
+		filepath := filepath.Join(tmpSrcStorage, fn)
+		err = os.WriteFile(filepath, img, 0644)
 		assert.Nil(t, err)
 	}
 
@@ -285,7 +287,7 @@ func TestDeleteHandler(t *testing.T) {
 
 			res := httptest.NewRecorder()
 			server.ServeHTTP(res, req)
-			assert.Equal(t, res.Code, 200)
+			assert.Equal(t, 200, res.Code)
 		}
 
 		checkDirCount(tmpDstStorage, 5, "after resize requests")
@@ -299,7 +301,7 @@ func TestDeleteHandler(t *testing.T) {
 
 			res := httptest.NewRecorder()
 			server.ServeHTTP(res, req)
-			assert.Equal(t, res.Code, 200)
+			assert.Equal(t, 200, res.Code)
 		}
 
 		checkDirCount(tmpSrcStorage, 5, "after resize requests")
@@ -312,7 +314,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		res := httptest.NewRecorder()
 		server.ServeHTTP(res, req)
-		assert.Equal(t, res.Code, 200)
+		assert.Equal(t, 200, res.Code)
 
 		checkDirCount(tmpSrcStorage, 4, "after 1st delete request")
 		checkDirCount(tmpDstStorage, 2, "after 1st delete request")
@@ -324,7 +326,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		res = httptest.NewRecorder()
 		server.ServeHTTP(res, req)
-		assert.Equal(t, res.Code, 404)
+		assert.Equal(t, 404, res.Code)
 
 		checkDirCount(tmpSrcStorage, 4, "after 2nd delete request")
 		checkDirCount(tmpDstStorage, 2, "after 2nd delete request")
@@ -339,7 +341,7 @@ func TestDeleteHandler(t *testing.T) {
 
 		res = httptest.NewRecorder()
 		server.ServeHTTP(res, req)
-		assert.Equal(t, res.Code, 200)
+		assert.Equal(t, 200, res.Code)
 
 		checkDirCount(tmpSrcStorage, 3, "after 3rd delete request")
 		checkDirCount(tmpDstStorage, 0, "after 3rd delete request")
