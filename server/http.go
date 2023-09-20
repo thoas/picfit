@@ -65,11 +65,11 @@ func (s *HTTPServer) Init() error {
 	if s.config.Debug {
 		router.Use(gin.Recovery())
 	} else {
-		router.Use(recoverMiddleware)
+		router.Use(middleware.Recover)
 	}
 
 	router.Use(middleware.NewLogger(s.config, s.processor.Logger))
-	router.Use(middleware.MetricsMiddlewares)
+	router.Use(middleware.Metrics)
 
 	if s.config.Sentry != nil {
 		if err := sentry.Init(sentry.ClientOptions{
