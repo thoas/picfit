@@ -35,8 +35,11 @@ type Storage struct {
 // URL returns the filepath prefixed with BaseURL from storage.
 func (s *Storage) URL(filepath string) string {
 	if s.cfg.BaseURL != "" {
-		return strings.Join([]string{s.cfg.BaseURL, filepath}, "/")
+		if _, ok := s.storage.(*fsstorage.Storage); ok || s.cfg.Location == "" {
+			return strings.Join([]string{s.cfg.BaseURL, filepath}, "/")
+		}
 
+		return strings.Join([]string{s.cfg.BaseURL, s.cfg.Location, filepath}, "/")
 	}
 
 	return ""
