@@ -9,6 +9,7 @@ import (
 
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
+	loggerpkg "github.com/thoas/picfit/logger"
 )
 
 func New(ctx context.Context, cfg *config.Config) (*HTTPServer, error) {
@@ -38,15 +39,15 @@ func Run(ctx context.Context, path string) error {
 	}
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	if err := server.Run(ctx); err != nil {
-		return err
-	}
-
 	go func() {
 		for range time.Tick(time.Duration(cfg.Options.FreeMemoryInterval) * time.Second) {
+			loggerpkg.LogMemStats(ctx, "Force free memory", server.processor.Logger)
 			debug.FreeOSMemory()
 		}
 	}()
+	if err := server.Run(ctx); err != nil {
+		return err
+	}
 
 	select { // nolint:gosimple
 	case <-ctx.Done():

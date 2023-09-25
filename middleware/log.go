@@ -2,15 +2,14 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
-	"runtime"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/constants"
+	loggerpkg "github.com/thoas/picfit/logger"
 )
 
 func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
@@ -48,25 +47,6 @@ func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 			logger.LogAttrs(ctx, slog.LevelInfo, path, attributes...)
 		}
 
-		logMemStats(ctx, logger)
+		loggerpkg.LogMemStats(ctx, "Memory stats", logger)
 	}
-}
-
-func logMemStats(ctx context.Context, logger *slog.Logger) {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	attributes := []slog.Attr{
-		slog.String("alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
-		slog.String("heap-alloc", fmt.Sprintf("%v MiB", bToMb(m.HeapAlloc))),
-		slog.String("total-alloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
-		slog.String("sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
-		slog.Int("numgc", int(m.NumGC)),
-		slog.Int("total-goroutine", runtime.NumGoroutine()),
-	}
-	logger.LogAttrs(ctx, slog.LevelInfo, "Memory stats", attributes...)
-}
-
-func bToMb(b uint64) uint64 {
-	return b / 1024 / 1024
 }
