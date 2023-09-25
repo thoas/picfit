@@ -61,7 +61,7 @@ func logMemStats(ctx context.Context, logger *slog.Logger) {
 		slog.String("heap-alloc", fmt.Sprintf("%v MiB", bToMb(m.HeapAlloc))),
 		slog.String("total-alloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
 		slog.String("sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
-		slog.String("numgc", fmt.Sprintf("%v", m.NumGC)),
+		slog.Int("numgc", int(m.NumGC)),
 		slog.Int("total-goroutine", runtime.NumGoroutine()),
 	}
 	logger.LogAttrs(ctx, slog.LevelInfo, "Memory stats", attributes...)
