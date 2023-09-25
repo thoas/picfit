@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -37,6 +38,10 @@ func NewHTTPServer(cfg *config.Config, processor *picfit.Processor) (*HTTPServer
 	}
 
 	return server, nil
+}
+
+func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	s.engine.ServeHTTP(w, req)
 }
 
 func (s *HTTPServer) Init() error {
@@ -223,8 +228,23 @@ func prometheusHandler() gin.HandlerFunc {
 }
 
 // Run loads a new http server
-func (s *HTTPServer) Run() error {
-	s.engine.Run(fmt.Sprintf(":%s", strconv.Itoa(s.config.Port)))
+func (s *HTTPServer) Run(ctx context.Context) error {
+	addr := fmt.Sprintf(":%s", strconv.Itoa(s.config.Port))
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: s.engine.Handler(),
+	}
 
-	return nil
+	cerr := make(chan error)
+	go func() {
+		s.processor.Logger.Debug(fmt.Sprintf("Starting HTTP server on %s", addr))
+		cerr <- srv.ListenAndServe()
+	}()
+	select {
+	case err := <-cerr:
+		return err
+	case <-ctx.Done():
+		s.processor.Logger.Debug("Shutdown HTTP server")
+		return srv.Shutdown(context.Background())
+	}
 }

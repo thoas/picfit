@@ -2,17 +2,16 @@ package server
 
 import (
 	"context"
-	"net/http"
+	"os/signal"
+	"runtime/debug"
+	"syscall"
+	"time"
 
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 )
 
-type Server struct {
-	http *HTTPServer
-}
-
-func New(ctx context.Context, cfg *config.Config) (*Server, error) {
+func New(ctx context.Context, cfg *config.Config) (*HTTPServer, error) {
 	processor, err := picfit.NewProcessor(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -23,16 +22,7 @@ func New(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	server := &Server{http: httpServer}
-	return server, nil
-}
-
-func (s *Server) Run() error {
-	return s.http.Run()
-}
-
-func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.http.engine.ServeHTTP(w, req)
+	return httpServer, nil
 }
 
 // Run runs the application and launch servers
@@ -46,6 +36,22 @@ func Run(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	if err := server.Run(ctx); err != nil {
+		return err
+	}
 
-	return server.Run()
+	go func() {
+		for range time.Tick(time.Duration(cfg.Options.FreeMemoryInterval) * time.Second) {
+			debug.FreeOSMemory()
+		}
+	}()
+
+	select { // nolint:gosimple
+	case <-ctx.Done():
+		stop()
+	}
+
+	return nil
 }

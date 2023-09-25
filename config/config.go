@@ -39,6 +39,7 @@ type Options struct {
 	EnableUpload        bool          `mapstructure:"enable_upload"`
 	EnablePrometheus    bool          `mapstructure:"enable_prometheus"`
 	MimetypeDetector    string        `mapstructure:"mimetype_detector"`
+	FreeMemoryInterval  int           `mapstructure:"free_memory_interval"`
 }
 
 // Sentry is a struct to configure sentry using a dsn
@@ -125,9 +126,12 @@ func load(content string, isPath bool) (*Config, error) {
 		}
 	}
 
-	err = viper.Unmarshal(&config)
-	if err != nil {
+	if err = viper.Unmarshal(&config); err != nil {
 		return nil, err
+	}
+
+	if config.Options.FreeMemoryInterval == 0 {
+		config.Options.FreeMemoryInterval = 10
 	}
 
 	return config, nil
