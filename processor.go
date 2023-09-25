@@ -68,7 +68,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 
 	endtime := time.Now()
 	log.InfoContext(ctx, "Save file to storage",
-		slog.String("duration", endtime.Sub(starttime).String()),
+		slog.Duration("duration", endtime.Sub(starttime)),
 	)
 
 	starttime = time.Now()
@@ -82,7 +82,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 	).Observe(endtime.Sub(starttime).Seconds())
 
 	log.InfoContext(ctx, "Save key to store",
-		slog.String("duration", endtime.Sub(starttime).String()),
+		slog.Duration("duration", endtime.Sub(starttime)),
 	)
 
 	// Write children info only when we actually want to be able to delete things.
@@ -261,7 +261,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			filesize := util.ByteCountDecimal(int64(len(img.Content())))
 			endtime := time.Now()
 			log.InfoContext(ctx, "Image retrieved from storage",
-				slog.String("duration", endtime.Sub(starttime).String()),
+				slog.Duration("duration", endtime.Sub(starttime)),
 				slog.String("size", filesize),
 				slog.String("image", img.Filepath))
 
@@ -351,7 +351,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	)
 
 	log.InfoContext(ctx, "Retrieved image to process from storage",
-		slog.String("duration", endtime.Sub(starttime).String()))
+		slog.Duration("duration", endtime.Sub(starttime)))
 
 	parameters, err := p.NewParameters(ctx, file, qs)
 	if err != nil {
@@ -382,7 +382,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	)
 
 	log.InfoContext(ctx, "Image processed",
-		slog.String("duration", endtime.Sub(starttime).String()))
+		slog.Duration("duration", endtime.Sub(starttime)))
 
 	if err := p.Store(ctx, log, filepath, file); err != nil {
 		return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
