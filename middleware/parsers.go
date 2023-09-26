@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
@@ -102,15 +103,23 @@ func setParamsFromURLValues(params map[string]interface{}, values url.Values) ma
 }
 
 // URLParser extracts the url query string and add a url.URL to the context
-func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
+func URLParser(mimetypeDetectorType string, processor *picfit.Processor) gin.HandlerFunc {
 	mimetypeDetector := image.GetMimetypeDetector(mimetypeDetectorType)
 
 	return func(c *gin.Context) {
-		value := c.Query("url")
+		if storeKey := c.MustGet("key").(string); storeKey != "" {
+			exists, err := processor.KeyExists(c.Request.Context(), storeKey)
+			if err != nil {
+				c.Abort()
+			}
+			if exists {
+				c.Next()
+				return
+			}
+		}
 
-		if value != "" {
+		if value := c.Query("url"); value != "" {
 			url, err := url.Parse(value)
-
 			if err != nil {
 				c.String(http.StatusBadRequest, fmt.Sprintf("URL %s is not valid", value))
 				c.Abort()
@@ -120,7 +129,6 @@ func URLParser(mimetypeDetectorType string) gin.HandlerFunc {
 			mimetype, _ := mimetypeDetector(url)
 
 			_, ok := image.Extensions[mimetype]
-
 			if !ok {
 				c.String(http.StatusBadRequest, fmt.Sprintf("Mimetype %s is not supported", mimetype))
 				c.Abort()
