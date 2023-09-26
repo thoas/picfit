@@ -1,19 +1,31 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type RouteKey struct{}
+
+func Route(route string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), RouteKey{}, route))
+		c.Next()
+	}
+}
+
 func Metrics(c *gin.Context) {
 	c.Next()
-	customMetrics.histogram.WithLabelValues(
-		c.Request.Method,
-		c.Request.URL.String(),
-		fmt.Sprint(c.Writer.Status()))
-
+	route, ok := c.Request.Context().Value(RouteKey{}).(string)
+	if ok {
+		customMetrics.histogram.WithLabelValues(
+			c.Request.Method,
+			route,
+			fmt.Sprint(c.Writer.Status()))
+	}
 }
 
 var customMetrics = newMetrics()

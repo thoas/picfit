@@ -7,4 +7,5 @@ type endpoint struct {
 	handler gin.HandlerFunc
 	method  handlerMethod
 	pattern string
+	route   string
 }

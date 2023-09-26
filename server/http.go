@@ -53,16 +53,19 @@ func (s *HTTPServer) Init() error {
 				pattern: "redirect",
 				handler: failure.Handle(handlers.redirect),
 				method:  router.GET,
+				route:   "redirect",
 			},
 			{
 				pattern: "display",
 				handler: failure.Handle(handlers.display),
 				method:  router.GET,
+				route:   "display",
 			},
 			{
 				pattern: "get",
 				handler: failure.Handle(handlers.get),
 				method:  router.GET,
+				route:   "get",
 			},
 		}
 	)
@@ -146,6 +149,7 @@ func (s *HTTPServer) Init() error {
 			middleware.URLParser(s.config.Options.MimetypeDetector, s.processor),
 			middleware.OperationParser(),
 			middleware.RestrictSizes(s.config.Options.AllowedSizes),
+			middleware.Route(e.route),
 			e.handler,
 		}
 
