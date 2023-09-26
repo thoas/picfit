@@ -244,7 +244,19 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 	case err := <-cerr:
 		return err
 	case <-ctx.Done():
-		s.processor.Logger.Debug("Shutdown HTTP server")
-		return srv.Shutdown(context.Background())
+		s.processor.Logger.Debug("Shutting down HTTP server")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			s.processor.Logger.Debug("HTTP server timeout")
+		}
+
+		s.processor.Logger.Debug("HTTP server exiting")
+
+		return nil
 	}
 }
