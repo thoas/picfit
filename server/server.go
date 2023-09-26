@@ -10,6 +10,7 @@ import (
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
 	loggerpkg "github.com/thoas/picfit/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 func New(ctx context.Context, cfg *config.Config) (*HTTPServer, error) {
@@ -39,19 +40,31 @@ func Run(ctx context.Context, path string) error {
 	}
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	go func() {
-		for range time.Tick(time.Duration(cfg.Options.FreeMemoryInterval) * time.Second) {
-			loggerpkg.LogMemStats(ctx, "Force free memory", server.processor.Logger)
-			debug.FreeOSMemory()
-		}
-	}()
-	if err := server.Run(ctx); err != nil {
-		return err
-	}
 
-	select { // nolint:gosimple
-	case <-ctx.Done():
-		stop()
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error {
+		ticker := time.Tick(time.Duration(cfg.Options.FreeMemoryInterval) * time.Second)
+		for {
+			select {
+			case <-ticker:
+				loggerpkg.LogMemStats(ctx, "Force free memory", server.processor.Logger)
+				debug.FreeOSMemory()
+			case <-ctx.Done():
+				return nil
+			}
+		}
+	})
+
+	g.Go(func() error {
+		if err := server.Run(ctx); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
 	}
 
 	return nil

@@ -439,14 +439,6 @@ github.com/ugorji/go/codec v1.2.11 h1:BMaWp1Bb6fHwEtbplGBGJ498wD+LKlNSl25MjdZY4d
 github.com/ugorji/go/codec v1.2.11/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe h1:ayWYvm5FWr78c8RYS32fXoZ5DM+sn3ngVeE3CHY3beM=
 github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe/go.mod h1:2buRSW9ZL73BFOkRwBSOVcPJG/JQxcbZPs8fo0TD5X0=
-github.com/ulule/gostorages v0.2.5-0.20230314124119-11134a4bce61 h1:Twadj4iaibm+nUX5PvElLeq5YsechTLpITZb/p27ywI=
-github.com/ulule/gostorages v0.2.5-0.20230314124119-11134a4bce61/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
-github.com/ulule/gostorages v0.2.5-0.20230707071807-ba19d4693f53 h1:uzC+DOzybak6pNOK7u0UdTomOEu2wPuCxkLad9WNs44=
-github.com/ulule/gostorages v0.2.5-0.20230707071807-ba19d4693f53/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
-github.com/ulule/gostorages v0.2.5-0.20230707072626-d429b21ca9b4 h1:PTBZrQv/VKCYBZQdbBj5ug+wvJZ+HuYLjAhzzu5PnB4=
-github.com/ulule/gostorages v0.2.5-0.20230707072626-d429b21ca9b4/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
-github.com/ulule/gostorages v0.2.5-0.20230710095702-bfbe5260f605 h1:PYD0HGywjlJ+WxFivejD2zyVRD0rRclPmCHx+HdBbXQ=
-github.com/ulule/gostorages v0.2.5-0.20230710095702-bfbe5260f605/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
 github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c h1:bNM3RCu+JUVpPW3yZ7aWb/CIpW5DO8z0PGuqAquCnTE=
 github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c/go.mod h1:nMhvJt6g5Ulmp3Y1M159+xvsaF3EPwdWdvBnjYAWK3o=
 github.com/urfave/cli v1.22.10 h1:p8Fspmz3iTctJstry1PYS3HVdllxnEzTEsgIgtxTrCk=
