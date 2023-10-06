@@ -7,12 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/constants"
 	loggerpkg "github.com/thoas/picfit/logger"
 )
 
-func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
+func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var (
 			ctx       = c.Request.Context()
@@ -27,7 +26,6 @@ func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 
 		c.Next()
 
-		end := time.Now()
 		attributes := []slog.Attr{
 			slog.Int("status", c.Writer.Status()),
 			slog.String("method", c.Request.Method),
@@ -36,7 +34,6 @@ func NewLogger(cfg *config.Config, logger *slog.Logger) gin.HandlerFunc {
 			slog.String("ip", c.ClientIP()),
 			slog.Duration("duration", time.Since(start)),
 			slog.String("user-agent", c.Request.UserAgent()),
-			slog.Time("time", end.UTC()),
 		}
 
 		if len(c.Errors) > 0 {
