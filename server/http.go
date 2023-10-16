@@ -174,7 +174,8 @@ func (s *HTTPServer) Init() error {
 			failure.Handle(handlers.delete))
 	}
 
-	router.GET("/error", handlers.internalError)
+	router.GET("/error", handlers.error)
+	router.GET("/panic", handlers.panic)
 
 	if s.config.Options.EnablePrometheus {
 		router.GET("/metrics", prometheusHandler())

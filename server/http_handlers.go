@@ -26,8 +26,18 @@ func (h handlers) stats(c *gin.Context) {
 	c.JSON(http.StatusOK, api.GetStats())
 }
 
-func (h handlers) internalError(c *gin.Context) {
+func (h handlers) panic(c *gin.Context) {
 	panic(errors.WithStack(fmt.Errorf("KO")))
+}
+
+func (h handlers) error(c *gin.Context) {
+	c.JSON(http.StatusInternalServerError, struct {
+		Message string    `json:"message"`
+		Time    time.Time `json:"time"`
+	}{
+		Message: "Internal server error",
+		Time:    time.Now(),
+	})
 }
 
 // healthcheck displays an ok response for healthcheck
