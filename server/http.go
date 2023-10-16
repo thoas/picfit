@@ -255,10 +255,6 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 		if err := srv.Shutdown(ctx); err != nil {
 			return err
 		}
-		select {
-		case <-ctx.Done():
-			s.processor.Logger.Debug("HTTP server timeout")
-		}
 
 		s.processor.Logger.Debug("HTTP server exiting")
 
