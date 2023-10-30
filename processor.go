@@ -359,7 +359,9 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	}
 
 	starttime = time.Now()
-	file, err = p.engine.Transform(ctx, parameters.output, parameters.operations)
+	ctxtimeout, cancel := context.WithTimeout(ctx, time.Second*time.Duration(p.config.Options.TransformTimeout))
+	defer cancel()
+	file, err = p.engine.Transform(ctxtimeout, parameters.output, parameters.operations)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
