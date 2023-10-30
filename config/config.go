@@ -40,6 +40,7 @@ type Options struct {
 	EnablePrometheus    bool          `mapstructure:"enable_prometheus"`
 	MimetypeDetector    string        `mapstructure:"mimetype_detector"`
 	FreeMemoryInterval  int           `mapstructure:"free_memory_interval"`
+	TransformTimeout    int           `mapstructure:"transform_timeout"`
 }
 
 // Sentry is a struct to configure sentry using a dsn
@@ -132,6 +133,10 @@ func load(content string, isPath bool) (*Config, error) {
 
 	if config.Options.FreeMemoryInterval == 0 {
 		config.Options.FreeMemoryInterval = 10
+	}
+
+	if config.Options.TransformTimeout == 0 {
+		config.Options.TransformTimeout = 10
 	}
 
 	return config, nil
