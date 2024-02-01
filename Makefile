@@ -39,7 +39,6 @@ build:
 		-X github.com/thoas/picfit/constants.Branch=$(branch) \
 		-X github.com/thoas/picfit/constants.Revision=$(commit) \
 		-X 'github.com/thoas/picfit/constants.BuildTime=$(now)' \
-		-X 'github.com/thoas/picfit/constants.LatestCommitMessage=$(commitMessage)' \
 		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -o $(BIN_DIR)/picfit ./cmd/picfit/main.go
 	@(echo "-> picfit binary created")
 
