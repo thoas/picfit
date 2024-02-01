@@ -430,6 +430,7 @@ picfit currently supports the following image formats:
 - ``image/png`` with the keyword ``png``
 - ``image/gif`` with the keyword ``gif``
 - ``image/bmp`` with the keyword ``bmp``
+- ``image/webp`` with the keyword ``webp``
 
 Operations
 ==========

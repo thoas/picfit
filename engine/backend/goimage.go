@@ -17,6 +17,7 @@ import (
 
 	imagefile "github.com/thoas/picfit/image"
 
+	"github.com/chai2010/webp"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -85,7 +86,7 @@ func (e *GoImage) Flip(ctx context.Context, img *imagefile.ImageFile, options *O
 }
 
 func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	if options.Format == imaging.GIF {
+	if options.Format == imagefile.GIF {
 		content, err := e.transformGIF(img, options, imaging.Thumbnail)
 		if err != nil {
 			return nil, err
@@ -102,7 +103,7 @@ func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Op
 	return e.transform(image, options, imaging.Fit)
 }
 
-func (e *GoImage) toBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {
+func (e *GoImage) toBytes(img image.Image, format imagefile.Format, quality int) ([]byte, error) {
 	var buf bytes.Buffer
 
 	if err := encode(&buf, img, format, quality); err != nil {
@@ -162,7 +163,7 @@ func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans
 }
 
 func (e *GoImage) resize(img *imagefile.ImageFile, options *Options, trans transformation) ([]byte, error) {
-	if options.Format == imaging.GIF {
+	if options.Format == imagefile.GIF {
 		content, err := e.transformGIF(img, options, trans)
 		if err != nil {
 			return nil, err
@@ -180,6 +181,10 @@ func (e *GoImage) resize(img *imagefile.ImageFile, options *Options, trans trans
 }
 
 func (e *GoImage) transform(img image.Image, options *Options, trans transformation) ([]byte, error) {
+	if options.Height == 0 && options.Width == 0 {
+		return e.toBytes(img, options.Format, options.Quality)
+	}
+
 	return e.toBytes(scale(img, options, trans), options.Format, options.Quality)
 }
 
@@ -218,10 +223,10 @@ func imageToPaletted(img image.Image) *image.Paletted {
 	return pm
 }
 
-func encode(w io.Writer, img image.Image, format imaging.Format, quality int) error {
+func encode(w io.Writer, img image.Image, format imagefile.Format, quality int) error {
 	var err error
 	switch format {
-	case imaging.JPEG:
+	case imagefile.JPEG:
 		var rgba *image.RGBA
 		if nrgba, ok := img.(*image.NRGBA); ok {
 			if nrgba.Opaque() {
@@ -238,14 +243,16 @@ func encode(w io.Writer, img image.Image, format imaging.Format, quality int) er
 			err = jpeg.Encode(w, img, &jpeg.Options{Quality: quality})
 		}
 
-	case imaging.PNG:
+	case imagefile.PNG:
 		err = png.Encode(w, img)
-	case imaging.GIF:
+	case imagefile.GIF:
 		err = gif.Encode(w, img, &gif.Options{NumColors: 256})
-	case imaging.TIFF:
+	case imagefile.TIFF:
 		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
-	case imaging.BMP:
+	case imagefile.BMP:
 		err = bmp.Encode(w, img)
+	case imagefile.WEBP:
+		err = webp.Encode(w, img, &webp.Options{Quality: float32(quality)})
 	default:
 		err = imaging.ErrUnsupportedFormat
 	}

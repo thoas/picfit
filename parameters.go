@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
 	"github.com/pkg/errors"
 	"github.com/ulule/gostorages"
 
@@ -24,12 +23,14 @@ const (
 	defaultWidth   = 0
 )
 
-var formats = map[string]imaging.Format{
-	"bmp":  imaging.BMP,
-	"gif":  imaging.GIF,
-	"jpeg": imaging.JPEG,
-	"jpg":  imaging.JPEG,
-	"png":  imaging.PNG,
+var formats = map[string]image.Format{
+	"bmp":  image.BMP,
+	"gif":  image.GIF,
+	"jpeg": image.JPEG,
+	"jpg":  image.JPEG,
+	"png":  image.PNG,
+	"tiff": image.TIFF,
+	"webp": image.WEBP,
 }
 
 type Parameters struct {
