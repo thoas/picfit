@@ -13,7 +13,7 @@ import (
 	"io"
 	"math"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 
 	imagefile "github.com/thoas/picfit/image"
 

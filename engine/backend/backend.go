@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
 )

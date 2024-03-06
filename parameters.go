@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 	"github.com/pkg/errors"
 	"github.com/ulule/gostorages"
 

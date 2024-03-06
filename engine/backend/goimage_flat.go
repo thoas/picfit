@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 	colorful "github.com/lucasb-eyer/go-colorful"
 
 	"github.com/thoas/picfit/constants"
