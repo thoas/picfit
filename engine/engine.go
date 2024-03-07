@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
@@ -124,7 +125,7 @@ func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operatio
 				output.Source = processed
 				break
 			}
-			if err != backend.MethodNotImplementedError {
+			if !errors.Is(err, backend.MethodNotImplementedError) {
 				return nil, err
 			}
 		}
@@ -152,7 +153,9 @@ func operate(ctx context.Context, b backend.Backend, img *image.ImageFile, opera
 		return b.Fit(ctx, img, options)
 	case Flat:
 		return b.Flat(ctx, img, options)
+	case Effect:
+		return b.Effect(ctx, img, options)
 	default:
-		return nil, fmt.Errorf("Operation not found for %s", operation)
+		return nil, fmt.Errorf("operation not found for %s", operation)
 	}
 }

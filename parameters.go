@@ -3,6 +3,7 @@ package picfit
 import (
 	"context"
 	"fmt"
+	"github.com/thoas/go-funk"
 	"strconv"
 	"strings"
 
@@ -197,17 +198,10 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 		return nil, fmt.Errorf("Parameter \"pos\" not found in query string")
 	}
 
-	stick, _ := qs["stick"].(string)
-	if stick != "" {
-		var exists bool
-		for i := range constants.StickPositions {
-			if stick == constants.StickPositions[i] {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			return nil, fmt.Errorf("Parameter \"stick\" has wrong value. Available values are: %v", constants.StickPositions)
+	stick, ok := qs["stick"].(string)
+	if ok {
+		if !funk.ContainsString(constants.StickPositions, stick) {
+			return nil, fmt.Errorf("parameter \"stick\" has wrong value. Available values are: %v", constants.StickPositions)
 		}
 	}
 
@@ -241,14 +235,20 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 		}
 	}
 
+	filter, ok := qs["filter"].(string)
+	if ok && !funk.ContainsString(constants.Filters, filter) {
+		return nil, fmt.Errorf("parameter \"filter\" has wrong value. Available values are: %v", constants.Filters)
+	}
+
 	return &backend.Options{
-		Width:    width,
-		Height:   height,
-		Upscale:  upscale,
-		Position: position,
-		Stick:    stick,
-		Quality:  quality,
-		Degree:   degree,
 		Color:    color,
+		Degree:   degree,
+		Filter:   filter,
+		Height:   height,
+		Position: position,
+		Quality:  quality,
+		Stick:    stick,
+		Upscale:  upscale,
+		Width:    width,
 	}, nil
 }

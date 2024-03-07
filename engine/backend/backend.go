@@ -16,6 +16,7 @@ var MethodNotImplementedError = errors.New("Not implemented")
 type Options struct {
 	Color    string
 	Degree   int
+	Filter   string
 	Format   imaging.Format
 	Height   int
 	Images   []image.ImageFile
@@ -33,6 +34,7 @@ func (o Options) String() string {
 
 // Engine is an interface to define an image engine
 type Backend interface {
+	Effect(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
 	Fit(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
 	Flat(ctx context.Context, background *image.ImageFile, options *Options) ([]byte, error)
 	Flip(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)

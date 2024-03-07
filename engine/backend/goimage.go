@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/thoas/go-funk"
+	"github.com/thoas/picfit/constants"
 	"image"
 	"image/color/palette"
 	"image/draw"
@@ -100,6 +102,23 @@ func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Op
 	}
 
 	return e.transform(image, options, imaging.Fit)
+}
+
+func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
+	image, err := e.source(img)
+	if err != nil {
+		return nil, err
+	}
+	width, height := imageSize(image)
+	size := funk.MaxInt([]int{width, height})
+	sigma := size / 20
+
+	switch options.Filter {
+	case constants.FilterBlur:
+		return e.toBytes(imaging.Blur(image, float64(sigma)), options.Format, options.Quality)
+	}
+
+	return nil, MethodNotImplementedError
 }
 
 func (e *GoImage) toBytes(img image.Image, format imaging.Format, quality int) ([]byte, error) {

@@ -40,6 +40,12 @@ var StickPositions = []string{
 	TopRight,
 }
 
+const FilterBlur = "blur"
+
+var Filters = []string{
+	FilterBlur,
+}
+
 const ModifiedTimeFormat = time.RFC1123
 
 const RequestIDCtx = "request-id"

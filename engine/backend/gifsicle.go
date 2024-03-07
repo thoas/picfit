@@ -92,6 +92,11 @@ func (b *Gifsicle) Fit(ctx context.Context, img *image.ImageFile, options *Optio
 	return nil, MethodNotImplementedError
 }
 
+// Effect implements Backend.
+func (b *Gifsicle) Effect(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
+	return nil, MethodNotImplementedError
+}
+
 // Flat implements Backend.
 func (b *Gifsicle) Flat(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
 	return nil, MethodNotImplementedError
