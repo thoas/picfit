@@ -4,7 +4,7 @@ import (
 	"image"
 	"io"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 	"github.com/rwcarlsen/goexif/exif"
 	_ "golang.org/x/image/webp"
 )

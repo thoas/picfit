@@ -4,11 +4,11 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cstockton/go-conv v0.0.0-20170524002450-66a2b2ba36e1
 	github.com/davecgh/go-spew v1.1.1
-	github.com/disintegration/imaging v1.6.2
 	github.com/getsentry/sentry-go v0.19.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.15.4 // indirect
+	github.com/go-spectest/imaging v1.0.6
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/lucasb-eyer/go-colorful v0.0.0-20180709185858-c7842319cf3a
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -25,16 +25,17 @@ require (
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
 	github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c
 	github.com/urfave/cli v1.22.10
-	golang.org/x/image v0.10.0
+	golang.org/x/image v0.13.0
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
 )
 
 require (
+	github.com/go-spectest/imaging v1.0.6
 	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.14.0
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.4.0
 )
 
 require (

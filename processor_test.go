@@ -20,7 +20,7 @@ import (
 
 	"github.com/cstockton/go-conv"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-spectest/imaging"
 
 	"github.com/stretchr/testify/assert"
 

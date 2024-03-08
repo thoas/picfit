@@ -9,6 +9,7 @@ func (o Operation) String() string {
 }
 
 const (
+	Effect    = Operation("effect")
 	Fit       = Operation("fit")
 	Flat      = Operation("flat")
 	Flip      = Operation("flip")
@@ -19,6 +20,7 @@ const (
 )
 
 var Operations = map[string]Operation{
+	Effect.String():    Effect,
 	Fit.String():       Fit,
 	Flat.String():      Flat,
 	Flip.String():      Flip,
