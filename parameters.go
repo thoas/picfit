@@ -3,7 +3,7 @@ package picfit
 import (
 	"context"
 	"fmt"
-	"github.com/thoas/go-funk"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -200,7 +200,7 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 
 	stick, ok := qs["stick"].(string)
 	if ok {
-		if !funk.ContainsString(constants.StickPositions, stick) {
+		if !slices.Contains(constants.StickPositions, stick) {
 			return nil, fmt.Errorf("parameter \"stick\" has wrong value. Available values are: %v", constants.StickPositions)
 		}
 	}
@@ -236,7 +236,7 @@ func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, q
 	}
 
 	filter, ok := qs["filter"].(string)
-	if ok && !funk.ContainsString(constants.Filters, filter) {
+	if ok && !slices.Contains(constants.Filters, filter) {
 		return nil, fmt.Errorf("parameter \"filter\" has wrong value. Available values are: %v", constants.Filters)
 	}
 
