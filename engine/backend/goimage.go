@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/thoas/go-funk"
-	"github.com/thoas/picfit/constants"
 	"image"
 	"image/color/palette"
 	"image/draw"
@@ -14,6 +12,9 @@ import (
 	"image/png"
 	"io"
 	"math"
+
+	"github.com/thoas/go-funk"
+	"github.com/thoas/picfit/constants"
 
 	"github.com/go-spectest/imaging"
 
@@ -233,7 +234,7 @@ func scale(img image.Image, options *Options, trans transformation) image.Image 
 func imageToPaletted(img image.Image) *image.Paletted {
 	b := img.Bounds()
 	pm := image.NewPaletted(b, palette.Plan9)
-	draw.FloydSteinberg.Draw(pm, b, img, image.ZP)
+	draw.FloydSteinberg.Draw(pm, b, img, image.Point{})
 	return pm
 }
 
