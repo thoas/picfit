@@ -26,13 +26,12 @@ require (
 	github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c
 	github.com/urfave/cli v1.22.10
 	golang.org/x/image v0.13.0
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
 )
 
 require (
-	github.com/go-spectest/imaging v1.0.6
 	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.14.0
 	golang.org/x/sync v0.4.0
