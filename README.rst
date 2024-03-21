@@ -435,6 +435,13 @@ picfit currently supports the following image formats:
 Operations
 ==========
 
+Noop
+----
+
+This operation will keep the actual size of the image without doing anything.
+
+You have to pass the ``noop`` value to the ``op`` parameter to use this operation.
+
 Resize
 ------
 
