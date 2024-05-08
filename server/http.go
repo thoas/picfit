@@ -70,13 +70,16 @@ func (s *HTTPServer) Init() error {
 		}
 	)
 
+	router.GET("/healthcheck", handlers.healthcheck(time.Now().UTC()))
+
+	router.Use(middleware.NewLogger(s.processor.Logger))
+
 	if s.config.Debug {
 		router.Use(gin.Recovery())
 	} else {
 		router.Use(middleware.Recover)
 	}
 
-	router.Use(middleware.NewLogger(s.processor.Logger))
 	router.Use(middleware.Metrics)
 
 	if s.config.Sentry != nil {
@@ -111,8 +114,6 @@ func (s *HTTPServer) Init() error {
 			AllowedHeaders:  s.config.AllowedHeaders,
 		}))
 	}
-
-	router.GET("/healthcheck", handlers.healthcheck(time.Now().UTC()))
 
 	restrictIPAddresses := middleware.RestrictIPAddresses(s.config.Options.AllowedIPAddresses)
 
