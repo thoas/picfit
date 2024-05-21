@@ -3,11 +3,11 @@ package backend
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"image/gif"
 	"os/exec"
 
+	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
 )
 
@@ -31,8 +31,9 @@ func (b *Gifsicle) Resize(ctx context.Context, imgfile *image.ImageFile, opts *O
 		return imgfile.Source, nil
 	}
 
+	resizeOption := fmt.Sprintf("%dx%d", opts.Width, opts.Height)
 	cmd := exec.CommandContext(ctx, b.Path,
-		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
+		"--resize", resizeOption,
 	)
 	cmd.Stdin = bytes.NewReader(imgfile.Source)
 	stdout := new(bytes.Buffer)
@@ -44,7 +45,7 @@ func (b *Gifsicle) Resize(ctx context.Context, imgfile *image.ImageFile, opts *O
 	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
 		return nil, errors.New(stderr.String())
 	} else if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to resize")
 	}
 	return stdout.Bytes(), nil
 }
@@ -62,11 +63,14 @@ func (b *Gifsicle) Thumbnail(ctx context.Context, imgfile *image.ImageFile, opts
 
 	bounds := img.Bounds()
 	left, top, cropw, croph := computecrop(bounds.Dx(), bounds.Dy(), opts.Width, opts.Height)
+	cropOption := fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph)
+	resizeOption := fmt.Sprintf("%dx%d", opts.Width, opts.Height)
 
 	cmd := exec.CommandContext(ctx, b.Path,
-		"--crop", fmt.Sprintf("%d,%d+%dx%d", left, top, cropw, croph),
-		"--resize", fmt.Sprintf("%dx%d", opts.Width, opts.Height),
+		"--crop", cropOption,
+		"--resize", resizeOption,
 	)
+
 	cmd.Stdin = bytes.NewReader(imgfile.Source)
 	stdout := new(bytes.Buffer)
 	cmd.Stdout = stdout
@@ -77,7 +81,7 @@ func (b *Gifsicle) Thumbnail(ctx context.Context, imgfile *image.ImageFile, opts
 	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
 		return nil, errors.New(stderr.String())
 	} else if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to thumbnail")
 	}
 	return stdout.Bytes(), nil
 }
