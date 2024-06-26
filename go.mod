@@ -25,7 +25,7 @@ require (
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
 	github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c
 	github.com/urfave/cli v1.22.10
-	golang.org/x/image v0.13.0
+	golang.org/x/image v0.18.0
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
@@ -34,7 +34,7 @@ require (
 require (
 	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.14.0
-	golang.org/x/sync v0.4.0
+	golang.org/x/sync v0.7.0
 )
 
 require (
@@ -95,7 +95,7 @@ require (
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
