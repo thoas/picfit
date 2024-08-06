@@ -124,7 +124,7 @@ a request only once.
       },
       "kvstore": {
         "type": "cache"
-      },
+      }
     }
 
 Store images on DigitalOcean S3
