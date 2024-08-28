@@ -1,4 +1,4 @@
-FROM golang:1.22-bookworm as builder
+FROM golang:1.23-bookworm as builder
 LABEL stage=builder
 
 ENV REPO=thoas/picfit
