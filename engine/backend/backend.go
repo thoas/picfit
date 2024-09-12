@@ -15,6 +15,7 @@ var MethodNotImplementedError = errors.New("Not implemented")
 type Options struct {
 	Color    string
 	Degree   int
+	Filter   string
 	Format   image.Format
 	Height   int
 	Images   []image.ImageFile
