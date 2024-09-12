@@ -15,5 +15,6 @@ var (
 		"image/gif",
 		"image/jpeg",
 		"image/png",
+		"image/webp",
 	}
 )

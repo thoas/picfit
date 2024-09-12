@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-spectest/imaging"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
 )
@@ -17,7 +16,7 @@ type Options struct {
 	Color    string
 	Degree   int
 	Filter   string
-	Format   imaging.Format
+	Format   image.Format
 	Height   int
 	Images   []image.ImageFile
 	Position string

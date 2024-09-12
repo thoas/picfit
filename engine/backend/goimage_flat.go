@@ -27,7 +27,7 @@ func (e *GoImage) Flat(ctx context.Context, backgroundFile *imagefile.ImageFile,
 		}
 	}
 
-	if options.Format == imaging.GIF {
+	if options.Format == imagefile.GIF {
 		g, err := gif.DecodeAll(bytes.NewReader(backgroundFile.Source))
 		if err != nil {
 			return nil, err
