@@ -30,6 +30,7 @@ func Handle(h Handler) gin.HandlerFunc {
 				c.String(http.StatusBadRequest, cerr.Error())
 			}
 
+			c.Error(err)
 			panic(err)
 		}
 	}
