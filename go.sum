@@ -455,8 +455,8 @@ github.com/ugorji/go/codec v1.2.11 h1:BMaWp1Bb6fHwEtbplGBGJ498wD+LKlNSl25MjdZY4d
 github.com/ugorji/go/codec v1.2.11/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe h1:ayWYvm5FWr78c8RYS32fXoZ5DM+sn3ngVeE3CHY3beM=
 github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe/go.mod h1:2buRSW9ZL73BFOkRwBSOVcPJG/JQxcbZPs8fo0TD5X0=
-github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c h1:bNM3RCu+JUVpPW3yZ7aWb/CIpW5DO8z0PGuqAquCnTE=
-github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c/go.mod h1:nMhvJt6g5Ulmp3Y1M159+xvsaF3EPwdWdvBnjYAWK3o=
+github.com/ulule/gostorages v0.2.5 h1:BY+/uq74+VRG83coKHFs3II3k7sxIkgkh+pBRZlvWyk=
+github.com/ulule/gostorages v0.2.5/go.mod h1:7yGiGHJ9mE+He6sB42cJaRE4zcselRo4g2GBd8NGEMU=
 github.com/urfave/cli v1.22.10 h1:p8Fspmz3iTctJstry1PYS3HVdllxnEzTEsgIgtxTrCk=
 github.com/urfave/cli v1.22.10/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

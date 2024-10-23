@@ -23,7 +23,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
-	github.com/ulule/gostorages v0.2.5-0.20230920134537-c63293fd790c
+	github.com/ulule/gostorages v0.2.5
 	github.com/urfave/cli v1.22.10
 	golang.org/x/image v0.18.0
 	google.golang.org/protobuf v1.33.0 // indirect
