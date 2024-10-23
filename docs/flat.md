@@ -32,7 +32,7 @@ according to the [go image package](https://blog.golang.org/go-image-package):
 an axis-aligned rectangle on the integer grid, defined by its top-left and
 bottom-right Point.
 
-![Rectangle position](https://github.com/thoas/picfit/blob/superpose-images/docs/picfit-dst-position.png)
+![Rectangle position](https://github.com/thoas/picfit/blob/main/docs/picfit-dst-position.png)
 
 The foreground image is resized in order to fit in the given rectangle
 and centered inside.
@@ -44,5 +44,5 @@ the rectangle width `Dx` is superior to its height `Dy` and
 order to fit in each parts and centered inside. The order follow the
 given order of `path` parameters in the URL.
 
-![Flat multiple images](https://github.com/thoas/picfit/blob/superpose-images/docs/picfit-flat.png)
+![Flat multiple images](https://github.com/thoas/picfit/blob/main/docs/picfit-flat.png)
 

@@ -498,7 +498,7 @@ Flat can be used only with the [multiple operation system].
 - **color** - the foreground color in Hex (without ``#``), default is transparent
 - **pos** - the destination rectangle
 
-In order to understand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/superpose-images/docs/flat.md>`_.
+In order to understand the Flat operation, please read the following `docs <https://github.com/thoas/picfit/blob/main/docs/flat.md>`_.
 
 Effect
 ------
