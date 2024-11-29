@@ -57,7 +57,7 @@ build-static:
 		-X 'github.com/thoas/picfit/constants.Compiler=$(compiler)'" -a -installsuffix cgo -o $(BIN_DIR)/picfit ./cmd/picfit/main.go
 
 docker-build-static:
-	CGO_ENABLED=0 make build-static
+	make build-static
 
 
 .PNONY: all test format
