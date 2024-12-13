@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm as builder
+FROM golang:1.23-bookworm AS builder
 LABEL stage=builder
 
 ENV REPO=thoas/picfit
@@ -11,7 +11,7 @@ RUN make docker-build-static && mv bin/picfit /picfit
 
 ###
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y ca-certificates
 
