@@ -32,6 +32,7 @@ var formats = map[string]image.Format{
 	"png":  image.PNG,
 	"tiff": image.TIFF,
 	"webp": image.WEBP,
+	"avif": image.AVIF,
 }
 
 type Parameters struct {
