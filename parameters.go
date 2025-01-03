@@ -65,7 +65,7 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 	}
 
 	if format != input.Format() {
-		index := len(filepath) - len(input.Format())
+		index := len(filepath) - len(input.Format()) - 1
 
 		filepath = filepath[:index] + format
 
