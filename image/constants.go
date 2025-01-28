@@ -7,6 +7,7 @@ var (
 		"image/jpeg": "jpg",
 		"image/png":  "png",
 		"image/webp": "webp",
+		"image/avif": "avif",
 	}
 
 	HeaderKeys = []string{
