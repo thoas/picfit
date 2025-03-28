@@ -100,7 +100,9 @@ func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage
 		}
 
 		log.InfoContext(ctx, "Source storage configured",
-			slog.String("type", cfg.Source.Type))
+			slog.String("type", cfg.Source.Type),
+			slog.String("name", cfg.Source.Name),
+		)
 	}
 
 	if cfg.Destination != nil {
@@ -110,10 +112,14 @@ func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage
 		}
 
 		log.InfoContext(ctx, "Destination storage configured",
-			slog.String("type", cfg.Destination.Type))
+			slog.String("type", cfg.Destination.Type),
+			slog.String("name", cfg.Destination.Name),
+		)
 	} else {
 		log.InfoContext(ctx, "Destination storage not set, source storage will be used",
-			slog.String("type", cfg.Source.Type))
+			slog.String("type", cfg.Source.Type),
+			slog.String("name", cfg.Source.Name),
+		)
 
 		destinationStorage = sourceStorage
 		cfg.Destination = cfg.Source
@@ -126,10 +132,14 @@ func New(ctx context.Context, log *slog.Logger, cfg *Config) (*Storage, *Storage
 		}
 
 		log.InfoContext(ctx, "Destination read-only storage configured",
-			slog.String("type", cfg.DestinationReadOnly.Type))
+			slog.String("type", cfg.DestinationReadOnly.Type),
+			slog.String("name", cfg.DestinationReadOnly.Name),
+		)
 	} else {
 		log.InfoContext(ctx, "Destination read-only storage not set, destination storage will be used",
-			slog.String("type", cfg.Destination.Type))
+			slog.String("type", cfg.Destination.Type),
+			slog.String("name", cfg.Destination.Name),
+		)
 
 		destinationReadOnlyStorage = destinationStorage
 		cfg.DestinationReadOnly = cfg.Destination
