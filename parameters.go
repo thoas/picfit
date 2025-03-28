@@ -32,6 +32,7 @@ var formats = map[string]image.Format{
 	"png":  image.PNG,
 	"tiff": image.TIFF,
 	"webp": image.WEBP,
+	"avif": image.AVIF,
 }
 
 type Parameters struct {
@@ -64,7 +65,7 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 	}
 
 	if format != input.Format() {
-		index := len(filepath) - len(input.Format())
+		index := len(filepath) - len(input.Format()) - 1
 
 		filepath = filepath[:index] + format
 

@@ -8,6 +8,7 @@ var (
 		"jpg":  "image/jpeg",
 		"png":  "image/png",
 		"webp": "image/webp",
+		"avif": "image/avif",
 	}
 
 	MimeTypes = []string{
@@ -16,5 +17,6 @@ var (
 		"image/jpeg",
 		"image/png",
 		"image/webp",
+		"image/avif",
 	}
 )
