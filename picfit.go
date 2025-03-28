@@ -18,7 +18,7 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	cfg.Logger.ContextKeys = []string{constants.RequestIDCtx}
 	log := logger.New(cfg.Logger)
 
-	sourceStorage, destinationStorage, err := storage.New(ctx,
+	sourceStorage, destinationStorage, destinationReadOnlyStorage, err := storage.New(ctx,
 		log.With(slog.String("logger", "storage")), cfg.Storage)
 	if err != nil {
 		return nil, err
@@ -39,10 +39,11 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	return &Processor{
 		Logger: log,
 
-		config:             cfg,
-		destinationStorage: destinationStorage,
-		engine:             e,
-		sourceStorage:      sourceStorage,
-		store:              s,
+		config:                     cfg,
+		destinationStorage:         destinationStorage,
+		destinationReadOnlyStorage: destinationReadOnlyStorage,
+		engine:                     e,
+		sourceStorage:              sourceStorage,
+		store:                      s,
 	}, nil
 }
