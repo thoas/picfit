@@ -30,11 +30,12 @@ import (
 type Processor struct {
 	Logger *slog.Logger
 
-	config             *config.Config
-	destinationStorage *storage.Storage
-	engine             *engine.Engine
-	sourceStorage      *storage.Storage
-	store              store.Store
+	config                     *config.Config
+	destinationStorage         *storage.Storage
+	destinationReadOnlyStorage *storage.Storage
+	engine                     *engine.Engine
+	sourceStorage              *storage.Storage
+	store                      store.Store
 }
 
 // Upload uploads a file to its storage
@@ -287,7 +288,7 @@ func (p *Processor) fileFromStorage(ctx context.Context, key string, filepath st
 	var (
 		file = &image.ImageFile{
 			Key:      key,
-			Storage:  p.destinationStorage,
+			Storage:  p.destinationReadOnlyStorage,
 			Filepath: filepath,
 			Headers:  map[string]string{},
 		}
@@ -295,7 +296,7 @@ func (p *Processor) fileFromStorage(ctx context.Context, key string, filepath st
 	)
 
 	if load {
-		file, err = image.FromStorage(ctx, p.destinationStorage, filepath)
+		file, err = image.FromStorage(ctx, p.destinationReadOnlyStorage, filepath)
 		if err != nil {
 			return nil, err
 		}

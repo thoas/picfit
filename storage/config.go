@@ -16,6 +16,7 @@ type StorageConfig struct {
 
 // Config is a struct to represent a section of storage (src, fst)
 type Config struct {
-	Destination *StorageConfig `mapstructure:"dst"`
-	Source      *StorageConfig `mapstructure:"src"`
+	Destination         *StorageConfig `mapstructure:"dst"`
+	Source              *StorageConfig `mapstructure:"src"`
+	DestinationReadOnly *StorageConfig `mapstructure:"dst-ro"`
 }
