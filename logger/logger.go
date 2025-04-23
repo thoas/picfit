@@ -79,11 +79,11 @@ func New(cfg Config) *slog.Logger {
 
 }
 
-func LogMemStats(ctx context.Context, msg string, logger *slog.Logger) {
+func WithMemStats(logger *slog.Logger) *slog.Logger {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	attributes := []slog.Attr{
+	attributes := []any{
 		slog.String("alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
 		slog.String("heap-alloc", fmt.Sprintf("%v MiB", bToMb(m.HeapAlloc))),
 		slog.String("total-alloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
@@ -91,7 +91,7 @@ func LogMemStats(ctx context.Context, msg string, logger *slog.Logger) {
 		slog.Int("numgc", int(m.NumGC)),
 		slog.Int("total-goroutine", runtime.NumGoroutine()),
 	}
-	logger.LogAttrs(ctx, slog.LevelInfo, msg, attributes...)
+	return logger.With(attributes...)
 }
 
 func bToMb(b uint64) uint64 {

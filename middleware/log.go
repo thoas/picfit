@@ -44,6 +44,6 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 			logger.LogAttrs(ctx, slog.LevelInfo, path, attributes...)
 		}
 
-		loggerpkg.LogMemStats(ctx, "Memory stats", logger)
+		loggerpkg.WithMemStats(logger).Info("Memory stats")
 	}
 }

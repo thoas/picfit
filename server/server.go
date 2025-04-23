@@ -47,7 +47,7 @@ func Run(ctx context.Context, path string) error {
 		for {
 			select {
 			case <-ticker:
-				loggerpkg.LogMemStats(ctx, "Force free memory", server.processor.Logger)
+				loggerpkg.WithMemStats(server.processor.Logger).Info("Force free memory")
 				debug.FreeOSMemory()
 			case <-ctx.Done():
 				return nil

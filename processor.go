@@ -23,6 +23,7 @@ import (
 	"github.com/thoas/picfit/failure"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
+	loggerpkg "github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/store"
 )
@@ -62,13 +63,14 @@ func (p *Processor) Upload(ctx context.Context, payload *payload.Multipart) (*im
 
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string, i *image.ImageFile) error {
+	loggerpkg.WithMemStats(log).InfoContext(ctx, "Saving file on storage...")
 	starttime := time.Now()
 	if err := i.Save(ctx); err != nil {
 		return err
 	}
 
 	endtime := time.Now()
-	log.InfoContext(ctx, "Save file to storage",
+	loggerpkg.WithMemStats(log).InfoContext(ctx, "File saved on storage",
 		slog.Duration("duration", endtime.Sub(starttime)),
 	)
 
@@ -82,7 +84,7 @@ func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string
 		strings.ToLower(filepathpkg.Ext(filepath)),
 	).Observe(endtime.Sub(starttime).Seconds())
 
-	log.InfoContext(ctx, "Save key to store",
+	log.InfoContext(ctx, "Cache key saved on store",
 		slog.Duration("duration", endtime.Sub(starttime)),
 	)
 
@@ -225,7 +227,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		}
 
 		if exists {
-			log.InfoContext(ctx, "Key already exists on store, file not modified",
+			log.InfoContext(ctx, "Cache key already exists on store, file not modified",
 				slog.String("modified-since", modifiedSince))
 
 			return nil, failure.ErrFileNotModified
@@ -245,7 +247,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				return nil, errors.WithStack(err)
 			}
 
-			log.InfoContext(ctx, "Key found in store",
+			loggerpkg.WithMemStats(log).InfoContext(ctx, "Cache key already found in store, retrieve image from destination storage...",
 				slog.String("filepath", filepath))
 
 			starttime := time.Now()
@@ -261,7 +263,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 
 			filesize := util.ByteCountDecimal(int64(len(img.Content())))
 			endtime := time.Now()
-			log.InfoContext(ctx, "Image retrieved from storage",
+			loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully retrieved from destination storage",
 				slog.Duration("duration", endtime.Sub(starttime)),
 				slog.String("size", filesize),
 				slog.String("image", img.Filepath))
@@ -276,7 +278,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 
 		// Image not found from the Store, we need to process it
 		// URL available in Query String
-		log.InfoContext(ctx, "Key not found in store")
+		log.InfoContext(ctx, "Cache key not found in store, image will be retrieved from source storage...")
 	} else {
 		log.InfoContext(ctx, "Force activated, key will be re-processed")
 	}
@@ -320,7 +322,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 		Headers: map[string]string{},
 	}
 
-	qs := c.MustGet("parameters").(map[string]interface{})
+	qs := c.MustGet("parameters").(map[string]any)
 	starttime := time.Now()
 	u, exists := c.Get("url")
 	if exists {
@@ -351,7 +353,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 		slog.String("size", filesize),
 	)
 
-	log.InfoContext(ctx, "Retrieved image to process from storage",
+	loggerpkg.WithMemStats(log).InfoContext(ctx, "Source image retrieved from storage to process",
 		slog.Duration("duration", endtime.Sub(starttime)))
 
 	parameters, err := p.NewParameters(ctx, file, qs)
@@ -384,7 +386,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 		slog.String("size", filesize),
 	)
 
-	log.InfoContext(ctx, "Image processed",
+	loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully processed",
 		slog.Duration("duration", endtime.Sub(starttime)))
 
 	if err := p.Store(ctx, log, filepath, file); err != nil {
@@ -403,7 +405,7 @@ func (p *Processor) ShardFilename(filename string) string {
 	return strings.Join(results, "/")
 }
 
-func (p *Processor) GetKey(ctx context.Context, key string) (interface{}, error) {
+func (p *Processor) GetKey(ctx context.Context, key string) (any, error) {
 	return p.store.Get(ctx, key)
 }
 
