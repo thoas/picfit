@@ -3,15 +3,18 @@ package engine
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os/exec"
+	"slices"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
-	"log/slog"
-	"os/exec"
-	"sort"
-	"strings"
-	"time"
+	loggerpkg "github.com/thoas/picfit/logger"
 )
 
 type Engine struct {
@@ -99,20 +102,13 @@ func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operatio
 	ct := output.ContentType()
 	for i := range operations {
 		for j := range e.backends {
-			var processing bool
-			for k := range e.backends[j].mimetypes {
-				if ct == e.backends[j].mimetypes[k] {
-					processing = true
-					break
-				}
-			}
-
-			if !processing {
+			if !slices.Contains(e.backends[j].mimetypes, ct) {
 				continue
 			}
 
 			defer func() {
-				e.logger.InfoContext(ctx, "Processing image",
+				loggerpkg.WithMemStats(e.logger).InfoContext(ctx, "Engine handled image",
+					slog.String("image", output.Filepath),
 					slog.String("backend", e.backends[j].backend.String()),
 					slog.String("operation", operations[i].Operation.String()),
 					slog.String("options", operations[i].Options.String()),
