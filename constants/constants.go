@@ -6,7 +6,7 @@ import (
 
 const (
 	// Version is the current version of picfit
-	Version = "0.16.0"
+	Version = "0.16.1"
 )
 
 var (
