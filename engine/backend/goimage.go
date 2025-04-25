@@ -21,6 +21,7 @@ import (
 	imagefile "github.com/thoas/picfit/image"
 
 	"github.com/chai2010/webp"
+	"github.com/gen2brain/avif"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -105,7 +106,6 @@ func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Op
 
 	return e.transform(image, options, imaging.Fit)
 }
-
 
 func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.source(img)
@@ -274,6 +274,8 @@ func encode(w io.Writer, img image.Image, format imagefile.Format, quality int) 
 		err = bmp.Encode(w, img)
 	case imagefile.WEBP:
 		err = webp.Encode(w, img, &webp.Options{Quality: float32(quality)})
+	case imagefile.AVIF:
+		err = avif.Encode(w, img, avif.Options{Quality: quality})
 	default:
 		err = imaging.ErrUnsupportedFormat
 	}
