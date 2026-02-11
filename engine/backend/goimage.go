@@ -12,8 +12,8 @@ import (
 	"image/png"
 	"io"
 	"math"
+	"sync"
 
-	"github.com/thoas/go-funk"
 	"github.com/thoas/picfit/constants"
 
 	"github.com/go-spectest/imaging"
@@ -42,6 +42,12 @@ var (
 		180: imaging.Rotate180,
 	}
 )
+
+var bufferPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
 
 type GoImage struct{}
 
@@ -106,16 +112,19 @@ func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Op
 	return e.transform(image, options, imaging.Fit)
 }
 
-
 func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
 	image, err := e.source(img)
 	if err != nil {
 		return nil, err
 	}
 	width, height := imageSize(image)
-	size := funk.MaxInt([]int{width, height})
+	size := max(width, height)
 	sigma := size / 20
 
+	const maxSigma = 50
+	if sigma > maxSigma {
+		sigma = maxSigma
+	}
 	switch options.Filter {
 	case constants.FilterBlur:
 		return e.toBytes(imaging.Blur(image, float64(sigma)), options.Format, options.Quality)
@@ -125,29 +134,35 @@ func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options 
 }
 
 func (e *GoImage) toBytes(img image.Image, format imagefile.Format, quality int) ([]byte, error) {
-	var buf bytes.Buffer
+	buf := bufferPool.Get().(*bytes.Buffer)
+	defer func() {
+		buf.Reset()
+		bufferPool.Put(buf)
+	}()
 
-	if err := encode(&buf, img, format, quality); err != nil {
+	if err := encode(buf, img, format, quality); err != nil {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	b := buf.Bytes()
+	dst := make([]byte, len(b))
+	copy(dst, b)
+	return dst, nil
 }
 
 func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans transformation) ([]byte, error) {
-	first, err := gif.Decode(bytes.NewReader(img.Source))
-	if err != nil {
-		return nil, err
-	}
-
-	factor := scalingFactorImage(first, options.Width, options.Height)
-	if factor > 1 && !options.Upscale {
-		return img.Source, nil
-	}
-
 	g, err := gif.DecodeAll(bytes.NewReader(img.Source))
 	if err != nil {
 		return nil, err
+	}
+	if len(g.Image) == 0 {
+		return nil, fmt.Errorf("GIF has no frames")
+	}
+
+	first := g.Image[0]
+	factor := scalingFactorImage(first, options.Width, options.Height)
+	if factor > 1 && !options.Upscale {
+		return img.Source, nil
 	}
 
 	firstFrame := g.Image[0].Bounds()
@@ -164,11 +179,11 @@ func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans
 
 	if options.Width == 0 {
 		tmpW := float64(options.Height) * float64(srcW) / float64(srcH)
-		options.Width = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+		options.Width = int(max(1.0, math.Floor(tmpW+0.5)))
 	}
 	if options.Height == 0 {
 		tmpH := float64(options.Width) * float64(srcH) / float64(srcW)
-		options.Height = int(math.Max(1.0, math.Floor(tmpH+0.5)))
+		options.Height = int(max(1.0, math.Floor(tmpH+0.5)))
 	}
 
 	g.Config.Height = options.Height
@@ -214,7 +229,7 @@ func (e *GoImage) source(img *imagefile.ImageFile) (image.Image, error) {
 }
 
 func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
-	return math.Max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
+	return max(float64(destWidth)/float64(srcWidth), float64(destHeight)/float64(srcHeight))
 }
 
 func scalingFactorImage(img image.Image, dstWidth int, dstHeight int) float64 {

@@ -20,7 +20,6 @@ require (
 	github.com/spf13/cast v1.4.0 // indirect
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.8.4
-	github.com/thoas/go-funk v0.9.3
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
 	github.com/ulule/gostorages v0.2.5

@@ -17,11 +17,11 @@ func (k *kvstoreWrapper) prefixed(key string) string {
 	return fmt.Sprint(k.Prefix, key)
 }
 
-func (k *kvstoreWrapper) Set(ctx context.Context, key string, value interface{}) error {
+func (k *kvstoreWrapper) Set(ctx context.Context, key string, value any) error {
 	return k.KVStore.Set(ctx, k.prefixed(key), value)
 }
 
-func (k *kvstoreWrapper) Get(ctx context.Context, key string) (interface{}, error) {
+func (k *kvstoreWrapper) Get(ctx context.Context, key string) (any, error) {
 	return k.KVStore.Get(ctx, k.prefixed(key))
 }
 
@@ -33,11 +33,11 @@ func (k *kvstoreWrapper) Exists(ctx context.Context, keys ...string) (bool, erro
 	return k.KVStore.Exists(ctx, newkeys...)
 }
 
-func (k *kvstoreWrapper) AppendSlice(ctx context.Context, key string, values ...interface{}) error {
+func (k *kvstoreWrapper) AppendSlice(ctx context.Context, key string, values ...any) error {
 	return k.KVStore.AppendSlice(ctx, k.prefixed(key), values...)
 }
 
-func (k *kvstoreWrapper) GetSlice(ctx context.Context, key string) ([]interface{}, error) {
+func (k *kvstoreWrapper) GetSlice(ctx context.Context, key string) ([]any, error) {
 	return k.KVStore.GetSlice(ctx, k.prefixed(key))
 }
 

@@ -13,7 +13,7 @@ func TestSetParamsFromURLValues(t *testing.T) {
 	v.Set("h", "123")
 	v.Set("op", "resize")
 
-	params := setParamsFromURLValues(make(map[string]interface{}), v)
+	params := setParamsFromURLValues(make(map[string]any), v)
 
 	assert.Equal(t, params["w"].(string), "100")
 	assert.Equal(t, params["h"].(string), "123")
@@ -23,7 +23,7 @@ func TestSetParamsFromURLValues(t *testing.T) {
 	v.Add("w", "99")
 	v.Add("h", "321")
 
-	params = setParamsFromURLValues(make(map[string]interface{}), v)
+	params = setParamsFromURLValues(make(map[string]any), v)
 
 	assert.Equal(t, params["w"].(string), "100")
 	assert.Equal(t, params["h"].(string), "123")

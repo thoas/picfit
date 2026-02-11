@@ -27,7 +27,7 @@ func ParametersParser() gin.HandlerFunc {
 		if result != "" {
 			match := parametersReg.FindStringSubmatch(result)
 			if match != nil {
-				parameters := make(map[string]interface{})
+				parameters := make(map[string]any)
 
 				results := parametersReg.SubexpNames()
 
@@ -54,11 +54,11 @@ func ParametersParser() gin.HandlerFunc {
 // KeyParser injects an unique key from query parameters
 func KeyParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		queryString := make(map[string]interface{})
+		queryString := make(map[string]any)
 
 		params, exists := c.Get("parameters")
 		if exists {
-			queryString = params.(map[string]interface{})
+			queryString = params.(map[string]any)
 		}
 
 		sorted := setParamsFromURLValues(queryString, c.Request.URL.Query())
@@ -78,7 +78,7 @@ func KeyParser() gin.HandlerFunc {
 	}
 }
 
-func setParamsFromURLValues(params map[string]interface{}, values url.Values) map[string]interface{} {
+func setParamsFromURLValues(params map[string]any, values url.Values) map[string]any {
 	for k, v := range values {
 		if k != constants.OperationParamName {
 			params[k] = v[0]
@@ -146,7 +146,7 @@ func URLParser(mimetypeDetectorType string, processor *picfit.Processor) gin.Han
 // OperationParser extracts the operation and add it to the context
 func OperationParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		parameters := c.MustGet("parameters").(map[string]interface{})
+		parameters := c.MustGet("parameters").(map[string]any)
 
 		operation, ok := parameters[constants.OperationParamName].(string)
 		if ok && operation != "" {

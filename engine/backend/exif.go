@@ -24,19 +24,33 @@ func decode(reader io.ReadSeeker) (image.Image, error) {
 	case "1":
 		return img, nil
 	case "2":
-		return imaging.FlipV(img), nil
+		result := imaging.FlipH(img)
+		img = nil
+		return result, nil
 	case "3":
-		return imaging.Rotate180(img), nil
+		result := imaging.Rotate180(img)
+		img = nil
+		return result, nil
 	case "4":
-		return imaging.Rotate180(imaging.FlipV(img)), nil
+		result := imaging.Rotate180(imaging.FlipH(img))
+		img = nil
+		return result, nil
 	case "5":
-		return imaging.Rotate270(imaging.FlipV(img)), nil
+		result := imaging.Rotate270(imaging.FlipV(img))
+		img = nil
+		return result, nil
 	case "6":
-		return imaging.Rotate270(img), nil
+		result := imaging.Rotate270(img)
+		img = nil
+		return result, nil
 	case "7":
-		return imaging.Rotate90(imaging.FlipV(img)), nil
+		result := imaging.Rotate90(imaging.FlipV(img))
+		img = nil
+		return result, nil
 	case "8":
-		return imaging.Rotate90(img), nil
+		result := imaging.Rotate90(img)
+		img = nil
+		return result, nil
 	default:
 		return img, nil
 	}
