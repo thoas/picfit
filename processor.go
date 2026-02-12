@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	filepathpkg "path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -38,8 +39,9 @@ type Processor struct {
 	sourceStorage              *storage.Storage
 	store                      store.Store
 
-	withSemaphore bool
-	semaphore     chan struct{}
+	withSemaphore       bool
+	semaphoreOperations []engine.Operation
+	semaphore           chan struct{}
 }
 
 // Upload uploads a file to its storage
@@ -364,7 +366,14 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 		return nil, errors.Wrap(err, "unable to process image")
 	}
 
-	if p.withSemaphore {
+	var containsSemaphoreOps bool
+	for i := range parameters.operations {
+		if slices.Contains(p.semaphoreOperations, parameters.operations[i].Operation) {
+			containsSemaphoreOps = true
+			break
+		}
+	}
+	if p.withSemaphore && containsSemaphoreOps {
 		// Wait for a slot in the semaphore
 		semaphorewait := time.Now()
 		select {

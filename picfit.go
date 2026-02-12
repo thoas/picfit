@@ -49,6 +49,7 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	if cfg.Options.MaxProcessorConcurrent != nil {
 		processor.withSemaphore = true
 		processor.semaphore = make(chan struct{}, *cfg.Options.MaxProcessorConcurrent)
+		processor.semaphoreOperations = cfg.Options.MaxProcessorConcurrentOperations
 	}
 	return processor, nil
 }
