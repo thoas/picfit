@@ -1,8 +1,8 @@
 package image
 
 import (
-	"bytes"
 	"context"
+	"io"
 	"mime"
 	"path"
 	"strings"
@@ -12,12 +12,16 @@ import (
 )
 
 type ImageFile struct {
-	Filepath  string
-	Headers   map[string]string
-	Key       string
-	Processed []byte
-	Source    []byte
-	Storage   *storage.Storage
+	Filepath string
+	Headers  map[string]string
+	Key      string
+
+	Stream io.ReadCloser
+
+	StorageStream io.Reader
+	HTTPStream    io.Reader
+
+	Storage *storage.Storage
 }
 
 func (i *ImageFile) URL() string {
@@ -29,20 +33,19 @@ func (i *ImageFile) Path() string {
 	return i.Storage.Path(i.Filepath)
 }
 
-func (i *ImageFile) Content() []byte {
-	if i.Processed != nil {
-		return i.Processed
-	}
+func (i *ImageFile) Content() io.ReadCloser {
+	return i.Stream
+}
 
-	return i.Source
+func (i *ImageFile) Close() {
+	i.Stream.Close()
+	i.HTTPStream = nil
 }
 
 func (i *ImageFile) Save(ctx context.Context) error {
-	content := bytes.NewReader(i.Content())
-	if err := i.Storage.Save(ctx, content, i.Filepath); err != nil {
+	if err := i.Storage.Save(ctx, i.StorageStream, i.Filepath); err != nil {
 		return errors.WithStack(err)
 	}
-
 	return nil
 }
 

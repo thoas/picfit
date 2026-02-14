@@ -1,8 +1,10 @@
 package engine
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os/exec"
 	"slices"
@@ -91,16 +93,28 @@ func (e Engine) String() string {
 	return strings.Join(backendNames, " ")
 }
 
-func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operations []EngineOperation) (*image.ImageFile, error) {
+func (e Engine) Transform(ctx context.Context, dst io.Writer, output *image.ImageFile, operations []EngineOperation) (*image.ImageFile, error) {
 	var (
-		err       error
-		processed []byte
-		source    = output.Source
-		start     = time.Now()
+		err    error
+		source = output.Stream
+		start  = time.Now()
 	)
 
 	ct := output.ContentType()
 	for i := range operations {
+		isLast := i == len(operations)-1
+		var target io.Writer
+
+		// swith writer target
+		// on last operation we write on dst
+		// else we use a temp buffer
+		if isLast {
+			target = dst
+		} else {
+			target = &bytes.Buffer{}
+		}
+		output.Stream = source
+
 		for j := range e.backends {
 			if !slices.Contains(e.backends[j].mimetypes, ct) {
 				continue
@@ -116,42 +130,45 @@ func (e Engine) Transform(ctx context.Context, output *image.ImageFile, operatio
 				)
 			}()
 
-			processed, err = operate(ctx, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
+			err = operate(ctx, target, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
 			if err == nil {
-				output.Source = processed
 				break
 			}
+
 			if !errors.Is(err, backend.MethodNotImplementedError) {
 				return nil, err
 			}
 		}
+		// is not last operations so we repass target to new source stream
+		if !isLast {
+			buf := target.(*bytes.Buffer)
+			source = io.NopCloser(bytes.NewReader(buf.Bytes()))
+		}
 	}
-
-	output.Source = source
-	output.Processed = processed
 
 	return output, err
 }
 
-func operate(ctx context.Context, b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) ([]byte, error) {
+func operate(ctx context.Context, dst io.Writer, b backend.Backend, img *image.ImageFile, operation Operation, options *backend.Options) error {
 	switch operation {
 	case Noop:
-		return img.Source, nil
+		_, err := io.Copy(dst, img.Stream)
+		return err
 	case Flip:
-		return b.Flip(ctx, img, options)
+		return b.Flip(ctx, dst, img, options)
 	case Rotate:
-		return b.Rotate(ctx, img, options)
+		return b.Rotate(ctx, dst, img, options)
 	case Resize:
-		return b.Resize(ctx, img, options)
+		return b.Resize(ctx, dst, img, options)
 	case Thumbnail:
-		return b.Thumbnail(ctx, img, options)
+		return b.Thumbnail(ctx, dst, img, options)
 	case Fit:
-		return b.Fit(ctx, img, options)
+		return b.Fit(ctx, dst, img, options)
 	case Flat:
-		return b.Flat(ctx, img, options)
+		return b.Flat(ctx, dst, img, options)
 	case Effect:
-		return b.Effect(ctx, img, options)
+		return b.Effect(ctx, dst, img, options)
 	default:
-		return nil, fmt.Errorf("operation not found for %s", operation)
+		return fmt.Errorf("operation not found for %s", operation)
 	}
 }

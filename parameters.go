@@ -74,7 +74,7 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 	}
 
 	output := &image.ImageFile{
-		Source:   input.Source,
+		Stream:   input.Stream,
 		Key:      input.Key,
 		Headers:  input.Headers,
 		Filepath: filepath,

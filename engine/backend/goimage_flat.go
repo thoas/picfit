@@ -1,12 +1,12 @@
 package backend
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"image"
 	"image/draw"
 	"image/gif"
+	"io"
 	"strconv"
 	"strings"
 
@@ -17,20 +17,20 @@ import (
 	imagefile "github.com/thoas/picfit/image"
 )
 
-func (e *GoImage) Flat(ctx context.Context, backgroundFile *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flat(ctx context.Context, dst io.Writer, backgroundFile *imagefile.ImageFile, options *Options) error {
 	var err error
 	images := make([]image.Image, len(options.Images))
 	for i := range options.Images {
 		images[i], err = e.source(&options.Images[i])
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	if options.Format == imagefile.GIF {
-		g, err := gif.DecodeAll(bytes.NewReader(backgroundFile.Source))
+		g, err := gif.DecodeAll(backgroundFile.Stream)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for i := range g.Image {
@@ -40,18 +40,17 @@ func (e *GoImage) Flat(ctx context.Context, backgroundFile *imagefile.ImageFile,
 				drawPosForeground(g.Image[i], images, options)
 			}
 		}
-		buf := bytes.Buffer{}
 
-		if err := gif.EncodeAll(&buf, g); err != nil {
-			return nil, err
+		if err := gif.EncodeAll(dst, g); err != nil {
+			return err
 		}
 
-		return buf.Bytes(), nil
+		return nil
 	}
 
 	background, err := e.source(backgroundFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	bg, ok := background.(draw.Image)
@@ -66,7 +65,7 @@ func (e *GoImage) Flat(ctx context.Context, backgroundFile *imagefile.ImageFile,
 		drawPosForeground(bg, images, options)
 	}
 
-	return e.toBytes(bg, options.Format, options.Quality)
+	return encode(dst, bg, options.Format, options.Quality)
 }
 
 func drawStickForeground(bg draw.Image, images []image.Image, options *Options) {

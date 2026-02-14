@@ -5,7 +5,8 @@ type Option func(*Options)
 
 // Options are server options.
 type Options struct {
-	Load bool
+	Load  bool
+	Async bool
 }
 
 // NewOptions initializes server options.
@@ -21,5 +22,12 @@ func newOptions(opts ...Option) Options {
 func WithLoad(load bool) Option {
 	return func(o *Options) {
 		o.Load = load
+	}
+}
+
+// WithAsync overrides async value.
+func WithAsync(async bool) Option {
+	return func(o *Options) {
+		o.Async = async
 	}
 }

@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"image"
@@ -47,68 +46,68 @@ type GoImage struct{}
 func (e *GoImage) String() string {
 	return "goimage"
 }
-func (e *GoImage) Resize(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return e.resize(img, options, imaging.Resize)
+func (e *GoImage) Resize(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
+	return e.resize(dst, img, options, imaging.Resize)
 }
 
-func (e *GoImage) Thumbnail(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
-	return e.resize(img, options, imaging.Thumbnail)
+func (e *GoImage) Thumbnail(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
+	return e.resize(dst, img, options, imaging.Thumbnail)
 }
 
-func (e *GoImage) Rotate(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Rotate(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
 	image, err := e.source(img)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	deg := options.Degree
 
 	transform, ok := rotateTransformations[deg]
 	if !ok {
-		return nil, fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
+		return fmt.Errorf("Invalid rotate transformation degree=%d is not supported", deg)
 	}
 
-	return e.toBytes(transform(image), options.Format, options.Quality)
+	return encode(dst, transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImage) Flip(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Flip(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
 	image, err := e.source(img)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	pos := options.Position
 
 	transform, ok := flipTransformations[pos]
 	if !ok {
-		return nil, fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
+		return fmt.Errorf("Invalid flip transformation, %s is not supported", pos)
 	}
 
-	return e.toBytes(transform(image), options.Format, options.Quality)
+	return encode(dst, transform(image), options.Format, options.Quality)
 }
 
-func (e *GoImage) Fit(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Fit(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
 	if options.Format == imagefile.GIF {
-		content, err := e.transformGIF(img, options, imaging.Thumbnail)
+		err := e.transformGIF(dst, img, options, imaging.Thumbnail)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return content, nil
+		return nil
 	}
 
 	image, err := e.source(img)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return e.transform(image, options, imaging.Fit)
+	return e.transform(dst, image, options, imaging.Fit)
 }
 
-func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options *Options) ([]byte, error) {
+func (e *GoImage) Effect(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options) error {
 	image, err := e.source(img)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	width, height := imageSize(image)
 	size := max(width, height)
@@ -120,37 +119,28 @@ func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options 
 	}
 	switch options.Filter {
 	case constants.FilterBlur:
-		return e.toBytes(imaging.Blur(image, float64(sigma)), options.Format, options.Quality)
+		return encode(dst, imaging.Blur(image, float64(sigma)), options.Format, options.Quality)
 	}
 
-	return nil, MethodNotImplementedError
+	return MethodNotImplementedError
 }
 
-func (e *GoImage) toBytes(img image.Image, format imagefile.Format, quality int) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := encode(&buf, img, format, quality); err != nil {
-		return nil, err
-	}
-
-	b := buf.Bytes()
-	dst := make([]byte, len(b))
-	copy(dst, b)
-	return dst, nil
-}
-
-func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans transformation) ([]byte, error) {
-	g, err := gif.DecodeAll(bytes.NewReader(img.Source))
+func (e *GoImage) transformGIF(dst io.Writer, img *imagefile.ImageFile, options *Options, trans transformation) error {
+	g, err := gif.DecodeAll(img.Stream)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if len(g.Image) == 0 {
-		return nil, fmt.Errorf("GIF has no frames")
+		return fmt.Errorf("GIF has no frames")
+	}
+	if len(g.Image) == 0 {
+		return fmt.Errorf("GIF has no frames")
 	}
 
 	first := g.Image[0]
 	factor := scalingFactorImage(first, options.Width, options.Height)
 	if factor > 1 && !options.Upscale {
-		return img.Source, nil
+		return gif.EncodeAll(dst, g)
 	}
 
 	firstFrame := g.Image[0].Bounds()
@@ -177,43 +167,41 @@ func (e *GoImage) transformGIF(img *imagefile.ImageFile, options *Options, trans
 	g.Config.Height = options.Height
 	g.Config.Width = options.Width
 
-	buf := bytes.Buffer{}
-
-	if err := gif.EncodeAll(&buf, g); err != nil {
-		return nil, err
+	if err := gif.EncodeAll(dst, g); err != nil {
+		return err
 	}
 
-	return buf.Bytes(), nil
+	return nil
 }
 
-func (e *GoImage) resize(img *imagefile.ImageFile, options *Options, trans transformation) ([]byte, error) {
+func (e *GoImage) resize(dst io.Writer, img *imagefile.ImageFile, options *Options, trans transformation) error {
 	if options.Format == imagefile.GIF {
-		content, err := e.transformGIF(img, options, trans)
+		err := e.transformGIF(dst, img, options, trans)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return content, nil
+		return nil
 	}
 
 	image, err := e.source(img)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return e.transform(image, options, trans)
+	return e.transform(dst, image, options, trans)
 }
 
-func (e *GoImage) transform(img image.Image, options *Options, trans transformation) ([]byte, error) {
+func (e *GoImage) transform(dst io.Writer, img image.Image, options *Options, trans transformation) error {
 	if options.Height == 0 && options.Width == 0 {
-		return e.toBytes(img, options.Format, options.Quality)
+		return encode(dst, img, options.Format, options.Quality)
 	}
 
-	return e.toBytes(scale(img, options, trans), options.Format, options.Quality)
+	return encode(dst, scale(img, options, trans), options.Format, options.Quality)
 }
 
 func (e *GoImage) source(img *imagefile.ImageFile) (image.Image, error) {
-	return decode(bytes.NewReader(img.Source))
+	return decode(img.Stream)
 }
 
 func scalingFactor(srcWidth int, srcHeight int, destWidth int, destHeight int) float64 {
