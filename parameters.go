@@ -40,7 +40,7 @@ type Parameters struct {
 }
 
 // newParameters returns Parameters for engine.
-func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, qs map[string]interface{}) (*Parameters, error) {
+func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, qs map[string]any) (*Parameters, error) {
 	format, ok := qs["fmt"].(string)
 	filepath := input.Filepath
 
@@ -130,7 +130,7 @@ func (p *Processor) NewParameters(ctx context.Context, input *image.ImageFile, q
 }
 
 func (p Processor) NewEngineOperationFromQuery(ctx context.Context, op string) (*engine.EngineOperation, error) {
-	params := make(map[string]interface{})
+	params := make(map[string]any)
 	var imagePaths []string
 	for _, p := range strings.Split(op, " ") {
 		l := strings.Split(p, ":")
@@ -172,7 +172,7 @@ func (p Processor) NewEngineOperationFromQuery(ctx context.Context, op string) (
 	}, nil
 }
 
-func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, qs map[string]interface{}) (*backend.Options, error) {
+func (p Processor) newBackendOptionsFromParameters(operation engine.Operation, qs map[string]any) (*backend.Options, error) {
 	var (
 		err     error
 		quality = p.engine.DefaultQuality

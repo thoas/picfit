@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"github.com/thoas/picfit/signature"
 	"net/http"
+	"slices"
 	"strconv"
+
+	"github.com/thoas/picfit/signature"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/thoas/go-funk"
 	"github.com/thoas/picfit/config"
 )
 
@@ -15,7 +16,7 @@ import (
 func Security(secretKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if secretKey != "" {
-			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]interface{})) {
+			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]any)) {
 				c.String(http.StatusUnauthorized, "Invalid signature")
 				c.Abort()
 				return
@@ -29,7 +30,7 @@ func Security(secretKey string) gin.HandlerFunc {
 func RestrictIPAddresses(ipAddresses []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if len(ipAddresses) > 0 {
-			if !funk.InStrings(ipAddresses, c.ClientIP()) {
+			if !slices.Contains(ipAddresses, c.ClientIP()) {
 				c.String(http.StatusUnauthorized, "Endpoint restricted")
 				c.Abort()
 				return
@@ -42,7 +43,7 @@ func RestrictIPAddresses(ipAddresses []string) gin.HandlerFunc {
 
 func RestrictSizes(sizes []config.AllowedSize) gin.HandlerFunc {
 	handler := func(c *gin.Context, sizes []config.AllowedSize) {
-		params := c.MustGet("parameters").(map[string]interface{})
+		params := c.MustGet("parameters").(map[string]any)
 
 		var w int
 		var h int

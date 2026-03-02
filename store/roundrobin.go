@@ -31,15 +31,15 @@ func (k *redisRoundRobinStore) forEach(f func(kvstore gokvstores.KVStore) error)
 	return err
 }
 
-func (k *redisRoundRobinStore) Set(ctx context.Context, key string, value interface{}) error {
+func (k *redisRoundRobinStore) Set(ctx context.Context, key string, value any) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.Set(ctx, key, value)
 	})
 }
 
-func (k *redisRoundRobinStore) Get(ctx context.Context, key string) (interface{}, error) {
+func (k *redisRoundRobinStore) Get(ctx context.Context, key string) (any, error) {
 	var (
-		res interface{}
+		res any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -75,15 +75,15 @@ func (k *redisRoundRobinStore) Exists(ctx context.Context, keys ...string) (bool
 	return res, nil
 }
 
-func (k *redisRoundRobinStore) AppendSlice(ctx context.Context, key string, values ...interface{}) error {
+func (k *redisRoundRobinStore) AppendSlice(ctx context.Context, key string, values ...any) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.AppendSlice(ctx, key, values...)
 	})
 }
 
-func (k *redisRoundRobinStore) GetSlice(ctx context.Context, key string) ([]interface{}, error) {
+func (k *redisRoundRobinStore) GetSlice(ctx context.Context, key string) ([]any, error) {
 	var (
-		res []interface{}
+		res []any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -124,9 +124,9 @@ func (k *redisRoundRobinStore) Flush(ctx context.Context) error {
 	})
 }
 
-func (k *redisRoundRobinStore) GetMaps(ctx context.Context, keys []string) (map[string]map[string]interface{}, error) {
+func (k *redisRoundRobinStore) GetMaps(ctx context.Context, keys []string) (map[string]map[string]any, error) {
 	var (
-		res map[string]map[string]interface{}
+		res map[string]map[string]any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -143,15 +143,15 @@ func (k *redisRoundRobinStore) GetMaps(ctx context.Context, keys []string) (map[
 	return res, nil
 }
 
-func (k *redisRoundRobinStore) SetMap(ctx context.Context, key string, value map[string]interface{}) error {
+func (k *redisRoundRobinStore) SetMap(ctx context.Context, key string, value map[string]any) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.SetMap(ctx, key, value)
 	})
 }
 
-func (k *redisRoundRobinStore) GetMap(ctx context.Context, key string) (map[string]interface{}, error) {
+func (k *redisRoundRobinStore) GetMap(ctx context.Context, key string) (map[string]any, error) {
 	var (
-		res map[string]interface{}
+		res map[string]any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -168,9 +168,9 @@ func (k *redisRoundRobinStore) GetMap(ctx context.Context, key string) (map[stri
 	return res, nil
 }
 
-func (k *redisRoundRobinStore) Keys(ctx context.Context, pattern string) ([]interface{}, error) {
+func (k *redisRoundRobinStore) Keys(ctx context.Context, pattern string) ([]any, error) {
 	var (
-		res []interface{}
+		res []any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -187,9 +187,9 @@ func (k *redisRoundRobinStore) Keys(ctx context.Context, pattern string) ([]inte
 	return res, nil
 }
 
-func (k *redisRoundRobinStore) MGet(ctx context.Context, keys []string) (map[string]interface{}, error) {
+func (k *redisRoundRobinStore) MGet(ctx context.Context, keys []string) (map[string]any, error) {
 	var (
-		res map[string]interface{}
+		res map[string]any
 		err error
 	)
 	if err := k.forEach(func(kvstore gokvstores.KVStore) error {
@@ -206,19 +206,19 @@ func (k *redisRoundRobinStore) MGet(ctx context.Context, keys []string) (map[str
 	return res, nil
 }
 
-func (k *redisRoundRobinStore) SetMaps(ctx context.Context, maps map[string]map[string]interface{}) error {
+func (k *redisRoundRobinStore) SetMaps(ctx context.Context, maps map[string]map[string]any) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.SetMaps(ctx, maps)
 	})
 }
 
-func (k *redisRoundRobinStore) SetSlice(ctx context.Context, key string, value []interface{}) error {
+func (k *redisRoundRobinStore) SetSlice(ctx context.Context, key string, value []any) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.SetSlice(ctx, key, value)
 	})
 }
 
-func (k *redisRoundRobinStore) SetWithExpiration(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+func (k *redisRoundRobinStore) SetWithExpiration(ctx context.Context, key string, value any, expiration time.Duration) error {
 	return k.forEach(func(kvstore gokvstores.KVStore) error {
 		return kvstore.SetWithExpiration(ctx, key, value, expiration)
 	})
