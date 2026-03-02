@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/viper"
+	"github.com/thoas/picfit/engine"
 
 	"github.com/thoas/picfit/constants"
 	engineconfig "github.com/thoas/picfit/engine/config"
@@ -28,19 +29,21 @@ type AllowedSize struct {
 
 // Options is a struct to add options to the application
 type Options struct {
-	AllowedIPAddresses  []string      `mapstructure:"allowed_ip_addresses"`
-	AllowedSizes        []AllowedSize `mapstructure:"allowed_sizes"`
-	DefaultUserAgent    string        `mapstructure:"default_user_agent"`
-	EnableCascadeDelete bool          `mapstructure:"enable_cascade_delete"`
-	EnableDelete        bool          `mapstructure:"enable_delete"`
-	EnableHealth        bool          `mapstructure:"enable_health"`
-	EnablePprof         bool          `mapstructure:"enable_pprof"`
-	EnableStats         bool          `mapstructure:"enable_stats"`
-	EnableUpload        bool          `mapstructure:"enable_upload"`
-	EnablePrometheus    bool          `mapstructure:"enable_prometheus"`
-	MimetypeDetector    string        `mapstructure:"mimetype_detector"`
-	FreeMemoryInterval  int           `mapstructure:"free_memory_interval"`
-	TransformTimeout    int           `mapstructure:"transform_timeout"`
+	AllowedIPAddresses               []string           `mapstructure:"allowed_ip_addresses"`
+	AllowedSizes                     []AllowedSize      `mapstructure:"allowed_sizes"`
+	DefaultUserAgent                 string             `mapstructure:"default_user_agent"`
+	EnableCascadeDelete              bool               `mapstructure:"enable_cascade_delete"`
+	EnableDelete                     bool               `mapstructure:"enable_delete"`
+	EnableHealth                     bool               `mapstructure:"enable_health"`
+	EnablePprof                      bool               `mapstructure:"enable_pprof"`
+	EnableStats                      bool               `mapstructure:"enable_stats"`
+	EnableUpload                     bool               `mapstructure:"enable_upload"`
+	EnablePrometheus                 bool               `mapstructure:"enable_prometheus"`
+	MimetypeDetector                 string             `mapstructure:"mimetype_detector"`
+	FreeMemoryInterval               int                `mapstructure:"free_memory_interval"`
+	TransformTimeout                 int                `mapstructure:"transform_timeout"`
+	MaxProcessorConcurrent           *int               `mapstructure:"max_processor_concurrent"`
+	MaxProcessorConcurrentOperations []engine.Operation `mapstructure:"max_processor_concurrent_operations"`
 }
 
 // Sentry is a struct to configure sentry using a dsn
