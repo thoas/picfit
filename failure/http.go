@@ -32,6 +32,7 @@ func Handle(h Handler) gin.HandlerFunc {
 			switch cerr.(type) {
 			case binding.Errors:
 				c.String(http.StatusBadRequest, cerr.Error())
+				return
 			}
 
 			c.Error(err)
