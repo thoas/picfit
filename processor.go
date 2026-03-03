@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	imagepkg "image"
 	"io"
 	"log/slog"
 	"net/url"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
+	"github.com/mholt/binding"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/storage"
 	"github.com/ulule/gostorages"
@@ -42,6 +44,7 @@ type Processor struct {
 	withSemaphore       bool
 	semaphoreOperations []engine.Operation
 	semaphore           chan struct{}
+	maxImageDimensions  *config.AllowedSize
 }
 
 // Upload uploads a file to its storage
@@ -269,7 +272,6 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			endtime := time.Now()
 			loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully retrieved from destination storage",
 				slog.Duration("duration", endtime.Sub(starttime)),
-				//slog.String("size", filesize),
 				slog.String("image", img.Filepath))
 
 			defaultMetrics.histogram.WithLabelValues(
@@ -345,6 +347,18 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	}
 	endtime := time.Now()
 
+	if p.maxImageDimensions != nil {
+		data, err := io.ReadAll(file.Stream)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		if err := p.checkImageMaxDimension(bytes.NewReader(data)); err != nil {
+			return nil, err
+		}
+		file.Stream = io.NopCloser(bytes.NewReader(data))
+	}
+
 	defaultMetrics.histogram.WithLabelValues(
 		"load",
 		strings.ToLower(filepathpkg.Ext(filepath)),
@@ -389,7 +403,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	ctxtimeout, cancel := context.WithTimeout(ctx, time.Second*time.Duration(p.config.Options.TransformTimeout))
 	defer cancel()
 
-	var buf bytes.Buffer
+	buf := bytes.Buffer{}
 	_, err = p.engine.Transform(ctxtimeout, &buf, parameters.output, parameters.operations)
 	if err != nil {
 		return nil, err
@@ -459,4 +473,18 @@ func (p *Processor) FileExists(ctx context.Context, name string) bool {
 
 func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, error) {
 	return p.sourceStorage.Open(ctx, name)
+}
+
+func (p *Processor) checkImageMaxDimension(file io.Reader) error {
+	if p.maxImageDimensions == nil {
+		return nil
+	}
+	imageconfig, _, err := imagepkg.DecodeConfig(file)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if imageconfig.Width > p.maxImageDimensions.Width && imageconfig.Height > p.maxImageDimensions.Height {
+		return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max dimensions is %d x %d", p.maxImageDimensions.Width, p.maxImageDimensions.Height))}
+	}
+	return nil
 }

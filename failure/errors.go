@@ -2,6 +2,7 @@ package failure
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -19,4 +20,7 @@ var (
 
 	// ErrFileNotModified is an error when file is not modified
 	ErrFileNotModified = errors.New("File not modified")
+
+	// ErrFileMaxDimensions is an error when file max dimensions is reached
+	ErrFileMaxDimensions = fmt.Errorf("Maximum of dimensions exceeded")
 )
