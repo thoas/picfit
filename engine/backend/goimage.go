@@ -12,7 +12,6 @@ import (
 	"image/png"
 	"io"
 	"math"
-	"sync"
 
 	"github.com/thoas/picfit/constants"
 
@@ -42,12 +41,6 @@ var (
 		180: imaging.Rotate180,
 	}
 )
-
-var bufferPool = sync.Pool{
-	New: func() any {
-		return new(bytes.Buffer)
-	},
-}
 
 type GoImage struct{}
 
@@ -134,13 +127,8 @@ func (e *GoImage) Effect(ctx context.Context, img *imagefile.ImageFile, options 
 }
 
 func (e *GoImage) toBytes(img image.Image, format imagefile.Format, quality int) ([]byte, error) {
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer func() {
-		buf.Reset()
-		bufferPool.Put(buf)
-	}()
-
-	if err := encode(buf, img, format, quality); err != nil {
+	var buf bytes.Buffer
+	if err := encode(&buf, img, format, quality); err != nil {
 		return nil, err
 	}
 
