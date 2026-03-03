@@ -2,10 +2,10 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -84,10 +84,10 @@ func WithMemStats(logger *slog.Logger) *slog.Logger {
 	runtime.ReadMemStats(&m)
 
 	attributes := []any{
-		slog.String("alloc", fmt.Sprintf("%v MiB", bToMb(m.Alloc))),
-		slog.String("heap-alloc", fmt.Sprintf("%v MiB", bToMb(m.HeapAlloc))),
-		slog.String("total-alloc", fmt.Sprintf("%v MiB", bToMb(m.TotalAlloc))),
-		slog.String("sys", fmt.Sprintf("%v MiB", bToMb(m.Sys))),
+		slog.String("alloc-Mib", strconv.FormatUint(bToMb(m.Alloc), 10)),
+		slog.String("heap-alloc-Mib", strconv.FormatUint(bToMb(m.HeapAlloc), 10)),
+		slog.String("total-alloc-Mib", strconv.FormatUint(bToMb(m.TotalAlloc), 10)),
+		slog.String("sys-Mib", strconv.FormatUint(bToMb(m.Sys), 10)),
 		slog.Int("numgc", int(m.NumGC)),
 		slog.Int("total-goroutine", runtime.NumGoroutine()),
 	}

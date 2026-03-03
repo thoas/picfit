@@ -17,7 +17,10 @@ import (
 	"github.com/thoas/picfit/util"
 )
 
-var parametersReg = regexp.MustCompile(`(?:(?P<sig>\w+)/)?(?P<op>\w+)/(?:(?P<w>\d+))?x(?:(?P<h>\d+))?/(?P<path>[\w\-/.]+)`)
+var (
+	parametersReg = regexp.MustCompile(`(?:(?P<sig>\w+)/)?(?P<op>\w+)/(?:(?P<w>\d+))?x(?:(?P<h>\d+))?/(?P<path>[\w\-/.]+)`)
+	reresults     = parametersReg.SubexpNames()
+)
 
 // ParametersParser matches parameters to query string
 func ParametersParser() gin.HandlerFunc {
@@ -29,9 +32,7 @@ func ParametersParser() gin.HandlerFunc {
 			if match != nil {
 				parameters := make(map[string]any)
 
-				results := parametersReg.SubexpNames()
-
-				for i, name := range results {
+				for i, name := range reresults {
 					if i != 0 && match[i] != "" {
 						parameters[name] = match[i]
 					}

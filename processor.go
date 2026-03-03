@@ -1,8 +1,10 @@
 package picfit
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	imagepkg "image"
 	"io"
 	"log/slog"
 	"net/url"
@@ -14,9 +16,9 @@ import (
 
 	"github.com/cstockton/go-conv"
 	"github.com/gin-gonic/gin"
+	"github.com/mholt/binding"
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/storage"
-	"github.com/thoas/picfit/util"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/config"
@@ -42,6 +44,7 @@ type Processor struct {
 	withSemaphore       bool
 	semaphoreOperations []engine.Operation
 	semaphore           chan struct{}
+	maxImageDimensions  *config.AllowedSize
 }
 
 // Upload uploads a file to its storage
@@ -260,24 +263,22 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			// no such file, just reprocess (maybe file cache was purged)
 			if err != nil {
 				if os.IsNotExist(err) {
-					return p.processImage(c, storeKey)
+					return p.processImage(c, storeKey, options.Async)
 				}
 
 				return nil, errors.WithStack(err)
 			}
 
-			filesize := util.ByteCountDecimal(int64(len(img.Content())))
 			endtime := time.Now()
 			loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully retrieved from destination storage",
 				slog.Duration("duration", endtime.Sub(starttime)),
-				slog.String("size", filesize),
 				slog.String("image", img.Filepath))
 
 			defaultMetrics.histogram.WithLabelValues(
 				"load",
 				strings.ToLower(filepathpkg.Ext(filepath)),
 			).Observe(endtime.Sub(starttime).Seconds())
-
+			img.HTTPStream = img.Stream
 			return img, nil
 		}
 
@@ -288,7 +289,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 		log.InfoContext(ctx, "Force activated, key will be re-processed")
 	}
 
-	return p.processImage(c, storeKey)
+	return p.processImage(c, storeKey, options.Async)
 }
 
 func (p *Processor) fileFromStorage(ctx context.Context, key string, filepath string, load bool) (*image.ImageFile, error) {
@@ -313,7 +314,7 @@ func (p *Processor) fileFromStorage(ctx context.Context, key string, filepath st
 	return file, nil
 }
 
-func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageFile, error) {
+func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*image.ImageFile, error) {
 	var (
 		filepath string
 		err      error
@@ -346,19 +347,26 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	}
 	endtime := time.Now()
 
+	if p.maxImageDimensions != nil {
+		data, err := io.ReadAll(file.Stream)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		if err := p.checkImageMaxDimension(bytes.NewReader(data)); err != nil {
+			return nil, err
+		}
+		file.Stream = io.NopCloser(bytes.NewReader(data))
+	}
+
 	defaultMetrics.histogram.WithLabelValues(
 		"load",
 		strings.ToLower(filepathpkg.Ext(filepath)),
 	).Observe(endtime.Sub(starttime).Seconds())
 
-	filesize := util.ByteCountDecimal(int64(len(file.Content())))
+	log = log.With(slog.String("image", file.Filepath))
 
-	log = log.With(
-		slog.String("image", file.Filepath),
-		slog.String("size", filesize),
-	)
-
-	loggerpkg.WithMemStats(log).InfoContext(ctx, "Source image retrieved from storage to process",
+	loggerpkg.WithMemStats(log).InfoContext(ctx, "Stream image retrieved from storage to process",
 		slog.Duration("duration", endtime.Sub(starttime)))
 
 	parameters, err := p.NewParameters(ctx, file, qs)
@@ -394,34 +402,49 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	starttime = time.Now()
 	ctxtimeout, cancel := context.WithTimeout(ctx, time.Second*time.Duration(p.config.Options.TransformTimeout))
 	defer cancel()
-	file, err = p.engine.Transform(ctxtimeout, parameters.output, parameters.operations)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to process image")
-	}
-	endtime = time.Now()
-	defaultMetrics.histogram.WithLabelValues(
-		"transform",
-		strings.ToLower(filepathpkg.Ext(filepath)),
-	).Observe(endtime.Sub(starttime).Seconds())
 
-	filesize = util.ByteCountDecimal(int64(len(file.Content())))
+	buf := bytes.Buffer{}
+	_, err = p.engine.Transform(ctxtimeout, &buf, parameters.output, parameters.operations)
+	if err != nil {
+		return nil, err
+	}
+	data := buf.Bytes()
+
 	filename := p.ShardFilename(storeKey)
 	file.Filepath = fmt.Sprintf("%s.%s", filename, file.Format())
 	file.Storage = p.destinationStorage
 	file.Key = storeKey
 	file.Headers["ETag"] = storeKey
 
+	file.HTTPStream = io.NopCloser(bytes.NewReader(data))
+	file.StorageStream = bytes.NewReader(data)
+	file.Storage = p.destinationStorage
+	if async {
+		go func() {
+			storectx, _ := context.WithTimeout(context.Background(), time.Second*60)
+
+			if err := p.Store(storectx, log, filepath, file); err != nil {
+				log.ErrorContext(storectx, "storage failed", slog.Any("error", err))
+			}
+		}()
+	} else {
+		if err := p.Store(c.Request.Context(), log, filepath, file); err != nil {
+			log.ErrorContext(c.Request.Context(), "storage failed", slog.Any("error", err))
+		}
+	}
+
+	endtime = time.Now()
+	defaultMetrics.histogram.WithLabelValues(
+		"transform",
+		strings.ToLower(filepathpkg.Ext(filepath)),
+	).Observe(endtime.Sub(starttime).Seconds())
+
 	log = log.With(
 		slog.String("image", file.Filepath),
-		slog.String("size", filesize),
 	)
 
 	loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully processed",
 		slog.Duration("duration", endtime.Sub(starttime)))
-
-	if err := p.Store(ctx, log, filepath, file); err != nil {
-		return nil, errors.Wrapf(err, "unable to store processed image: %s", filepath)
-	}
 
 	return file, nil
 }
@@ -450,4 +473,18 @@ func (p *Processor) FileExists(ctx context.Context, name string) bool {
 
 func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, error) {
 	return p.sourceStorage.Open(ctx, name)
+}
+
+func (p *Processor) checkImageMaxDimension(file io.Reader) error {
+	if p.maxImageDimensions == nil {
+		return nil
+	}
+	imageconfig, _, err := imagepkg.DecodeConfig(file)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if imageconfig.Width > p.maxImageDimensions.Width && imageconfig.Height > p.maxImageDimensions.Height {
+		return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max dimensions is %d x %d", p.maxImageDimensions.Width, p.maxImageDimensions.Height))}
+	}
+	return nil
 }

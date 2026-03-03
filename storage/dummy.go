@@ -11,7 +11,8 @@ type DummyStorage struct {
 }
 
 func (s *DummyStorage) Save(ctx context.Context, content io.Reader, filepath string) error {
-	return nil
+	_, err := io.Copy(io.Discard, content)
+	return err
 }
 
 func (s *DummyStorage) Delete(ctx context.Context, filepath string) error {

@@ -44,6 +44,7 @@ type Options struct {
 	TransformTimeout                 int                `mapstructure:"transform_timeout"`
 	MaxProcessorConcurrent           *int               `mapstructure:"max_processor_concurrent"`
 	MaxProcessorConcurrentOperations []engine.Operation `mapstructure:"max_processor_concurrent_operations"`
+	MaxImageDimensions               *AllowedSize       `mapstructure:"max_image_dimensions"`
 }
 
 // Sentry is a struct to configure sentry using a dsn

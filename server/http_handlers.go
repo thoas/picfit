@@ -64,6 +64,7 @@ func (h handlers) healthcheck(startedAt time.Time) func(c *gin.Context) {
 // display displays and image using resizing parameters
 func (h handlers) display(c *gin.Context) error {
 	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(true),
 		picfit.WithLoad(true))
 	if err != nil {
 		return err
@@ -74,8 +75,10 @@ func (h handlers) display(c *gin.Context) error {
 	}
 
 	c.Header("Cache-Control", "must-revalidate")
-
-	c.Data(http.StatusOK, file.ContentType(), file.Content())
+	defer func() {
+		file.Close()
+	}()
+	c.DataFromReader(http.StatusOK, -1, file.ContentType(), file.HTTPStream, nil)
 
 	return nil
 }
@@ -132,11 +135,14 @@ func (h handlers) delete(c *gin.Context) error {
 // get generates an image synchronously and return its information from storages
 func (h handlers) get(c *gin.Context) error {
 	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(false),
 		picfit.WithLoad(false))
 	if err != nil {
 		return err
 	}
-
+	defer func() {
+		file.Close()
+	}()
 	c.JSON(http.StatusOK, gin.H{
 		"filename": file.Filename(),
 		"path":     file.Path(),
@@ -150,11 +156,14 @@ func (h handlers) get(c *gin.Context) error {
 // redirect redirects to the image using base url from storage
 func (h handlers) redirect(c *gin.Context) error {
 	file, err := h.processor.ProcessContext(c,
+		picfit.WithAsync(false),
 		picfit.WithLoad(false))
 	if err != nil {
 		return err
 	}
-
+	defer func() {
+		file.Close()
+	}()
 	c.Redirect(http.StatusMovedPermanently, file.URL())
 
 	return nil

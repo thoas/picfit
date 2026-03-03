@@ -1,9 +1,7 @@
 package image
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -26,15 +24,8 @@ func FromURL(ctx context.Context, u *url.URL, userAgent string) (*ImageFile, err
 		return nil, errors.WithStack(err)
 	}
 
-	var buffer bytes.Buffer
-	if _, err = io.Copy(&buffer, content); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	if err := content.Close(); err != nil {
-		return nil, errors.WithStack(err)
-	}
 	return &ImageFile{
-		Source:   buffer.Bytes(),
+		Stream:   content,
 		Headers:  headers,
 		Filepath: u.Path[1:],
 	}, nil
@@ -61,16 +52,7 @@ func FromStorage(ctx context.Context, storage *storagepkg.Storage, filepath stri
 		"Last-Modified": stat.ModifiedTime.Format(constants.ModifiedTimeFormat),
 		"Content-Type":  contentType,
 	}
-
-	var buffer bytes.Buffer
-	if _, err = io.Copy(&buffer, f); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	file.Source = buffer.Bytes()
+	file.Stream = f
 	file.Headers = headers
-	if err := f.Close(); err != nil {
-		return nil, errors.WithStack(err)
-	}
 	return file, err
 }

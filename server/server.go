@@ -3,13 +3,10 @@ package server
 import (
 	"context"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
-	"time"
 
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/config"
-	loggerpkg "github.com/thoas/picfit/logger"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -42,18 +39,6 @@ func Run(ctx context.Context, path string) error {
 	defer stop()
 
 	g, _ := errgroup.WithContext(context.Background())
-	g.Go(func() error {
-		ticker := time.Tick(time.Duration(cfg.Options.FreeMemoryInterval) * time.Second)
-		for {
-			select {
-			case <-ticker:
-				loggerpkg.WithMemStats(server.processor.Logger).Info("Force free memory")
-				debug.FreeOSMemory()
-			case <-ctx.Done():
-				return nil
-			}
-		}
-	})
 
 	g.Go(func() error {
 		if err := server.Run(ctx); err != nil {

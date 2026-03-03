@@ -962,6 +962,53 @@ preserve aspect ratio.
       }
     }
 
+Max image dimensions
+--------------------
+
+To reject source images that exceed a maximum width or height before any
+processing takes place, use the ``max_image_dimensions`` option.
+When a source image is larger than the configured dimensions the server
+returns an error.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "max_image_dimensions": {
+          "width": 8000,
+          "height": 8000
+        }
+      }
+    }
+
+Concurrency limiter (semaphore)
+-------------------------------
+
+Heavy operations such as ``resize`` or ``thumbnail`` can be expensive.
+To limit how many of these operations run concurrently, use
+``max_processor_concurrent`` together with
+``max_processor_concurrent_operations``.
+
+When all slots are busy, new requests wait until a slot is freed or the
+request context is cancelled.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "max_processor_concurrent": 10,
+        "max_processor_concurrent_operations": [
+          "resize",
+          "thumbnail",
+          "fit"
+        ]
+      }
+    }
+
 IP Address restriction
 ----------------------
 

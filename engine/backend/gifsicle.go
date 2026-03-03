@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"image/gif"
+	"io"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -21,44 +22,53 @@ func (b *Gifsicle) String() string {
 }
 
 // Resize implements Backend.
-func (b *Gifsicle) Resize(ctx context.Context, imgfile *image.ImageFile, opts *Options) ([]byte, error) {
-	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
+func (b *Gifsicle) Resize(ctx context.Context, dst io.Writer, imgfile *image.ImageFile, opts *Options) error {
+	data, err := io.ReadAll(imgfile.Stream)
 	if err != nil {
-		return nil, err
+		return errors.WithStack(err)
+	}
+
+	img, err := gif.Decode(bytes.NewReader(data))
+	if err != nil {
+		return errors.WithStack(err)
 	}
 	factor := scalingFactorImage(img, opts.Width, opts.Height)
 	if factor > 1 && !opts.Upscale {
-		return imgfile.Source, nil
+		return gif.Encode(dst, img, nil)
 	}
 
 	resizeOption := fmt.Sprintf("%dx%d", opts.Width, opts.Height)
 	cmd := exec.CommandContext(ctx, b.Path,
 		"--resize", resizeOption,
 	)
-	cmd.Stdin = bytes.NewReader(imgfile.Source)
-	stdout := new(bytes.Buffer)
-	cmd.Stdout = stdout
+	cmd.Stdin = bytes.NewReader(data)
+	cmd.Stdout = dst
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
 
 	var target *exec.ExitError
 	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
-		return nil, errors.New(stderr.String())
+		return errors.New(stderr.String())
 	} else if err != nil {
-		return nil, errors.Wrap(err, "unable to resize")
+		return errors.Wrap(err, "unable to resize")
 	}
-	return stdout.Bytes(), nil
+	return nil
 }
 
 // Thumbnail implements Backend.
-func (b *Gifsicle) Thumbnail(ctx context.Context, imgfile *image.ImageFile, opts *Options) ([]byte, error) {
-	img, err := gif.Decode(bytes.NewReader(imgfile.Source))
+func (b *Gifsicle) Thumbnail(ctx context.Context, dst io.Writer, imgfile *image.ImageFile, opts *Options) error {
+	data, err := io.ReadAll(imgfile.Stream)
 	if err != nil {
-		return nil, err
+		return errors.WithStack(err)
+	}
+
+	img, err := gif.Decode(bytes.NewReader(data))
+	if err != nil {
+		return errors.WithStack(err)
 	}
 	factor := scalingFactorImage(img, opts.Width, opts.Height)
 	if factor > 1 && !opts.Upscale {
-		return imgfile.Source, nil
+		return gif.Encode(dst, img, nil)
 	}
 
 	bounds := img.Bounds()
@@ -71,44 +81,43 @@ func (b *Gifsicle) Thumbnail(ctx context.Context, imgfile *image.ImageFile, opts
 		"--resize", resizeOption,
 	)
 
-	cmd.Stdin = bytes.NewReader(imgfile.Source)
-	stdout := new(bytes.Buffer)
-	cmd.Stdout = stdout
+	cmd.Stdin = bytes.NewReader(data)
+	cmd.Stdout = dst
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
 
 	var target *exec.ExitError
 	if err := cmd.Run(); errors.As(err, &target) && target.Exited() {
-		return nil, errors.New(stderr.String())
+		return errors.New(stderr.String())
 	} else if err != nil {
-		return nil, errors.Wrap(err, "unable to thumbnail")
+		return errors.Wrap(err, "unable to thumbnail")
 	}
-	return stdout.Bytes(), nil
+	return nil
 }
 
 // Rotate implements Backend.
-func (b *Gifsicle) Rotate(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
+func (b *Gifsicle) Rotate(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error {
+	return MethodNotImplementedError
 }
 
 // Fit implements Backend.
-func (b *Gifsicle) Fit(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
+func (b *Gifsicle) Fit(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error {
+	return MethodNotImplementedError
 }
 
 // Effect implements Backend.
-func (b *Gifsicle) Effect(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
+func (b *Gifsicle) Effect(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error {
+	return MethodNotImplementedError
 }
 
 // Flat implements Backend.
-func (b *Gifsicle) Flat(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
+func (b *Gifsicle) Flat(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error {
+	return MethodNotImplementedError
 }
 
 // Flip implements Backend.
-func (b *Gifsicle) Flip(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error) {
-	return nil, MethodNotImplementedError
+func (b *Gifsicle) Flip(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error {
+	return MethodNotImplementedError
 }
 
 func computecrop(srcw, srch, destw, desth int) (left, top, cropw, croph int) {
