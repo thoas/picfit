@@ -449,7 +449,7 @@ func TestStorageApplicationWithPath(t *testing.T) {
 		assert.Equal(t, 200, res.Code)
 		assert.Equal(t, "application/json; charset=utf-8", res.Header().Get("Content-Type"))
 
-		var dat map[string]interface{}
+		var dat map[string]any
 
 		err = json.Unmarshal(res.Body.Bytes(), &dat)
 		assert.Nil(t, err)

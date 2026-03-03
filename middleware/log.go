@@ -35,6 +35,7 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 			slog.Duration("duration", time.Since(start)),
 			slog.String("user-agent", c.Request.UserAgent()),
 		}
+		logger = loggerpkg.WithMemStats(logger)
 
 		if len(c.Errors) > 0 {
 			for _, e := range c.Errors.Errors() {
@@ -43,7 +44,5 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 		} else {
 			logger.LogAttrs(ctx, slog.LevelInfo, path, attributes...)
 		}
-
-		loggerpkg.WithMemStats(logger).Info("Memory stats")
 	}
 }

@@ -14,7 +14,7 @@ func Tokey(args ...string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func Serialize(obj interface{}) string {
+func Serialize(obj any) string {
 	result, _ := json.Marshal(obj)
 
 	return string(result)

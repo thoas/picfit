@@ -36,7 +36,7 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	log.InfoContext(ctx, "Image engine configured",
 		slog.String("engine", e.String()))
 
-	return &Processor{
+	processor := &Processor{
 		Logger: log,
 
 		config:                     cfg,
@@ -45,5 +45,11 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 		engine:                     e,
 		sourceStorage:              sourceStorage,
 		store:                      s,
-	}, nil
+	}
+	if cfg.Options.MaxProcessorConcurrent != nil {
+		processor.withSemaphore = true
+		processor.semaphore = make(chan struct{}, *cfg.Options.MaxProcessorConcurrent)
+		processor.semaphoreOperations = cfg.Options.MaxProcessorConcurrentOperations
+	}
+	return processor, nil
 }

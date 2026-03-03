@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	filepathpkg "path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -37,6 +38,10 @@ type Processor struct {
 	engine                     *engine.Engine
 	sourceStorage              *storage.Storage
 	store                      store.Store
+
+	withSemaphore       bool
+	semaphoreOperations []engine.Operation
+	semaphore           chan struct{}
 }
 
 // Upload uploads a file to its storage
@@ -359,6 +364,31 @@ func (p *Processor) processImage(c *gin.Context, storeKey string) (*image.ImageF
 	parameters, err := p.NewParameters(ctx, file, qs)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
+	}
+
+	var containsSemaphoreOps bool
+	for i := range parameters.operations {
+		if slices.Contains(p.semaphoreOperations, parameters.operations[i].Operation) {
+			containsSemaphoreOps = true
+			break
+		}
+	}
+	if p.withSemaphore && containsSemaphoreOps {
+		// Wait for a slot in the semaphore
+		semaphorewait := time.Now()
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case p.semaphore <- struct{}{}:
+			break
+		}
+		log.InfoContext(ctx, "semaphore acquired", slog.Float64("semaphone-wait-duration-sec", time.Since(semaphorewait).Seconds()))
+
+		defer func() {
+			<-p.semaphore
+			log.InfoContext(ctx, "semaphore released")
+
+		}()
 	}
 
 	starttime = time.Now()
