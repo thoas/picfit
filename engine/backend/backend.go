@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 	"github.com/thoas/picfit/image"
@@ -33,12 +34,12 @@ func (o Options) String() string {
 
 // Engine is an interface to define an image engine
 type Backend interface {
-	Effect(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
-	Fit(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
-	Flat(ctx context.Context, background *image.ImageFile, options *Options) ([]byte, error)
-	Flip(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
-	Resize(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
-	Rotate(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
+	Effect(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
+	Fit(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
+	Flat(ctx context.Context, dst io.Writer, background *image.ImageFile, options *Options) error
+	Flip(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
+	Resize(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
+	Rotate(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
 	String() string
-	Thumbnail(ctx context.Context, img *image.ImageFile, options *Options) ([]byte, error)
+	Thumbnail(ctx context.Context, dst io.Writer, img *image.ImageFile, options *Options) error
 }

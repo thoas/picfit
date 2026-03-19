@@ -51,5 +51,8 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 		processor.semaphore = make(chan struct{}, *cfg.Options.MaxProcessorConcurrent)
 		processor.semaphoreOperations = cfg.Options.MaxProcessorConcurrentOperations
 	}
+	if cfg.Options.MaxImageDimensions != nil {
+		processor.maxImageDimensions = cfg.Options.MaxImageDimensions
+	}
 	return processor, nil
 }

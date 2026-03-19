@@ -24,10 +24,15 @@ func Handle(h Handler) gin.HandlerFunc {
 				c.AbortWithStatus(http.StatusNotModified)
 				return
 			}
+			if cerr == ErrFileMaxDimensions {
+				c.AbortWithStatus(http.StatusUnprocessableEntity)
+				return
+			}
 
 			switch cerr.(type) {
 			case binding.Errors:
 				c.String(http.StatusBadRequest, cerr.Error())
+				return
 			}
 
 			c.Error(err)
