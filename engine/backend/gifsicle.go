@@ -34,7 +34,8 @@ func (b *Gifsicle) Resize(ctx context.Context, dst io.Writer, imgfile *image.Ima
 	}
 	factor := scalingFactorImage(img, opts.Width, opts.Height)
 	if factor > 1 && !opts.Upscale {
-		return gif.Encode(dst, img, nil)
+		_, err := io.Copy(dst, bytes.NewReader(data))
+		return err
 	}
 
 	resizeOption := fmt.Sprintf("%dx%d", opts.Width, opts.Height)
@@ -68,7 +69,8 @@ func (b *Gifsicle) Thumbnail(ctx context.Context, dst io.Writer, imgfile *image.
 	}
 	factor := scalingFactorImage(img, opts.Width, opts.Height)
 	if factor > 1 && !opts.Upscale {
-		return gif.Encode(dst, img, nil)
+		_, err := io.Copy(dst, bytes.NewReader(data))
+		return err
 	}
 
 	bounds := img.Bounds()
