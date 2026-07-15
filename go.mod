@@ -24,7 +24,7 @@ require (
 	github.com/ulule/gokvstores v0.1.1-0.20221229151109-3bd12fb72ebe
 	github.com/ulule/gostorages v0.2.5
 	github.com/urfave/cli v1.22.10
-	golang.org/x/image v0.38.0
+	golang.org/x/image v0.41.0
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fukata/golang-stats-api-handler.v1 v1.0.0
