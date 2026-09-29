@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/thoas/picfit/constants"
-	loggerpkg "github.com/thoas/picfit/logger"
 )
 
 func NewLogger(logger *slog.Logger) gin.HandlerFunc {
@@ -35,8 +34,6 @@ func NewLogger(logger *slog.Logger) gin.HandlerFunc {
 			slog.Duration("duration", time.Since(start)),
 			slog.String("user-agent", c.Request.UserAgent()),
 		}
-		logger = loggerpkg.WithMemStats(logger)
-
 		if len(c.Errors) > 0 {
 			for _, e := range c.Errors.Errors() {
 				logger.LogAttrs(ctx, slog.LevelError, e, attributes...)

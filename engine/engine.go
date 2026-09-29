@@ -16,7 +16,6 @@ import (
 	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/image"
-	loggerpkg "github.com/thoas/picfit/logger"
 )
 
 type Engine struct {
@@ -97,7 +96,6 @@ func (e Engine) Transform(ctx context.Context, dst io.Writer, output *image.Imag
 	var (
 		err    error
 		source = output.Stream
-		start  = time.Now()
 	)
 
 	ct := output.ContentType()
@@ -120,18 +118,22 @@ func (e Engine) Transform(ctx context.Context, dst io.Writer, output *image.Imag
 				continue
 			}
 
-			defer func() {
-				loggerpkg.WithMemStats(e.logger).InfoContext(ctx, "Engine handled image",
+			start := time.Now()
+			err = operate(ctx, target, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
+			if err == nil {
+				duration := time.Since(start)
+				defaultMetrics.operationSeconds.WithLabelValues(
+					operations[i].Operation.String(),
+					e.backends[j].backend.String(),
+					ct,
+				).Observe(duration.Seconds())
+				e.logger.InfoContext(ctx, "Engine handled image",
 					slog.String("image", output.Filepath),
 					slog.String("backend", e.backends[j].backend.String()),
 					slog.String("operation", operations[i].Operation.String()),
 					slog.String("options", operations[i].Options.String()),
-					slog.String("duration", time.Now().Sub(start).String()),
+					slog.Duration("duration", duration),
 				)
-			}()
-
-			err = operate(ctx, target, e.backends[j].backend, output, operations[i].Operation, operations[i].Options)
-			if err == nil {
 				break
 			}
 
