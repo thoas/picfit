@@ -369,6 +369,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		slog.String("source-format", sourceformat),
 		slog.Int("source-width", sourceconfig.Width),
 		slog.Int("source-height", sourceconfig.Height),
+		slog.Int("source-pixels", sourceconfig.Width*sourceconfig.Height),
 	)
 
 	log.InfoContext(ctx, "Stream image retrieved from storage to process",
@@ -378,6 +379,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to process image")
 	}
+	log = log.With(operationsAttrs(parameters.operations)...)
 
 	var containsSemaphoreOps bool
 	for i := range parameters.operations {
@@ -476,6 +478,25 @@ func (p *Processor) FileExists(ctx context.Context, name string) bool {
 
 func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, error) {
 	return p.sourceStorage.Open(ctx, name)
+}
+
+// operationsAttrs returns operation names and their options as log attributes,
+// e.g. operations="thumbnail,flip" options="thumbnail(width:40 ...) | flip(...)"
+func operationsAttrs(operations []engine.EngineOperation) []any {
+	names := make([]string, 0, len(operations))
+	options := make([]string, 0, len(operations))
+	for _, op := range operations {
+		names = append(names, op.Operation.String())
+		if op.Options != nil {
+			options = append(options, fmt.Sprintf("%s(%s)", op.Operation, op.Options))
+		} else {
+			options = append(options, op.Operation.String())
+		}
+	}
+	return []any{
+		slog.String("operations", strings.Join(names, ",")),
+		slog.String("options", strings.Join(options, " | ")),
+	}
 }
 
 type readCloser struct {

@@ -5,9 +5,12 @@ import (
 	imagepkg "image"
 	"image/png"
 	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/thoas/picfit/config"
+	"github.com/thoas/picfit/engine"
+	"github.com/thoas/picfit/engine/backend"
 	"github.com/thoas/picfit/image"
 )
 
@@ -61,5 +64,23 @@ func TestDecodeConfigKeepsStream(t *testing.T) {
 	}
 	if err := file.Stream.Close(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestOperationsAttrs(t *testing.T) {
+	attrs := operationsAttrs([]engine.EngineOperation{
+		{Operation: engine.Thumbnail, Options: &backend.Options{Width: 40, Height: 40, Quality: 100, Upscale: true}},
+		{Operation: engine.Flip},
+	})
+	got := map[string]string{}
+	for _, a := range attrs {
+		attr := a.(slog.Attr)
+		got[attr.Key] = attr.Value.String()
+	}
+	if got["operations"] != "thumbnail,flip" {
+		t.Fatalf("operations = %q", got["operations"])
+	}
+	if want := "thumbnail(width:40 height:40 quality:100 upscale:true) | flip"; got["options"] != want {
+		t.Fatalf("options = %q, want %q", got["options"], want)
 	}
 }
