@@ -4,8 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"runtime"
-	"strconv"
 	"strings"
 )
 
@@ -77,23 +75,4 @@ func New(cfg Config) *slog.Logger {
 		sloghandler: slog.NewJSONHandler(os.Stderr, &opts),
 	})
 
-}
-
-func WithMemStats(logger *slog.Logger) *slog.Logger {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	attributes := []any{
-		slog.String("alloc-Mib", strconv.FormatUint(bToMb(m.Alloc), 10)),
-		slog.String("heap-alloc-Mib", strconv.FormatUint(bToMb(m.HeapAlloc), 10)),
-		slog.String("total-alloc-Mib", strconv.FormatUint(bToMb(m.TotalAlloc), 10)),
-		slog.String("sys-Mib", strconv.FormatUint(bToMb(m.Sys), 10)),
-		slog.Int("numgc", int(m.NumGC)),
-		slog.Int("total-goroutine", runtime.NumGoroutine()),
-	}
-	return logger.With(attributes...)
-}
-
-func bToMb(b uint64) uint64 {
-	return b / 1024 / 1024
 }

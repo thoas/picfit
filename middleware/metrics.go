@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,13 +19,15 @@ func Route(route string) gin.HandlerFunc {
 }
 
 func Metrics(c *gin.Context) {
+	start := time.Now()
 	c.Next()
 	route, ok := c.Request.Context().Value(RouteKey{}).(string)
 	if ok {
 		customMetrics.histogram.WithLabelValues(
 			c.Request.Method,
 			route,
-			fmt.Sprint(c.Writer.Status()))
+			fmt.Sprint(c.Writer.Status()),
+		).Observe(time.Since(start).Seconds())
 	}
 }
 

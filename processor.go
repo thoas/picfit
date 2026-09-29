@@ -26,7 +26,6 @@ import (
 	"github.com/thoas/picfit/failure"
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
-	loggerpkg "github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/store"
 )
@@ -71,14 +70,14 @@ func (p *Processor) Upload(ctx context.Context, payload *payload.Multipart) (*im
 
 // Store stores an image file with the defined filepath
 func (p *Processor) Store(ctx context.Context, log *slog.Logger, filepath string, i *image.ImageFile) error {
-	loggerpkg.WithMemStats(log).InfoContext(ctx, "Saving file on storage...")
+	log.InfoContext(ctx, "Saving file on storage...")
 	starttime := time.Now()
 	if err := i.Save(ctx); err != nil {
 		return err
 	}
 
 	endtime := time.Now()
-	loggerpkg.WithMemStats(log).InfoContext(ctx, "File saved on storage",
+	log.InfoContext(ctx, "File saved on storage",
 		slog.Duration("duration", endtime.Sub(starttime)),
 	)
 
@@ -255,7 +254,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 				return nil, errors.WithStack(err)
 			}
 
-			loggerpkg.WithMemStats(log).InfoContext(ctx, "Cache key already found in store, retrieve image from destination storage...",
+			log.InfoContext(ctx, "Cache key already found in store, retrieve image from destination storage...",
 				slog.String("filepath", filepath))
 
 			starttime := time.Now()
@@ -270,7 +269,7 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			}
 
 			endtime := time.Now()
-			loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully retrieved from destination storage",
+			log.InfoContext(ctx, "Image successfully retrieved from destination storage",
 				slog.Duration("duration", endtime.Sub(starttime)),
 				slog.String("image", img.Filepath))
 
@@ -347,26 +346,32 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	}
 	endtime := time.Now()
 
-	if p.maxImageDimensions != nil {
-		data, err := io.ReadAll(file.Stream)
-		if err != nil {
+	sourceconfig, sourceformat, err := decodeConfig(file)
+	if err != nil {
+		if p.maxImageDimensions != nil {
 			return nil, errors.WithStack(err)
 		}
-
-		if err := p.checkImageMaxDimension(bytes.NewReader(data)); err != nil {
-			return nil, err
-		}
-		file.Stream = io.NopCloser(bytes.NewReader(data))
+		sourceformat = "unknown"
+	}
+	if err := p.checkImageMaxDimension(sourceconfig); err != nil {
+		return nil, err
 	}
 
 	defaultMetrics.histogram.WithLabelValues(
 		"load",
 		strings.ToLower(filepathpkg.Ext(filepath)),
 	).Observe(endtime.Sub(starttime).Seconds())
+	defaultMetrics.sourcePixels.WithLabelValues(sourceformat).
+		Observe(float64(sourceconfig.Width) * float64(sourceconfig.Height))
 
-	log = log.With(slog.String("image", file.Filepath))
+	log = log.With(
+		slog.String("image", file.Filepath),
+		slog.String("source-format", sourceformat),
+		slog.Int("source-width", sourceconfig.Width),
+		slog.Int("source-height", sourceconfig.Height),
+	)
 
-	loggerpkg.WithMemStats(log).InfoContext(ctx, "Stream image retrieved from storage to process",
+	log.InfoContext(ctx, "Stream image retrieved from storage to process",
 		slog.Duration("duration", endtime.Sub(starttime)))
 
 	parameters, err := p.NewParameters(ctx, file, qs)
@@ -421,7 +426,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	file.Storage = p.destinationStorage
 	if async {
 		go func() {
-			storectx, _ := context.WithTimeout(context.Background(), time.Second*60)
+			storectx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+			defer cancel()
 
 			if err := p.Store(storectx, log, filepath, file); err != nil {
 				log.ErrorContext(storectx, "storage failed", slog.Any("error", err))
@@ -439,11 +445,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 		strings.ToLower(filepathpkg.Ext(filepath)),
 	).Observe(endtime.Sub(starttime).Seconds())
 
-	log = log.With(
-		slog.String("image", file.Filepath),
-	)
-
-	loggerpkg.WithMemStats(log).InfoContext(ctx, "Image successfully processed",
+	log.InfoContext(ctx, "Image successfully processed",
+		slog.String("destination", file.Filepath),
 		slog.Duration("duration", endtime.Sub(starttime)))
 
 	return file, nil
@@ -475,15 +478,32 @@ func (p *Processor) OpenFile(ctx context.Context, name string) (io.ReadCloser, e
 	return p.sourceStorage.Open(ctx, name)
 }
 
-func (p *Processor) checkImageMaxDimension(file io.Reader) error {
+type readCloser struct {
+	io.Reader
+	io.Closer
+}
+
+// decodeConfig reads the image header without consuming file.Stream:
+// the bytes read by the decoder are replayed before the rest of the stream.
+func decodeConfig(file *image.ImageFile) (imagepkg.Config, string, error) {
+	if file.Stream == nil {
+		return imagepkg.Config{}, "", errors.New("image has no stream")
+	}
+	var (
+		stream = file.Stream
+		header bytes.Buffer
+	)
+	imageconfig, format, err := imagepkg.DecodeConfig(io.TeeReader(stream, &header))
+	file.Stream = readCloser{Reader: io.MultiReader(&header, stream), Closer: stream}
+	return imageconfig, format, err
+}
+
+func (p *Processor) checkImageMaxDimension(imageconfig imagepkg.Config) error {
 	if p.maxImageDimensions == nil {
 		return nil
 	}
-	imageconfig, _, err := imagepkg.DecodeConfig(file)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if imageconfig.Width > p.maxImageDimensions.Width && imageconfig.Height > p.maxImageDimensions.Height {
+	maxWidth, maxHeight := p.maxImageDimensions.Width, p.maxImageDimensions.Height
+	if (maxWidth > 0 && imageconfig.Width > maxWidth) || (maxHeight > 0 && imageconfig.Height > maxHeight) {
 		return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max dimensions is %d x %d", p.maxImageDimensions.Width, p.maxImageDimensions.Height))}
 	}
 	return nil
