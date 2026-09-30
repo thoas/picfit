@@ -323,9 +323,13 @@ func TestVipsConcurrent(t *testing.T) {
 }
 
 func BenchmarkBackends(b *testing.B) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "tests", "fixtures", "original.jpg"))
-	if err != nil {
-		b.Skip("tests/fixtures/original.jpg is missing")
+	sources := map[string][]byte{}
+	for _, name := range []string{"original.jpg", "schwarzy.jpg"} {
+		data, err := os.ReadFile(filepath.Join("..", "..", "tests", "fixtures", name))
+		if err != nil {
+			b.Skipf("tests/fixtures/%s is missing", name)
+		}
+		sources[name] = data
 	}
 
 	backends := []Backend{&GoImage{}, NewVips(0, nil)}
@@ -342,19 +346,22 @@ func BenchmarkBackends(b *testing.B) {
 		{"blur", effectFunc, Options{Filter: constants.FilterBlur}},
 	}
 
-	for _, op := range operations {
-		for _, backend := range backends {
-			b.Run(fmt.Sprintf("%s/%s", op.name, backend), func(b *testing.B) {
-				opts := op.opts
-				opts.Format = imagefile.JPEG
-				opts.Quality = 95
-				b.ReportAllocs()
-				for b.Loop() {
-					if err := op.fn(backend)(context.Background(), io.Discard, newTestFile(data), &opts); err != nil {
-						b.Fatal(err)
+	for _, source := range []string{"original.jpg", "schwarzy.jpg"} {
+		for _, op := range operations {
+			for _, backend := range backends {
+				// key=value names so that benchstat -col /backend compares the backends
+				b.Run(fmt.Sprintf("src=%s/op=%s/backend=%s", source, op.name, backend), func(b *testing.B) {
+					opts := op.opts
+					opts.Format = imagefile.JPEG
+					opts.Quality = 95
+					b.ReportAllocs()
+					for b.Loop() {
+						if err := op.fn(backend)(context.Background(), io.Discard, newTestFile(sources[source]), &opts); err != nil {
+							b.Fatal(err)
+						}
 					}
-				}
-			})
+				})
+			}
 		}
 	}
 }

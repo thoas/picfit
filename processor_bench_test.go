@@ -322,7 +322,7 @@ func BenchmarkProcessor_Backends(b *testing.B) {
 
 	for _, op := range []string{"resize", "thumbnail", "fit", "rotate", "flip", "blur"} {
 		for _, backend := range []string{"goimage", "vips"} {
-			b.Run(fmt.Sprintf("%s/%s", op, backend), func(b *testing.B) {
+			b.Run(fmt.Sprintf("op=%s/backend=%s", op, backend), func(b *testing.B) {
 				cfg := configs[backend]
 				cfg.Debug = false
 				cfg.Logger.Level = "error"
