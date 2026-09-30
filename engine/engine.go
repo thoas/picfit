@@ -120,6 +120,7 @@ func (e Engine) Transform(ctx context.Context, dst io.Writer, output *image.Imag
 		}
 		output.Stream = source
 
+		handled := false
 		for j := range e.backends {
 			if !slices.Contains(e.backends[j].mimetypes, ct) {
 				continue
@@ -141,12 +142,18 @@ func (e Engine) Transform(ctx context.Context, dst io.Writer, output *image.Imag
 					slog.String("options", operations[i].Options.String()),
 					slog.Duration("duration", duration),
 				)
+				handled = true
 				break
 			}
 
 			if !errors.Is(err, backend.MethodNotImplementedError) {
 				return nil, err
 			}
+		}
+		// otherwise the next operation would read an empty stream and the response would be empty
+		if !handled {
+			return nil, errors.Wrapf(backend.MethodNotImplementedError,
+				"no backend handled operation %s for %s", operations[i].Operation, ct)
 		}
 		// is not last operations so we repass target to new source stream
 		if !isLast {
