@@ -26,7 +26,9 @@ Build it
 
     git clone https://github.com/thoas/picfit.git
 
-4. Run ``make build``
+4. Install `libvips <https://www.libvips.org/>`_ >= 8.16 and ``pkg-config``
+   (``brew install vips pkg-config`` on macOS, ``apt install libvips-dev`` on Debian trixie)
+5. Run ``make build``
 
 You have now a binary version of picfit in the ``bin`` directory which
 fits perfectly with your architecture.
@@ -776,6 +778,45 @@ By default the format will be chosen in this order:
 * The ``fmt`` parameter if exists in query string
 * The original image format
 * The default format provided in the `application <https://github.com/thoas/picfit/blob/master/application/constants.go#L6>`_
+
+Backends
+--------
+
+Operations are handled by backends, tried by ascending ``weight`` among those
+accepting the output content type. A backend which does not support an operation
+hands it to the next one.
+
+* ``vips``: `libvips <https://www.libvips.org/>`_, the fastest and least memory hungry one.
+  Handles jpeg, png and webp outputs for every operation except ``flat``.
+  ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default.
+* ``goimage``: pure Go, handles every operation and format.
+* ``gifsicle``: animated gif ``resize`` and ``thumbnail``, requires the ``gifsicle`` binary.
+
+Without ``backends``, only ``goimage`` is used.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "engine": {
+        "backends": {
+          "vips": {
+            "weight": 0,
+            "mimetypes": ["image/jpeg", "image/png", "image/webp"],
+            "concurrency": 0
+          },
+          "gifsicle": {
+            "weight": 1,
+            "mimetypes": ["image/gif"]
+          },
+          "goimage": {
+            "weight": 2,
+            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"]
+          }
+        }
+      }
+    }
 
 Options
 =======

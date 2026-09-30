@@ -25,4 +25,7 @@ const (
 
 	// DefaultShardRestOnly is the default shard rest behaviour
 	DefaultShardRestOnly = true
+
+	// DefaultTransformTimeout is the default timeout in seconds of an image transformation
+	DefaultTransformTimeout = 10
 )

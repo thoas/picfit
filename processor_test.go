@@ -25,6 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/thoas/picfit/config"
+	"github.com/thoas/picfit/engine"
+	engineconfig "github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/picfit/tests"
@@ -565,13 +567,37 @@ func TestDummyApplicationErrors(t *testing.T) {
 	assert.Equal(t, 404, res.Code)
 }
 
+// vipsConfig returns the default config with libvips in front of GoImage.
+func vipsConfig() *config.Config {
+	cfg := config.DefaultConfig()
+	cfg.Engine.Backends = &engineconfig.Backends{
+		Vips: &engineconfig.VipsBackend{
+			Mimetypes: []string{"image/jpeg", "image/png", "image/webp"},
+		},
+		GoImage: &engineconfig.Backend{
+			Weight:    1,
+			Mimetypes: engine.MimeTypes,
+		},
+	}
+	return cfg
+}
+
 func TestDummyApplication(t *testing.T) {
+	t.Run("goimage", func(t *testing.T) {
+		testDummyApplication(t, config.DefaultConfig())
+	})
+	t.Run("vips", func(t *testing.T) {
+		testDummyApplication(t, vipsConfig())
+	})
+}
+
+func testDummyApplication(t *testing.T, cfg *config.Config) {
 	ts := tests.NewImageServer()
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
 	ctx := context.Background()
-	server, err := server.New(ctx, config.DefaultConfig())
+	server, err := server.New(ctx, cfg)
 	assert.Nil(t, err)
 
 	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {
