@@ -3,3 +3,5 @@ Dockerfile.*
 LICENSE
 .travis.yml
 .gitignore
+bin
+tmp
