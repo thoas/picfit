@@ -63,6 +63,13 @@ func New(cfg config.Config, logger *slog.Logger) *Engine {
 				weight:    cfg.Backends.GoImage.Weight,
 			})
 		}
+		if cfg.Backends.Vips != nil {
+			b = append(b, &backendWrapper{
+				backend:   backend.NewVips(cfg.Backends.Vips.Concurrency, logger),
+				mimetypes: cfg.Backends.Vips.Mimetypes,
+				weight:    cfg.Backends.Vips.Weight,
+			})
+		}
 	}
 
 	sort.Slice(b, func(i, j int) bool {

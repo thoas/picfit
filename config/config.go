@@ -88,6 +88,7 @@ func DefaultConfig() *Config {
 			EnableDelete:     false,
 			EnableUpload:     false,
 			MimetypeDetector: DefaultMimetypeDetector,
+			TransformTimeout: DefaultTransformTimeout,
 		},
 		Port: DefaultPort,
 		KVStore: &store.Config{
@@ -140,7 +141,7 @@ func load(content string, isPath bool) (*Config, error) {
 	}
 
 	if config.Options.TransformTimeout == 0 {
-		config.Options.TransformTimeout = 10
+		config.Options.TransformTimeout = DefaultTransformTimeout
 	}
 
 	return config, nil
