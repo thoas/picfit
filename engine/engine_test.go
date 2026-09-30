@@ -61,70 +61,86 @@ func flatOperations(t *testing.T) []EngineOperation {
 	}
 }
 
-func transform(t *testing.T, cfg config.Config, operations []EngineOperation) ([]byte, []string, error) {
+// sepiaOperation is supported by no backend.
+var sepiaOperation = EngineOperation{
+	Operation: Effect,
+	Options:   &backend.Options{Filter: "sepia", Format: image.PNG},
+}
+
+func transform(t *testing.T, cfg config.Config, source, contentType string, operations []EngineOperation) ([]byte, []string, error) {
 	t.Helper()
 	logs := &bytes.Buffer{}
 	e := New(cfg, slog.New(slog.NewJSONHandler(logs, nil)))
 
 	output := &image.ImageFile{
-		Stream:  io.NopCloser(bytes.NewReader(readFixture(t, "schwarzy.jpg"))),
-		Headers: map[string]string{"Content-Type": "image/png"},
+		Stream:  io.NopCloser(bytes.NewReader(readFixture(t, source))),
+		Headers: map[string]string{"Content-Type": contentType},
 	}
 	dst := &bytes.Buffer{}
 	_, err := e.Transform(context.Background(), dst, output, operations)
 	return dst.Bytes(), handledBy(t, logs), err
 }
 
-func TestTransformFlatFallsBackOnGoImage(t *testing.T) {
-	vipsFirst := config.Config{Backends: &config.Backends{
-		Vips:    &config.VipsBackend{Mimetypes: MimeTypes},
-		GoImage: &config.Backend{Weight: 1, Mimetypes: MimeTypes},
-	}}
+func decodeConfig(t *testing.T, data []byte) stdimage.Config {
+	t.Helper()
+	cfg, _, err := stdimage.DecodeConfig(bytes.NewReader(data))
+	require.NoError(t, err)
+	return cfg
+}
 
-	actual, backends, err := transform(t, vipsFirst, flatOperations(t))
-	require.NoError(t, err)
-	assert.Equal(t, []string{"vips", "goimage"}, backends)
+var vipsFirst = config.Config{Backends: &config.Backends{
+	Vips:    &config.VipsBackend{Mimetypes: MimeTypes},
+	GoImage: &config.Backend{Weight: 1, Mimetypes: MimeTypes},
+}}
 
-	expected, _, err := transform(t, config.Config{}, flatOperations(t))
+func TestTransformFlat(t *testing.T) {
+	actual, backends, err := transform(t, vipsFirst, "schwarzy.jpg", "image/png", flatOperations(t))
 	require.NoError(t, err)
+	assert.Equal(t, []string{"vips", "vips"}, backends)
 
-	actualCfg, _, err := stdimage.DecodeConfig(bytes.NewReader(actual))
+	expected, backends, err := transform(t, config.Config{}, "schwarzy.jpg", "image/png", flatOperations(t))
 	require.NoError(t, err)
-	expectedCfg, _, err := stdimage.DecodeConfig(bytes.NewReader(expected))
+	assert.Equal(t, []string{"goimage", "goimage"}, backends)
+
+	assert.Equal(t, decodeConfig(t, expected), decodeConfig(t, actual))
+}
+
+func TestTransformFallsBackOnGoImage(t *testing.T) {
+	// vips does not encode GIF
+	operations := flatOperations(t)
+	for i := range operations {
+		operations[i].Options.Format = image.GIF
+	}
+
+	actual, backends, err := transform(t, vipsFirst, "giphy.gif", "image/gif", operations)
 	require.NoError(t, err)
-	assert.Equal(t, expectedCfg, actualCfg)
+	assert.Equal(t, []string{"goimage", "goimage"}, backends)
+	assert.Equal(t, 200, decodeConfig(t, actual).Width)
 }
 
 func TestTransformNoBackendForOperation(t *testing.T) {
 	vipsOnly := config.Config{Backends: &config.Backends{
 		Vips: &config.VipsBackend{Mimetypes: MimeTypes},
 	}}
+	resize := flatOperations(t)[0]
 
 	t.Run("last operation", func(t *testing.T) {
-		_, _, err := transform(t, vipsOnly, flatOperations(t))
+		_, _, err := transform(t, vipsOnly, "schwarzy.jpg", "image/png", []EngineOperation{resize, sepiaOperation})
 		assert.ErrorIs(t, err, backend.MethodNotImplementedError)
+		assert.ErrorContains(t, err, "operation effect")
 	})
 
 	t.Run("intermediate operation", func(t *testing.T) {
-		operations := flatOperations(t)
-		operations = append([]EngineOperation{operations[1]}, operations[0])
-
-		_, _, err := transform(t, vipsOnly, operations)
+		_, _, err := transform(t, vipsOnly, "schwarzy.jpg", "image/png", []EngineOperation{sepiaOperation, resize})
 		assert.ErrorIs(t, err, backend.MethodNotImplementedError)
-		assert.ErrorContains(t, err, "operation flat")
+		assert.ErrorContains(t, err, "operation effect")
 	})
 
 	t.Run("intermediate operation with a fallback for the next one", func(t *testing.T) {
-		vipsWithGIFFallback := config.Config{Backends: &config.Backends{
-			Vips:    &config.VipsBackend{Mimetypes: MimeTypes},
-			GoImage: &config.Backend{Weight: 1, Mimetypes: []string{"image/gif"}},
-		}}
-		operations := flatOperations(t)
-		operations = append([]EngineOperation{operations[1]}, operations[0])
-
-		_, _, err := transform(t, vipsWithGIFFallback, operations)
+		// GoImage would fail on the empty stream left by the effect with a misleading error
+		_, _, err := transform(t, vipsFirst, "schwarzy.jpg", "image/png", []EngineOperation{sepiaOperation, resize})
 		assert.ErrorIs(t, err, backend.MethodNotImplementedError)
-		assert.ErrorContains(t, err, "operation flat")
+		assert.ErrorContains(t, err, "operation effect")
 	})
 
 	t.Run("no backend for the content type", func(t *testing.T) {

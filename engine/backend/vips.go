@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -137,11 +136,6 @@ func (b *Vips) Effect(ctx context.Context, dst io.Writer, img *imagefile.ImageFi
 	})
 }
 
-// Flat implements Backend.
-func (b *Vips) Flat(ctx context.Context, dst io.Writer, background *imagefile.ImageFile, options *Options) error {
-	return MethodNotImplementedError
-}
-
 // scale follows the GoImage rules: no upscale unless requested, output dimensions computed like imaging.
 func (b *Vips) scale(ctx context.Context, dst io.Writer, img *imagefile.ImageFile, options *Options, size sizeFunc, crop vips.Interesting) error {
 	if !vipsCanSave(options.Format) {
@@ -226,7 +220,7 @@ func (b *Vips) load(ctx context.Context, img *imagefile.ImageFile) ([]byte, *vip
 			slog.String("image", img.Filepath),
 			slog.String("reason", reason),
 		)
-		img.Stream = io.NopCloser(bytes.NewReader(data))
+		rewind(img, data)
 		return nil, nil, MethodNotImplementedError
 	}
 

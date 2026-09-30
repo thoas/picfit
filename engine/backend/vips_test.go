@@ -226,7 +226,7 @@ func TestVipsNotImplementedKeepsStream(t *testing.T) {
 	}{
 		{"gif output", vipsBackend.Resize, readFixture(t, "giphy.gif"), Options{Width: 100, Format: imagefile.GIF}},
 		{"unknown filter", vipsBackend.Effect, readFixture(t, "schwarzy.jpg"), Options{Filter: "sepia", Format: imagefile.JPEG}},
-		{"flat", vipsBackend.Flat, readFixture(t, "schwarzy.jpg"), Options{Format: imagefile.JPEG}},
+		{"flat gif output", vipsBackend.Flat, readFixture(t, "giphy.gif"), Options{Position: "10.10.50.50", Format: imagefile.GIF}},
 		{"bmp source", vipsBackend.Resize, bmpData.Bytes(), Options{Width: 5, Format: imagefile.JPEG}},
 		{"not an image", vipsBackend.Resize, []byte("not an image"), Options{Width: 5, Format: imagefile.JPEG}},
 		{"empty", vipsBackend.Resize, []byte{}, Options{Width: 5, Format: imagefile.JPEG}},
@@ -289,6 +289,116 @@ func TestVipsCanceledContext(t *testing.T) {
 	err := vipsBackend.Resize(ctx, io.Discard, newTestFile(readFixture(t, "schwarzy.jpg")),
 		&Options{Width: 100, Format: imagefile.JPEG})
 	assert.ErrorIs(t, err, context.Canceled)
+}
+
+// pixelDiff returns the mean absolute difference per channel (0-255) and the ratio
+// of pixels differing by more than 64 on a channel, a misplaced overlay raises the latter.
+func pixelDiff(t *testing.T, a, b []byte) (float64, float64) {
+	t.Helper()
+	imgA, _, err := stdimage.Decode(bytes.NewReader(a))
+	require.NoError(t, err)
+	imgB, _, err := stdimage.Decode(bytes.NewReader(b))
+	require.NoError(t, err)
+	require.Equal(t, imgA.Bounds().Size(), imgB.Bounds().Size())
+
+	var sum float64
+	var far, n int
+	bounds := imgA.Bounds()
+	for y := range bounds.Dy() {
+		for x := range bounds.Dx() {
+			r1, g1, b1, _ := imgA.At(bounds.Min.X+x, bounds.Min.Y+y).RGBA()
+			r2, g2, b2, _ := imgB.At(imgB.Bounds().Min.X+x, imgB.Bounds().Min.Y+y).RGBA()
+			worst := 0
+			for _, d := range []int{int(r1>>8) - int(r2>>8), int(g1>>8) - int(g2>>8), int(b1>>8) - int(b2>>8)} {
+				d = max(d, -d)
+				sum += float64(d)
+				worst = max(worst, d)
+			}
+			if worst > 64 {
+				far++
+			}
+			n++
+		}
+	}
+	return sum / float64(3*n), float64(far) / float64(n)
+}
+
+func TestVipsFlatParityWithGoImage(t *testing.T) {
+	goimage := &GoImage{}
+	vipsBackend := NewVips(0, nil)
+
+	tests := []struct {
+		name        string
+		background  string
+		foregrounds []string
+		opts        Options
+	}{
+		{"pos one image", "schwarzy.jpg", []string{"avatar.png"}, Options{Position: "10.10.60.60"}},
+		{"pos horizontal", "schwarzy.jpg", []string{"avatar.png", "giphy.gif"}, Options{Position: "10.20.90.60"}},
+		{"pos vertical", "schwarzy.jpg", []string{"avatar.png", "giphy.gif"}, Options{Position: "70.5.95.95"}},
+		{"pos color", "schwarzy.jpg", []string{"giphy.gif"}, Options{Position: "10.10.50.90", Color: "ff0000"}},
+		{"pos color without image", "schwarzy.jpg", nil, Options{Position: "20.20.80.80", Color: "00ff00"}},
+		{"pos invalid color", "schwarzy.jpg", []string{"avatar.png"}, Options{Position: "10.10.60.60", Color: "zz"}},
+		{"pos beyond background", "schwarzy.jpg", []string{"avatar.png"}, Options{Position: "80.80.150.150", Color: "0000ff"}},
+		{"pos empty", "schwarzy.jpg", []string{"avatar.png"}, Options{}},
+		{"stick top-left", "schwarzy.jpg", []string{"avatar.png"}, Options{Stick: constants.TopLeft, Width: 100, Height: 80}},
+		{"stick top-right", "schwarzy.jpg", []string{"giphy.gif"}, Options{Stick: constants.TopRight, Width: 100, Height: 80}},
+		{"stick bottom-left", "schwarzy.jpg", []string{"avatar.png"}, Options{Stick: constants.BottomLeft, Width: 100, Height: 80}},
+		{"stick bottom-right", "schwarzy.jpg", []string{"giphy.gif"}, Options{Stick: constants.BottomRight, Width: 100, Height: 80}},
+		{"stick width only", "schwarzy.jpg", []string{"avatar.png"}, Options{Stick: constants.BottomRight, Width: 120}},
+		{"stick without dimension", "schwarzy.jpg", []string{"avatar.png"}, Options{Stick: constants.TopLeft}},
+		{"transparent background", "giphy.gif", []string{"avatar.png"}, Options{Position: "25.25.75.75"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flat := func(b Backend) []byte {
+				opts := tt.opts
+				opts.Format = imagefile.PNG
+				for _, name := range tt.foregrounds {
+					opts.Images = append(opts.Images, *newTestFile(readFixture(t, name)))
+				}
+				dst := &bytes.Buffer{}
+				require.NoError(t, b.Flat(context.Background(), dst, newTestFile(readFixture(t, tt.background)), &opts))
+				return dst.Bytes()
+			}
+
+			expected, actual := flat(goimage), flat(vipsBackend)
+			mean, far := pixelDiff(t, expected, actual)
+			assert.Less(t, mean, 3.0, "mean difference per channel")
+			assert.Less(t, far, 0.01, "ratio of very different pixels")
+		})
+	}
+}
+
+func TestVipsFlatFallbackRewindsEveryStream(t *testing.T) {
+	vipsBackend := NewVips(0, nil)
+
+	bmpData := &bytes.Buffer{}
+	require.NoError(t, bmp.Encode(bmpData, stdimage.NewRGBA(stdimage.Rect(0, 0, 10, 10))))
+	background, avatar := readFixture(t, "schwarzy.jpg"), readFixture(t, "avatar.png")
+
+	bgFile := newTestFile(background)
+	opts := &Options{
+		Position: "10.10.60.60",
+		Format:   imagefile.JPEG,
+		Images:   []imagefile.ImageFile{*newTestFile(avatar), *newTestFile(bmpData.Bytes())},
+	}
+	err := vipsBackend.Flat(context.Background(), io.Discard, bgFile, opts)
+	require.ErrorIs(t, err, MethodNotImplementedError)
+
+	for name, tt := range map[string]struct {
+		file *imagefile.ImageFile
+		data []byte
+	}{
+		"background": {bgFile, background},
+		"avatar":     {&opts.Images[0], avatar},
+		"bmp":        {&opts.Images[1], bmpData.Bytes()},
+	} {
+		rest, err := io.ReadAll(tt.file.Stream)
+		require.NoError(t, err)
+		assert.Equal(t, tt.data, rest, name)
+	}
 }
 
 func TestVipsConcurrent(t *testing.T) {
@@ -363,5 +473,34 @@ func BenchmarkBackends(b *testing.B) {
 				})
 			}
 		}
+	}
+}
+
+func BenchmarkFlat(b *testing.B) {
+	background, err := os.ReadFile(filepath.Join("..", "..", "tests", "fixtures", "original.jpg"))
+	if err != nil {
+		b.Skip("tests/fixtures/original.jpg is missing")
+	}
+	foreground, err := os.ReadFile(filepath.Join("..", "..", "tests", "fixtures", "avatar.png"))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	for _, backend := range []Backend{&GoImage{}, NewVips(0, nil)} {
+		b.Run(fmt.Sprintf("backend=%s", backend), func(b *testing.B) {
+			b.ReportAllocs()
+			for b.Loop() {
+				opts := &Options{
+					Position: "10.10.60.60",
+					Color:    "ffffff",
+					Format:   imagefile.JPEG,
+					Quality:  95,
+					Images:   []imagefile.ImageFile{*newTestFile(foreground)},
+				}
+				if err := backend.Flat(context.Background(), io.Discard, newTestFile(background), opts); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
 	}
 }

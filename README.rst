@@ -787,7 +787,7 @@ accepting the output content type. A backend which does not support an operation
 hands it to the next one.
 
 * ``vips``: `libvips <https://www.libvips.org/>`_, the fastest and least memory hungry one.
-  Handles jpeg, png and webp outputs for every operation except ``flat``.
+  Handles jpeg, png and webp outputs for every operation.
   ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default.
 * ``goimage``: pure Go, handles every operation and format.
 * ``gifsicle``: animated gif ``resize`` and ``thumbnail``, requires the ``gifsicle`` binary.
