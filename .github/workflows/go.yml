@@ -9,6 +9,8 @@ on:
 jobs:
   container-job:
     runs-on: ubuntu-latest
+    # libvips >= 8.16 is required, ubuntu-latest ships an older one
+    container: golang:1.25-trixie
 
     services:
       redis:
@@ -18,17 +20,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 6379:6379
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v7
 
-      - name: Set up Go
-        uses: actions/setup-go@v7
-        with:
-          go-version: "1.25"
+      - name: Install libvips
+        run: apt-get update && apt-get install -y --no-install-recommends libvips-dev
 
       - name: Build
         run: make build
@@ -36,5 +34,5 @@ jobs:
       - name: Test
         run: make test
         env:
-          REDIS_HOST: localhost
+          REDIS_HOST: redis
           REDIS_PORT: 6379

@@ -788,7 +788,8 @@ hands it to the next one.
 
 * ``vips``: `libvips <https://www.libvips.org/>`_, the fastest and least memory hungry one.
   Handles jpeg, png and webp outputs for every operation.
-  ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default.
+  ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default
+  (one per core). ``1`` gives a better throughput when picfit serves concurrent requests.
 * ``goimage``: pure Go, handles every operation and format.
 * ``gifsicle``: animated gif ``resize`` and ``thumbnail``, requires the ``gifsicle`` binary.
 
@@ -804,7 +805,7 @@ Without ``backends``, only ``goimage`` is used.
           "vips": {
             "weight": 0,
             "mimetypes": ["image/jpeg", "image/png", "image/webp"],
-            "concurrency": 0
+            "concurrency": 1
           },
           "gifsicle": {
             "weight": 1,
