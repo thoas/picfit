@@ -1025,6 +1025,35 @@ returns an error.
       }
     }
 
+Maximum image pixels
+--------------------
+
+``max_image_dimensions`` limits each side, which also rejects ordinary portrait
+or panoramic photos. ``max_image_pixels`` limits the total number of pixels
+(width × height) instead, which is what drives the memory needed to decode an
+image. Both options can be combined, for instance a pixel limit with a generous
+limit per side to reject absurd aspect ratios.
+
+The dimensions are read from the image header before any processing. When a
+limit is configured, a source whose header cannot be read is rejected too.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "max_image_pixels": 50000000,
+        "max_image_dimensions": {
+          "width": 20000,
+          "height": 20000
+        }
+      }
+    }
+
+With this configuration a 3746×5630 photo (21 Mpx) is accepted, a 10000×10000
+image (100 Mpx) is rejected.
+
 Concurrency limiter (semaphore)
 -------------------------------
 
