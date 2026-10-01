@@ -5,3 +5,4 @@ LICENSE
 .gitignore
 bin
 tmp
+bench

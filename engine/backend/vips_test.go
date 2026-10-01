@@ -504,3 +504,30 @@ func BenchmarkFlat(b *testing.B) {
 		})
 	}
 }
+
+func TestVipsPNGSizeParityWithGoImage(t *testing.T) {
+	goimage := &GoImage{}
+	vipsBackend := NewVips(0, nil)
+
+	tests := []struct {
+		name    string
+		fixture string
+		fn      backendFunc
+		opts    Options
+	}{
+		{"thumbnail", "schwarzy.jpg", thumbnailFunc, Options{Width: 300, Height: 300, Upscale: true}},
+		{"flip", "schwarzy.jpg", flipFunc, Options{Position: "h"}},
+		{"resize", "avatar.png", resizeFunc, Options{Width: 200, Upscale: true}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := tt.opts
+			opts.Format = imagefile.PNG
+			data := readFixture(t, tt.fixture)
+
+			expected := len(run(t, goimage, tt.fn, data, opts))
+			actual := len(run(t, vipsBackend, tt.fn, data, opts))
+			assert.LessOrEqual(t, float64(actual), 1.2*float64(expected), "vips %d bytes, goimage %d bytes", actual, expected)
+		})
+	}
+}

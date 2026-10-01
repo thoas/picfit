@@ -267,7 +267,9 @@ func (b *Vips) save(dst io.Writer, image *vips.Image, options *Options) error {
 		})
 	case imagefile.PNG:
 		buf, err = image.PngsaveBuffer(&vips.PngsaveBufferOptions{
-			Keep: vips.KeepNone,
+			// libvips does not filter rows by default, files are up to twice as big as Go's encoder
+			Filter: vips.PngFilterAll,
+			Keep:   vips.KeepNone,
 		})
 	case imagefile.WEBP:
 		buf, err = image.WebpsaveBuffer(&vips.WebpsaveBufferOptions{
