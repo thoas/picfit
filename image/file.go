@@ -38,7 +38,10 @@ func (i *ImageFile) Content() io.ReadCloser {
 }
 
 func (i *ImageFile) Close() {
-	i.Stream.Close()
+	// get and redirect load cached files without their stream
+	if i.Stream != nil {
+		i.Stream.Close()
+	}
 	i.HTTPStream = nil
 }
 
