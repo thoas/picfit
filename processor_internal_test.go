@@ -39,6 +39,52 @@ func TestCheckImageMaxDimension(t *testing.T) {
 	}
 }
 
+func TestCheckImageMaxPixels(t *testing.T) {
+	tests := []struct {
+		name          string
+		maxPixels     int64
+		maxDimensions *config.AllowedSize
+		width, height int
+		wantErr       bool
+	}{
+		{"portrait photo under the limit", 50_000_000, nil, 3746, 5630, false},
+		{"exactly at the limit", 50_000_000, nil, 10_000, 5_000, false},
+		{"over the limit", 50_000_000, nil, 10_000, 10_000, true},
+		{"product larger than int32", 50_000_000, nil, 100_000, 100_000, true},
+		{"limit disabled", 0, nil, 100_000, 100_000, false},
+		{"pixels under the limit but side too long", 50_000_000, &config.AllowedSize{Width: 20_000, Height: 20_000}, 60_000, 800, true},
+		{"both limits respected", 50_000_000, &config.AllowedSize{Width: 20_000, Height: 20_000}, 8064, 6048, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Processor{maxImagePixels: tt.maxPixels, maxImageDimensions: tt.maxDimensions}
+			err := p.checkImageMaxDimension(imagepkg.Config{Width: tt.width, Height: tt.height})
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("checkImageMaxDimension(%dx%d) error = %v, wantErr %v", tt.width, tt.height, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestHasImageLimits(t *testing.T) {
+	tests := []struct {
+		name string
+		p    *Processor
+		want bool
+	}{
+		{"no limit", &Processor{}, false},
+		{"dimensions only", &Processor{maxImageDimensions: &config.AllowedSize{Width: 10}}, true},
+		{"pixels only", &Processor{maxImagePixels: 10}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.p.hasImageLimits(); got != tt.want {
+				t.Fatalf("hasImageLimits() = %t, want %t", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDecodeConfigKeepsStream(t *testing.T) {
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, imagepkg.NewRGBA(imagepkg.Rect(0, 0, 30, 20))); err != nil {

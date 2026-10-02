@@ -680,3 +680,36 @@ func testDummyApplication(t *testing.T, cfg *config.Config) {
 		}
 	}
 }
+
+func TestMaxImagePixels(t *testing.T) {
+	ts := tests.NewImageServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	// avatar.png is 400x400, i.e. 160 000 pixels
+	for _, tt := range []struct {
+		name      string
+		maxPixels int
+		status    int
+	}{
+		{"under the limit", 200_000, http.StatusOK},
+		{"over the limit", 100_000, http.StatusBadRequest},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			content := fmt.Sprintf(`{"port": 3001, "options": {"max_image_pixels": %d}}`, tt.maxPixels)
+
+			tests.Run(t, func(t *testing.T, suite *tests.Suite) {
+				u, _ := url.Parse(ts.URL + "/avatar.png")
+				request, _ := http.NewRequest("GET", fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=resize", u.String()), nil)
+
+				server, err := server.New(context.Background(), suite.Config)
+				assert.Nil(t, err)
+
+				res := httptest.NewRecorder()
+				server.ServeHTTP(res, request)
+
+				assert.Equal(t, tt.status, res.Code, res.Body.String())
+			}, tests.WithConfig(content))
+		})
+	}
+}

@@ -45,6 +45,7 @@ type Options struct {
 	MaxProcessorConcurrent           *int               `mapstructure:"max_processor_concurrent"`
 	MaxProcessorConcurrentOperations []engine.Operation `mapstructure:"max_processor_concurrent_operations"`
 	MaxImageDimensions               *AllowedSize       `mapstructure:"max_image_dimensions"`
+	MaxImagePixels                   int64              `mapstructure:"max_image_pixels"`
 }
 
 // Sentry is a struct to configure sentry using a dsn
