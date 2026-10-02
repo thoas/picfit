@@ -1,4 +1,8 @@
-FROM golang:1.25-bookworm
+FROM golang:1.25-trixie
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 ADD . /go/src/github.com/thoas/picfit
 

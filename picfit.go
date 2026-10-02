@@ -54,5 +54,8 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	if cfg.Options.MaxImageDimensions != nil {
 		processor.maxImageDimensions = cfg.Options.MaxImageDimensions
 	}
+	if cfg.Options.MaxImagePixels > 0 {
+		processor.maxImagePixels = cfg.Options.MaxImagePixels
+	}
 	return processor, nil
 }

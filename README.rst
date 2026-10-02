@@ -26,7 +26,9 @@ Build it
 
     git clone https://github.com/thoas/picfit.git
 
-4. Run ``make build``
+4. Install `libvips <https://www.libvips.org/>`_ >= 8.16 and ``pkg-config``
+   (``brew install vips pkg-config`` on macOS, ``apt install libvips-dev`` on Debian trixie)
+5. Run ``make build``
 
 You have now a binary version of picfit in the ``bin`` directory which
 fits perfectly with your architecture.
@@ -777,6 +779,46 @@ By default the format will be chosen in this order:
 * The original image format
 * The default format provided in the `application <https://github.com/thoas/picfit/blob/master/application/constants.go#L6>`_
 
+Backends
+--------
+
+Operations are handled by backends, tried by ascending ``weight`` among those
+accepting the output content type. A backend which does not support an operation
+hands it to the next one.
+
+* ``vips``: `libvips <https://www.libvips.org/>`_, the fastest and least memory hungry one.
+  Handles jpeg, png and webp outputs for every operation.
+  ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default
+  (one per core). ``1`` gives a better throughput when picfit serves concurrent requests.
+* ``goimage``: pure Go, handles every operation and format.
+* ``gifsicle``: animated gif ``resize`` and ``thumbnail``, requires the ``gifsicle`` binary.
+
+Without ``backends``, only ``goimage`` is used.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "engine": {
+        "backends": {
+          "vips": {
+            "weight": 0,
+            "mimetypes": ["image/jpeg", "image/png", "image/webp"],
+            "concurrency": 1
+          },
+          "gifsicle": {
+            "weight": 1,
+            "mimetypes": ["image/gif"]
+          },
+          "goimage": {
+            "weight": 2,
+            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"]
+          }
+        }
+      }
+    }
+
 Options
 =======
 
@@ -982,6 +1024,35 @@ returns an error.
         }
       }
     }
+
+Maximum image pixels
+--------------------
+
+``max_image_dimensions`` limits each side, which also rejects ordinary portrait
+or panoramic photos. ``max_image_pixels`` limits the total number of pixels
+(width × height) instead, which is what drives the memory needed to decode an
+image. Both options can be combined, for instance a pixel limit with a generous
+limit per side to reject absurd aspect ratios.
+
+The dimensions are read from the image header before any processing. When a
+limit is configured, a source whose header cannot be read is rejected too.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "max_image_pixels": 50000000,
+        "max_image_dimensions": {
+          "width": 20000,
+          "height": 20000
+        }
+      }
+    }
+
+With this configuration a 3746×5630 photo (21 Mpx) is accepted, a 10000×10000
+image (100 Mpx) is rejected.
 
 Concurrency limiter (semaphore)
 -------------------------------

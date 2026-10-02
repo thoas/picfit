@@ -33,8 +33,8 @@ func BenchmarkProcessor_ProcessContext(b *testing.B) {
 
 	params := map[string]any{
 		"url": u,
-		"w":   50,
-		"h":   50,
+		"w":   "50",
+		"h":   "50",
 		"op":  "resize",
 	}
 	key := "test-key"
@@ -78,8 +78,8 @@ func BenchmarkProcessor_ProcessContext_Thumbnail(b *testing.B) {
 	u, _ := url.Parse(ts.URL + "/original.jpg")
 	params := map[string]any{
 		"url": u,
-		"w":   50,
-		"h":   50,
+		"w":   "50",
+		"h":   "50",
 		"op":  "thumbnail",
 	}
 	key := "test-key-thumbnail"
@@ -124,7 +124,7 @@ func BenchmarkProcessor_ProcessContext_Rotate(b *testing.B) {
 	params := map[string]any{
 		"url": u,
 		"op":  "rotate",
-		"deg": 90,
+		"deg": "90",
 	}
 	key := "test-key-rotate"
 
@@ -211,8 +211,8 @@ func BenchmarkProcessor_ProcessContext_Fit(b *testing.B) {
 	u, _ := url.Parse(ts.URL + "/original.jpg")
 	params := map[string]any{
 		"url": u,
-		"w":   50,
-		"h":   50,
+		"w":   "50",
+		"h":   "50",
 		"op":  "fit",
 	}
 	key := "test-key-fit"
@@ -296,5 +296,63 @@ func BenchmarkProcessor_ProcessContext_Blur(b *testing.B) {
 			b.Fatal(err)
 		}
 		c.DataFromReader(200, -1, file.ContentType(), file.HTTPStream, nil)
+	}
+}
+
+func BenchmarkProcessor_Backends(b *testing.B) {
+	ts := tests.NewImageServer()
+	defer ts.Close()
+
+	ctx := context.Background()
+	gin.SetMode(gin.ReleaseMode)
+	u, _ := url.Parse(ts.URL + "/original.jpg")
+
+	configs := map[string]*config.Config{
+		"goimage": config.DefaultConfig(),
+		"vips":    vipsConfig(),
+	}
+	operations := map[string]map[string]any{
+		"resize":    {"w": "50", "h": "50", "op": "resize"},
+		"thumbnail": {"w": "200", "h": "200", "op": "thumbnail"},
+		"fit":       {"w": "800", "h": "600", "op": "fit"},
+		"rotate":    {"deg": "90", "op": "rotate"},
+		"flip":      {"pos": "h", "op": "flip"},
+		"blur":      {"filter": "blur", "op": "effect"},
+	}
+
+	for _, op := range []string{"resize", "thumbnail", "fit", "rotate", "flip", "blur"} {
+		for _, backend := range []string{"goimage", "vips"} {
+			b.Run(fmt.Sprintf("op=%s/backend=%s", op, backend), func(b *testing.B) {
+				cfg := configs[backend]
+				cfg.Debug = false
+				cfg.Logger.Level = "error"
+
+				processor, err := picfit.NewProcessor(ctx, cfg)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				params := map[string]any{"url": u, "fmt": "jpg"}
+				for k, v := range operations[op] {
+					params[k] = v
+				}
+
+				b.ReportAllocs()
+				for b.Loop() {
+					res := httptest.NewRecorder()
+					c, _ := gin.CreateTestContext(res)
+					c.Request, _ = http.NewRequestWithContext(ctx, "GET", "/", nil)
+					c.Set("key", "test-key")
+					c.Set("parameters", params)
+					c.Set("url", u)
+
+					file, err := processor.ProcessContext(c)
+					if err != nil {
+						b.Fatal(err)
+					}
+					c.DataFromReader(200, -1, file.ContentType(), file.HTTPStream, nil)
+				}
+			})
+		}
 	}
 }
