@@ -44,6 +44,7 @@ type Processor struct {
 	semaphoreOperations []engine.Operation
 	semaphore           chan struct{}
 	maxImageDimensions  *config.AllowedSize
+	maxImagePixels      int64
 }
 
 // Upload uploads a file to its storage
@@ -348,7 +349,8 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 
 	sourceconfig, sourceformat, err := decodeConfig(file)
 	if err != nil {
-		if p.maxImageDimensions != nil {
+		// the dimensions of an unreadable header cannot be checked
+		if p.hasImageLimits() {
 			return nil, errors.WithStack(err)
 		}
 		sourceformat = "unknown"
@@ -519,13 +521,20 @@ func decodeConfig(file *image.ImageFile) (imagepkg.Config, string, error) {
 	return imageconfig, format, err
 }
 
+func (p *Processor) hasImageLimits() bool {
+	return p.maxImageDimensions != nil || p.maxImagePixels > 0
+}
+
 func (p *Processor) checkImageMaxDimension(imageconfig imagepkg.Config) error {
-	if p.maxImageDimensions == nil {
-		return nil
+	if p.maxImageDimensions != nil {
+		maxWidth, maxHeight := p.maxImageDimensions.Width, p.maxImageDimensions.Height
+		if (maxWidth > 0 && imageconfig.Width > maxWidth) || (maxHeight > 0 && imageconfig.Height > maxHeight) {
+			return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max dimensions is %d x %d", p.maxImageDimensions.Width, p.maxImageDimensions.Height))}
+		}
 	}
-	maxWidth, maxHeight := p.maxImageDimensions.Width, p.maxImageDimensions.Height
-	if (maxWidth > 0 && imageconfig.Width > maxWidth) || (maxHeight > 0 && imageconfig.Height > maxHeight) {
-		return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max dimensions is %d x %d", p.maxImageDimensions.Width, p.maxImageDimensions.Height))}
+	// int64 so that huge dimensions cannot overflow the product
+	if pixels := int64(imageconfig.Width) * int64(imageconfig.Height); p.maxImagePixels > 0 && pixels > p.maxImagePixels {
+		return binding.Errors{binding.NewError([]string{"dimensions"}, failure.ErrFileMaxDimensions.Error(), fmt.Sprintf("max pixels is %d, image is %d x %d", p.maxImagePixels, imageconfig.Width, imageconfig.Height))}
 	}
 	return nil
 }

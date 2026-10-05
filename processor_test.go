@@ -25,6 +25,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/thoas/picfit/config"
+	"github.com/thoas/picfit/engine"
+	engineconfig "github.com/thoas/picfit/engine/config"
 	"github.com/thoas/picfit/server"
 	"github.com/thoas/picfit/signature"
 	"github.com/thoas/picfit/tests"
@@ -565,13 +567,37 @@ func TestDummyApplicationErrors(t *testing.T) {
 	assert.Equal(t, 404, res.Code)
 }
 
+// vipsConfig returns the default config with libvips in front of GoImage.
+func vipsConfig() *config.Config {
+	cfg := config.DefaultConfig()
+	cfg.Engine.Backends = &engineconfig.Backends{
+		Vips: &engineconfig.VipsBackend{
+			Mimetypes: []string{"image/jpeg", "image/png", "image/webp"},
+		},
+		GoImage: &engineconfig.Backend{
+			Weight:    1,
+			Mimetypes: engine.MimeTypes,
+		},
+	}
+	return cfg
+}
+
 func TestDummyApplication(t *testing.T) {
+	t.Run("goimage", func(t *testing.T) {
+		testDummyApplication(t, config.DefaultConfig())
+	})
+	t.Run("vips", func(t *testing.T) {
+		testDummyApplication(t, vipsConfig())
+	})
+}
+
+func testDummyApplication(t *testing.T, cfg *config.Config) {
 	ts := tests.NewImageServer()
 	defer ts.Close()
 	defer ts.CloseClientConnections()
 
 	ctx := context.Background()
-	server, err := server.New(ctx, config.DefaultConfig())
+	server, err := server.New(ctx, cfg)
 	assert.Nil(t, err)
 
 	for _, filename := range []string{"avatar.png", "schwarzy.jpg", "giphy.gif"} {
@@ -652,5 +678,38 @@ func TestDummyApplication(t *testing.T) {
 				t.Fatalf("Invalid width for %s: %d != %d", filename, img.Bounds().Max.Y, test.Dimensions.Height)
 			}
 		}
+	}
+}
+
+func TestMaxImagePixels(t *testing.T) {
+	ts := tests.NewImageServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	// avatar.png is 400x400, i.e. 160 000 pixels
+	for _, tt := range []struct {
+		name      string
+		maxPixels int
+		status    int
+	}{
+		{"under the limit", 200_000, http.StatusOK},
+		{"over the limit", 100_000, http.StatusBadRequest},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			content := fmt.Sprintf(`{"port": 3001, "options": {"max_image_pixels": %d}}`, tt.maxPixels)
+
+			tests.Run(t, func(t *testing.T, suite *tests.Suite) {
+				u, _ := url.Parse(ts.URL + "/avatar.png")
+				request, _ := http.NewRequest("GET", fmt.Sprintf("http://example.com/display?url=%s&w=50&h=50&op=resize", u.String()), nil)
+
+				server, err := server.New(context.Background(), suite.Config)
+				assert.Nil(t, err)
+
+				res := httptest.NewRecorder()
+				server.ServeHTTP(res, request)
+
+				assert.Equal(t, tt.status, res.Code, res.Body.String())
+			}, tests.WithConfig(content))
+		})
 	}
 }

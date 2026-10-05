@@ -45,6 +45,7 @@ type Options struct {
 	MaxProcessorConcurrent           *int               `mapstructure:"max_processor_concurrent"`
 	MaxProcessorConcurrentOperations []engine.Operation `mapstructure:"max_processor_concurrent_operations"`
 	MaxImageDimensions               *AllowedSize       `mapstructure:"max_image_dimensions"`
+	MaxImagePixels                   int64              `mapstructure:"max_image_pixels"`
 }
 
 // Sentry is a struct to configure sentry using a dsn
@@ -88,6 +89,7 @@ func DefaultConfig() *Config {
 			EnableDelete:     false,
 			EnableUpload:     false,
 			MimetypeDetector: DefaultMimetypeDetector,
+			TransformTimeout: DefaultTransformTimeout,
 		},
 		Port: DefaultPort,
 		KVStore: &store.Config{
@@ -140,7 +142,7 @@ func load(content string, isPath bool) (*Config, error) {
 	}
 
 	if config.Options.TransformTimeout == 0 {
-		config.Options.TransformTimeout = 10
+		config.Options.TransformTimeout = DefaultTransformTimeout
 	}
 
 	return config, nil
