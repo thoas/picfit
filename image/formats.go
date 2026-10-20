@@ -10,4 +10,5 @@ const (
 	TIFF
 	BMP
 	WEBP
+	AVIF
 )

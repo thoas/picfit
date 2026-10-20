@@ -19,6 +19,7 @@ import (
 	imagefile "github.com/thoas/picfit/image"
 
 	"github.com/chai2010/webp"
+	"github.com/gen2brain/avif"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -265,6 +266,14 @@ func encode(w io.Writer, img image.Image, format imagefile.Format, quality int) 
 		err = bmp.Encode(w, img)
 	case imagefile.WEBP:
 		err = webp.Encode(w, img, &webp.Options{Quality: float32(quality)})
+	case imagefile.AVIF:
+		// zero values are valid speed and chroma subsampling, the defaults must be set explicitly
+		err = avif.Encode(w, img, avif.Options{
+			Quality:           quality,
+			QualityAlpha:      quality,
+			Speed:             avif.DefaultSpeed,
+			ChromaSubsampling: image.YCbCrSubsampleRatio420,
+		})
 	default:
 		err = imaging.ErrUnsupportedFormat
 	}

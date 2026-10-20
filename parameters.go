@@ -25,6 +25,7 @@ const (
 )
 
 var formats = map[string]image.Format{
+	"avif": image.AVIF,
 	"bmp":  image.BMP,
 	"gif":  image.GIF,
 	"jpeg": image.JPEG,

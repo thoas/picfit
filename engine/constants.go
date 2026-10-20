@@ -2,6 +2,7 @@ package engine
 
 var (
 	ContentTypes = map[string]string{
+		"avif": "image/avif",
 		"bmp":  "image/bmp",
 		"gif":  "image/gif",
 		"jpeg": "image/jpeg",
@@ -11,6 +12,7 @@ var (
 	}
 
 	MimeTypes = []string{
+		"image/avif",
 		"image/bmp",
 		"image/gif",
 		"image/jpeg",

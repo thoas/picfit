@@ -434,6 +434,7 @@ picfit currently supports the following image formats:
 - ``image/gif`` with the keyword ``gif``
 - ``image/bmp`` with the keyword ``bmp``
 - ``image/webp`` with the keyword ``webp``
+- ``image/avif`` with the keyword ``avif``
 
 Operations
 ==========
@@ -787,7 +788,8 @@ accepting the output content type. A backend which does not support an operation
 hands it to the next one.
 
 * ``vips``: `libvips <https://www.libvips.org/>`_, the fastest and least memory hungry one.
-  Handles jpeg, png and webp outputs for every operation.
+  Handles jpeg, png, webp and avif outputs for every operation.
+  avif requires libvips built with libheif and an AV1 encoder (aom or rav1e).
   ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default
   (one per core). ``1`` gives a better throughput when picfit serves concurrent requests.
 * ``goimage``: pure Go, handles every operation and format.
@@ -804,7 +806,7 @@ Without ``backends``, only ``goimage`` is used.
         "backends": {
           "vips": {
             "weight": 0,
-            "mimetypes": ["image/jpeg", "image/png", "image/webp"],
+            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/avif"],
             "concurrency": 1
           },
           "gifsicle": {
@@ -813,7 +815,7 @@ Without ``backends``, only ``goimage`` is used.
           },
           "goimage": {
             "weight": 2,
-            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"]
+            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/bmp"]
           }
         }
       }

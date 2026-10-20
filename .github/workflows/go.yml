@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install libvips
-        run: apt-get update && apt-get install -y --no-install-recommends libvips-dev
+        run: apt-get update && apt-get install -y --no-install-recommends libvips-dev libheif-plugin-aomenc libheif-plugin-dav1d
 
       - name: Build
         run: make build

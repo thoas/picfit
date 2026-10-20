@@ -246,6 +246,26 @@ func TestVipsNotImplementedKeepsStream(t *testing.T) {
 	}
 }
 
+func TestVipsAvif(t *testing.T) {
+	vipsBackend := NewVips(0, nil)
+
+	avif := run(t, vipsBackend, resizeFunc, readFixture(t, "schwarzy.jpg"),
+		Options{Width: 100, Upscale: true, Format: imagefile.AVIF, Quality: 60})
+	require.GreaterOrEqual(t, len(avif), 12)
+	assert.Equal(t, "ftypavif", string(avif[4:12]))
+
+	image, err := vips.NewImageFromBuffer(avif, nil)
+	require.NoError(t, err)
+	defer image.Close()
+	assert.Equal(t, 100, image.Width())
+
+	// an avif source is handled by vips as well
+	out := run(t, vipsBackend, resizeFunc, avif, Options{Width: 50, Upscale: true, Format: imagefile.PNG})
+	cfg, format := decodeConfig(t, out)
+	assert.Equal(t, "png", format)
+	assert.Equal(t, 50, cfg.Width)
+}
+
 func TestVipsTruncatedImage(t *testing.T) {
 	vipsBackend := NewVips(0, nil)
 	data := readFixture(t, "schwarzy.jpg")
