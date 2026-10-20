@@ -12,6 +12,7 @@ var (
 	}
 
 	MimeTypes = []string{
+		"image/avif",
 		"image/bmp",
 		"image/gif",
 		"image/jpeg",

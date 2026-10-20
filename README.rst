@@ -434,7 +434,7 @@ picfit currently supports the following image formats:
 - ``image/gif`` with the keyword ``gif``
 - ``image/bmp`` with the keyword ``bmp``
 - ``image/webp`` with the keyword ``webp``
-- ``image/avif`` with the keyword ``avif``, output requires the ``vips`` backend
+- ``image/avif`` with the keyword ``avif``
 
 Operations
 ==========
@@ -792,7 +792,7 @@ hands it to the next one.
   avif requires libvips built with libheif and an AV1 encoder (aom or rav1e).
   ``concurrency`` is the number of libvips threads per image, ``0`` uses the libvips default
   (one per core). ``1`` gives a better throughput when picfit serves concurrent requests.
-* ``goimage``: pure Go, handles every operation and format but avif.
+* ``goimage``: pure Go, handles every operation and format.
 * ``gifsicle``: animated gif ``resize`` and ``thumbnail``, requires the ``gifsicle`` binary.
 
 Without ``backends``, only ``goimage`` is used.
@@ -815,7 +815,7 @@ Without ``backends``, only ``goimage`` is used.
           },
           "goimage": {
             "weight": 2,
-            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"]
+            "mimetypes": ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/bmp"]
           }
         }
       }
