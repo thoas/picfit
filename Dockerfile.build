@@ -1,7 +1,7 @@
 FROM golang:1.25-trixie
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libvips-dev \
+    && apt-get install -y --no-install-recommends libvips-dev libheif-plugin-aomenc libheif-plugin-dav1d \
     && rm -rf /var/lib/apt/lists/*
 
 ADD . /go/src/github.com/thoas/picfit

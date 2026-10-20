@@ -40,6 +40,8 @@ var (
 		vips.ImageTypeWebp,
 		vips.ImageTypeGif,
 		vips.ImageTypeTiff,
+		// avif sources are reported as heif, both use the heif loader
+		vips.ImageTypeHeif,
 	}
 )
 
@@ -276,6 +278,15 @@ func (b *Vips) save(dst io.Writer, image *vips.Image, options *Options) error {
 			Q:    options.Quality,
 			Keep: vips.KeepNone,
 		})
+	case imagefile.AVIF:
+		buf, err = image.HeifsaveBuffer(&vips.HeifsaveBufferOptions{
+			Q:           options.Quality,
+			Bitdepth:    8,
+			Compression: vips.HeifCompressionAv1,
+			// 0 is a valid effort, the libvips default must be set explicitly
+			Effort: 4,
+			Keep:   vips.KeepNone,
+		})
 	default:
 		return MethodNotImplementedError
 	}
@@ -288,7 +299,7 @@ func (b *Vips) save(dst io.Writer, image *vips.Image, options *Options) error {
 }
 
 func vipsCanSave(format imagefile.Format) bool {
-	return format == imagefile.JPEG || format == imagefile.PNG || format == imagefile.WEBP
+	return format == imagefile.JPEG || format == imagefile.PNG || format == imagefile.WEBP || format == imagefile.AVIF
 }
 
 // resizeSize computes the dimensions like imaging.Resize: a zero dimension preserves the aspect ratio.

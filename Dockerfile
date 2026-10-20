@@ -19,7 +19,7 @@ RUN make docker-build-static && mv bin/picfit /picfit
 FROM debian:trixie-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libvips42t64 gifsicle \
+    && apt-get install -y --no-install-recommends ca-certificates libvips42t64 libheif-plugin-aomenc libheif-plugin-dav1d gifsicle \
     && rm -rf /var/lib/apt/lists/*
 
 # Limits glibc malloc arenas, libvips threads otherwise fragment the memory

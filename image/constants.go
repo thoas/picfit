@@ -2,6 +2,7 @@ package image
 
 var (
 	Extensions = map[string]string{
+		"image/avif": "avif",
 		"image/bmp":  "bmp",
 		"image/gif":  "gif",
 		"image/jpeg": "jpg",
