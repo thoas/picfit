@@ -8,6 +8,7 @@ import (
 
 	"github.com/thoas/picfit/config"
 	"github.com/thoas/picfit/engine"
+	httppkg "github.com/thoas/picfit/http"
 	"github.com/thoas/picfit/logger"
 	"github.com/thoas/picfit/storage"
 	"github.com/thoas/picfit/store"
@@ -36,6 +37,7 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 	log.InfoContext(ctx, "Image engine configured",
 		slog.String("engine", e.String()))
 
+	policy := httppkg.NewFetchPolicy(cfg.Options.BlockPrivateNetworks, cfg.Options.AllowedSourceHosts)
 	processor := &Processor{
 		Logger: log,
 
@@ -45,6 +47,11 @@ func NewProcessor(ctx context.Context, cfg *config.Config) (*Processor, error) {
 		engine:                     e,
 		sourceStorage:              sourceStorage,
 		store:                      s,
+		urlPolicy:                  policy,
+		urlClient: httppkg.NewClient(
+			httppkg.WithUserAgent(cfg.Options.DefaultUserAgent),
+			httppkg.WithFetchPolicy(policy),
+		),
 	}
 	if cfg.Options.MaxProcessorConcurrent != nil {
 		processor.withSemaphore = true

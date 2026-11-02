@@ -25,6 +25,7 @@ import (
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/failure"
 	"github.com/thoas/picfit/hash"
+	httppkg "github.com/thoas/picfit/http"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/store"
@@ -45,6 +46,19 @@ type Processor struct {
 	semaphore           chan struct{}
 	maxImageDimensions  *config.AllowedSize
 	maxImagePixels      int64
+
+	urlPolicy httppkg.FetchPolicy
+	urlClient *httppkg.Client
+}
+
+// URLFetchPolicy is the policy applied to user-supplied url fetches.
+func (p *Processor) URLFetchPolicy() httppkg.FetchPolicy {
+	return p.urlPolicy
+}
+
+// URLClient is the HTTP client used to fetch a user-supplied url.
+func (p *Processor) URLClient() *httppkg.Client {
+	return p.urlClient
 }
 
 // Upload uploads a file to its storage
@@ -332,7 +346,7 @@ func (p *Processor) processImage(c *gin.Context, storeKey string, async bool) (*
 	starttime := time.Now()
 	u, exists := c.Get("url")
 	if exists {
-		file, err = image.FromURL(ctx, u.(*url.URL), p.config.Options.DefaultUserAgent)
+		file, err = image.FromURL(ctx, u.(*url.URL), p.urlClient)
 	} else {
 		// URL provided we use http protocol to retrieve it
 		filepath = qs["path"].(string)

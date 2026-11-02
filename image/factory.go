@@ -10,9 +10,17 @@ import (
 	storagepkg "github.com/thoas/picfit/storage"
 )
 
-// FromURL retrieves an ImageFile from an url
-func FromURL(ctx context.Context, u *url.URL, userAgent string) (*ImageFile, error) {
-	storage := storagepkg.NewHTTPStorage(nil, http.NewClient(http.WithUserAgent(userAgent)))
+// FromURL retrieves an ImageFile from an url.
+// client carries the user-agent and the optional fetch policy. A nil client
+// uses an unrestricted client, which is the historical behavior.
+func FromURL(ctx context.Context, u *url.URL, client *http.Client) (*ImageFile, error) {
+	if client == nil {
+		client = http.NewClient()
+	}
+	if err := client.ValidateURL(u); err != nil {
+		return nil, err
+	}
+	storage := storagepkg.NewHTTPStorage(nil, client)
 
 	content, err := storage.OpenFromURL(ctx, u)
 	if err != nil {

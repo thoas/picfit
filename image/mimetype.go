@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rubenfonseca/fastimage"
+	httppkg "github.com/thoas/picfit/http"
 )
 
 const (
@@ -19,11 +20,29 @@ const (
 )
 
 func GetMimetypeDetector(mimetypeDetectorType string) MimetypeDetectorFunc {
+	return GetMimetypeDetectorWithClient(mimetypeDetectorType, nil)
+}
+
+// GetMimetypeDetectorWithClient is GetMimetypeDetector with the HTTP client
+// used by detectors that fetch the URL. A nil client keeps each detector's
+// historical client. Pass the fetch-policy client so those requests are held
+// to the same dial checks as the image download.
+func GetMimetypeDetectorWithClient(mimetypeDetectorType string, client *httppkg.Client) MimetypeDetectorFunc {
 	switch mimetypeDetectorType {
 	case MimetypeDetectorTypeFastimage:
-		return MimetypeDetectorFastimage
+		if client == nil {
+			return MimetypeDetectorFastimage
+		}
+		return func(uri *url.URL) (string, error) {
+			return fastimageWithClient(uri, client)
+		}
 	case MimetypeDetectorTypeSniff:
-		return MimetypeDetectorSniff
+		if client == nil {
+			return MimetypeDetectorSniff
+		}
+		return func(uri *url.URL) (string, error) {
+			return sniffWithClient(uri, client)
+		}
 	default:
 		return MimetypeDetectorExtension
 	}
@@ -44,6 +63,24 @@ func MimetypeDetectorFastimage(uri *url.URL) (string, error) {
 		return "", err
 	}
 
+	return fmt.Sprint("image/", strings.ToLower(imageType.String())), nil
+}
+
+func fastimageWithClient(uri *url.URL, client *httppkg.Client) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	imageType, _, err := fastimage.DetectImageTypeFromResponse(resp)
+	if err != nil {
+		return "", err
+	}
 	return fmt.Sprint("image/", strings.ToLower(imageType.String())), nil
 }
 
@@ -75,4 +112,23 @@ func MimetypeDetectorSniff(uri *url.URL) (string, error) {
 	contentType := http.DetectContentType(buffer[:n])
 
 	return contentType, nil
+}
+
+func sniffWithClient(uri *url.URL, client *httppkg.Client) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	buffer := make([]byte, 512)
+	n, err := resp.Body.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	return http.DetectContentType(buffer[:n]), nil
 }

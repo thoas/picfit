@@ -31,6 +31,8 @@ type AllowedSize struct {
 type Options struct {
 	AllowedIPAddresses               []string           `mapstructure:"allowed_ip_addresses"`
 	AllowedSizes                     []AllowedSize      `mapstructure:"allowed_sizes"`
+	AllowedSourceHosts               []string           `mapstructure:"allowed_source_hosts"`
+	BlockPrivateNetworks             bool               `mapstructure:"block_private_networks"`
 	DefaultUserAgent                 string             `mapstructure:"default_user_agent"`
 	EnableCascadeDelete              bool               `mapstructure:"enable_cascade_delete"`
 	EnableDelete                     bool               `mapstructure:"enable_delete"`
