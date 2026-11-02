@@ -713,3 +713,78 @@ func TestMaxImagePixels(t *testing.T) {
 		})
 	}
 }
+
+func TestURLFetchPolicy(t *testing.T) {
+	ts := tests.NewImageServer()
+	defer ts.Close()
+	defer ts.CloseClientConnections()
+
+	imageURL, err := url.Parse(ts.URL + "/avatar.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	localhostURL := *imageURL
+	localhostURL.Host = "localhost:" + imageURL.Port()
+
+	cases := []struct {
+		name   string
+		config string
+		rawURL string
+		status int
+	}{
+		{
+			name:   "private networks blocked for a literal",
+			config: `{"debug": true, "options": {"block_private_networks": true}}`,
+			rawURL: imageURL.String(),
+			status: http.StatusBadRequest,
+		},
+		{
+			name:   "private networks blocked after resolving localhost",
+			config: `{"debug": true, "options": {"block_private_networks": true}}`,
+			rawURL: localhostURL.String(),
+			status: http.StatusBadRequest,
+		},
+		{
+			name:   "allow list rejects other hosts",
+			config: `{"debug": true, "options": {"allowed_source_hosts": ["images.example.com"]}}`,
+			rawURL: imageURL.String(),
+			status: http.StatusBadRequest,
+		},
+		{
+			name:   "allow list permits a listed loopback host",
+			config: fmt.Sprintf(`{"debug": true, "options": {"allowed_source_hosts": [%q]}}`, imageURL.Hostname()),
+			rawURL: imageURL.String(),
+			status: http.StatusOK,
+		},
+		{
+			name:   "allow list does not override the private network block",
+			config: fmt.Sprintf(`{"debug": true, "options": {"block_private_networks": true, "allowed_source_hosts": [%q]}}`, imageURL.Hostname()),
+			rawURL: imageURL.String(),
+			status: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			tests.Run(t, func(t *testing.T, suite *tests.Suite) {
+				server, err := server.New(context.Background(), suite.Config)
+				assert.Nil(t, err)
+
+				q := url.Values{}
+				q.Set("url", tt.rawURL)
+				q.Set("w", "100")
+				q.Set("h", "100")
+				q.Set("op", "resize")
+				request, err := http.NewRequest(http.MethodGet, "http://example.com/display?"+q.Encode(), nil)
+				assert.Nil(t, err)
+
+				res := httptest.NewRecorder()
+				server.ServeHTTP(res, request)
+				assert.Equal(t, tt.status, res.Code, res.Body.String())
+				if tt.status == http.StatusBadRequest {
+					assert.Equal(t, "URL is not allowed", res.Body.String())
+				}
+			}, tests.WithConfig(tt.config))
+		})
+	}
+}

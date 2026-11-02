@@ -662,6 +662,53 @@ Note, the application does not include the leading question mark when verifying
 the supplied signature. To verify your signature implementation, see the
 ``signature`` command described in the `Tools`_ section.
 
+Source URL restrictions
+-----------------------
+
+``/display``, ``/get`` and ``/redirect`` accept a ``url`` parameter and fetch
+that address. Nothing is blocked unless you opt in, so a deployment that
+already fetches images from a private or loopback address keeps working.
+
+``options.block_private_networks`` (default ``false``) refuses connections to
+loopback, private, link-local, and unspecified addresses, and to the well-known
+metadata addresses those ranges do not already include (``169.254.169.254`` is
+link-local; ``100.100.100.200`` is listed explicitly). Enable it when clients
+you do not trust can set ``url``.
+
+The check runs in a ``net.Dialer`` ``Control`` hook on the address obtained
+after DNS resolution, for every connection attempt and every redirect. A name
+that first resolves to a public address and is later rebound to an internal
+address is still refused. IPv4-mapped IPv6 addresses are unwrapped. 6to4,
+Teredo, and the well-known NAT64 prefix ``64:ff9b::/96`` are checked when they
+carry a blocked IPv4 address. Network-specific NAT64 prefixes are not.
+
+``options.allowed_source_hosts`` is an optional list of hostnames or IP
+addresses. An empty list does not restrict hosts. When it is non-empty, the
+``url`` host must match an entry exactly, ignoring case, a trailing dot, and
+any port. The allow list does not itself block private addresses: a listed name
+that resolves to a private address is fetched unless
+``block_private_networks`` is also enabled. When both are set, the host must be
+listed and the connected address must not be blocked.
+
+While either option is set, only ``http`` and ``https`` URLs are accepted.
+While ``block_private_networks`` is enabled, these fetches do not use
+``HTTP_PROXY`` or ``HTTPS_PROXY``, because the proxy would connect to the
+target and the dialer would only see the proxy. Storage backends configured
+under ``storage`` are not affected. ``secret_key`` remains a separate control.
+
+``config.json``
+
+.. code-block:: json
+
+    {
+      "options": {
+        "block_private_networks": true,
+        "allowed_source_hosts": [
+          "images.example.com"
+        ]
+      }
+    }
+
 Limiting allowed sizes
 ----------------------
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/engine"
 	"github.com/thoas/picfit/hash"
+	httppkg "github.com/thoas/picfit/http"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/util"
 )
@@ -105,7 +107,12 @@ func setParamsFromURLValues(params map[string]any, values url.Values) map[string
 
 // URLParser extracts the url query string and add a url.URL to the context
 func URLParser(mimetypeDetectorType string, processor *picfit.Processor) gin.HandlerFunc {
-	mimetypeDetector := image.GetMimetypeDetector(mimetypeDetectorType)
+	policy := processor.URLFetchPolicy()
+	var fetchClient *httppkg.Client
+	if policy.Active() {
+		fetchClient = processor.URLClient()
+	}
+	mimetypeDetector := image.GetMimetypeDetectorWithClient(mimetypeDetectorType, fetchClient)
 
 	return func(c *gin.Context) {
 		if storeKey := c.MustGet("key").(string); storeKey != "" {
@@ -127,7 +134,18 @@ func URLParser(mimetypeDetectorType string, processor *picfit.Processor) gin.Han
 				return
 			}
 
-			mimetype, _ := mimetypeDetector(url)
+			if err := policy.ValidateURL(url); err != nil {
+				c.String(http.StatusBadRequest, "URL is not allowed")
+				c.Abort()
+				return
+			}
+
+			mimetype, err := mimetypeDetector(url)
+			if errors.Is(err, httppkg.ErrURLNotAllowed) {
+				c.String(http.StatusBadRequest, "URL is not allowed")
+				c.Abort()
+				return
+			}
 
 			_, ok := image.Extensions[mimetype]
 			if !ok {
